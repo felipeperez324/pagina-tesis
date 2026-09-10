@@ -5,47 +5,53 @@ import PostCard from "../components/PostCard.astro";
 import Sidebar from "../components/Sidebar.astro";
 import Footer from "../components/Footer.astro";
 
-const posts = [
-  {
-    title: "Luna — busca un hogar ⋆˚࿔",
-    image: "assets/caniche.jpg",
-    alt: "Luna — busca un hogar",
-    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-pusheen.html",
-    date: "2026-05-27T13:19:00-07:00",
-    snippet: "_____________________________"
-  },
-  {
-    title: "lara - rescatada de maltrato animal ⋐ ⊂ ˶",
-    image: "assets/siames.jpg",
-    alt: "Lara - rescatada de maltrato animal",
-    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-korilakkuma.html",
-    date: "2026-05-27T13:11:00-07:00",
-    snippet: "_______________________________________________;"
-  },
-  {
-    title: "Nala — busca un hogar 𑣲⋆",
-    image: "assets/hamte.webp",
-    alt: "Nala — busca un hogar",
-    href: "https://www.Kodappstore.com/2026/05/pack-wallpaper-k-on.html",
-    date: "2026-05-27T12:57:00-07:00",
-    snippet: "_______________________________________________;"
-  },
-  {
-    title: "perro rescatado de un incendio busca hogar ˚˖𓍢ִ໋❀",
-    image: "assets/feo.jpg",
-    alt: "Perro rescatado de un incendio busca hogar",
-    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-8.html",
-    date: "2026-05-27T11:55:00-07:00",
-    snippet: "…"
-  },
-  {
-    title: "jimmy - busca un hogar ˚˖𓍢ִ໋❀",
-    image: "assets/images.jpg",
-    alt: "Jimmy - busca un hogar",
-    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-7.html",
-    date: "2026-05-27T10:51:00-07:00",
-    snippet: "…"
-  }
+import caniche from "../assets/caniche.jpg";
+import siames from "../assets/siames.jpg";
+import hamte from "../assets/hamte.webp";
+import feo from "../assets/feo.jpg";
+import images from "../assets/images.jpg";
+
+  const posts = [
+    {
+      title: "Luna — busca un hogar ⋆˚࿔",
+      image: caniche.src,
+      alt: "Luna — busca un hogar",
+      href: "https://www.Kodappstore.com/2026/05/pack-mascotas-pusheen.html",
+      date: "2026-05-27T13:19:00-07:00",
+      snippet: "_____________________________"
+    },
+    {
+      title: "lara - rescatada de maltrato animal ⋐ ⊂ ˶",
+      image: siames.src,
+      alt: "Lara - rescatada de maltrato animal",
+      href: "https://www.Kodappstore.com/2026/05/pack-mascotas-korilakkuma.html",
+      date: "2026-05-27T13:11:00-07:00",
+      snippet: "_______________________________________________;"
+    },
+    {
+      title: "Nala — busca un hogar 𑣲⋆",
+      image: hamte.src,
+      alt: "Nala — busca un hogar",
+      href: "https://www.Kodappstore.com/2026/05/pack-wallpaper-k-on.html",
+      date: "2026-05-27T12:57:00-07:00",
+      snippet: "_______________________________________________;"
+    },
+    {
+      title: "perro rescatado de un incendio busca hogar ˚˖𓍢ִ໋❀",
+      image: feo.src,
+      alt: "Perro rescatado de un incendio busca hogar",
+      href: "https://www.Kodappstore.com/2026/05/pack-mascotas-8.html",
+      date: "2026-05-27T11:55:00-07:00",
+      snippet: "…"
+    },
+    {
+      title: "jimmy - busca un hogar ˚˖𓍢ִ໋❀",
+      image: images.src,
+      alt: "Jimmy - busca un hogar",
+      href: "https://www.Kodappstore.com/2026/05/pack-mascotas-7.html",
+      date: "2026-05-27T10:51:00-07:00",
+      snippet: "…"
+    }
 ];
 ---
 
