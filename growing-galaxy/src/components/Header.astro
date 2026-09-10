@@ -1,0 +1,79 @@
+---
+const menu = [
+  { label: "inicio", href: "/" },
+  { label: "Teclados", href: "#", children: [
+    { label: "_Baidu", href: "https://Kodappstore.blogspot.com/search?q=baidu&by-date=true" },
+    { label: "_Facemoji", href: "https://Kodappstore.blogspot.com/search?q=facemoji" }
+  ]},
+  { label: "APPs", href: "https://Kodappstore.blogspot.com/search?q=apks+android&by-date=true" },
+  { label: "Personalizar celular", href: "#", children: [
+    { label: "_Android", href: "#" },
+    { label: "__Widgets Kwgt", href: "https://Kodappstore.blogspot.com/search?q=kwgt" },
+    { label: "__Temas para Xiaomi", href: "https://Kodappstore.blogspot.com/search?q=tema+xiaomi%2C+redmi%2C+poco" },
+    { label: "__Pinterest de colores", href: "https://Kodappstore.blogspot.com/search?q=pinterest" },
+    { label: "_iOs", href: "#" },
+    { label: "__Top widgets", href: "https://Kodappstore.blogspot.com/search?q=top+widgets" }
+  ]},
+  { label: "Pc/Laptops", href: "#", children: [
+    { label: "_Windows / Mac", href: "#" },
+    { label: "__Themes", href: "https://Kodappstore.blogspot.com/search?q=themepack+pc" },
+    { label: "__Wallpapers", href: "https://Kodappstore.blogspot.com/search?q=mascotas+pc+y+laptop&by-date=true" },
+    { label: "__iconos", href: "https://Kodappstore.blogspot.com/search?q=title:pack+icons&by-date=true" },
+    { label: "__Cursor", href: "https://Kodappstore.blogspot.com/search?q=cursor+mouse" },
+    { label: "__Fonts", href: "https://Kodappstore.blogspot.com/search?q=font+windows&by-date=true" },
+    { label: "__Widgets Rainmater", href: "https://Kodappstore.blogspot.com/search?q=widget+rainmater&by-date=true" },
+    { label: "__Explorador de archivos", href: "https://Kodappstore.blogspot.com/search?q=explorerbgtool" }
+  ]},
+  { label: "_Temas para Youtube", href: "https://Kodappstore.blogspot.com/search?q=personaliza+youtube&by-date=true" },
+  { label: "_Temas para Chrome", href: "https://Kodappstore.blogspot.com/search?q=navegador+google+chrome&by-date=true" }
+];
+---
+
+<header class="site-header" id="header-wrap">
+  <div class="header-inner container">
+    <a class="brand" href="/" aria-label="Kodapp">
+      <img src="/logo.png" alt="Kodapp" />
+    </a>
+
+    <button class="mobile-toggle" type="button" aria-label="Abrir menú" aria-expanded="false">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <nav class="main-nav" aria-label="Navegación principal">
+      <ul>
+        {menu.map((item) => (
+          <li class:list={{ "has-submenu": item.children?.length }}>
+            <a href={item.href}>{item.label}{item.children?.length && <span class="chevron">⌄</span>}</a>
+
+            {item.children?.length && (
+              <ul class="submenu">
+                {item.children.map((child) => (
+                  <li><a href={child.href}>{child.label}</a></li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="search-shell">
+      <form action="/search" method="get" role="search">
+        <input name="q" type="search" placeholder="Buscar este blog" aria-label="Buscar" />
+        <button type="submit" aria-label="Buscar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<script>
+  const toggle = document.querySelector(".mobile-toggle");
+  const nav = document.querySelector(".main-nav");
+
+  toggle?.addEventListener("click", () => {
+    const open = nav?.classList.toggle("is-open") ?? false;
+    toggle?.setAttribute("aria-expanded", String(open));
+  });
+</script>

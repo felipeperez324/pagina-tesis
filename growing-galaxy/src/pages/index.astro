@@ -1,0 +1,83 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import PostCard from "../components/PostCard.astro";
+import Sidebar from "../components/Sidebar.astro";
+import Footer from "../components/Footer.astro";
+
+const posts = [
+  {
+    title: "Luna — busca un hogar ⋆˚࿔",
+    image: "assets/caniche.jpg",
+    alt: "Luna — busca un hogar",
+    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-pusheen.html",
+    date: "2026-05-27T13:19:00-07:00",
+    snippet: "_____________________________"
+  },
+  {
+    title: "lara - rescatada de maltrato animal ⋐ ⊂ ˶",
+    image: "assets/siames.jpg",
+    alt: "Lara - rescatada de maltrato animal",
+    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-korilakkuma.html",
+    date: "2026-05-27T13:11:00-07:00",
+    snippet: "_______________________________________________;"
+  },
+  {
+    title: "Nala — busca un hogar 𑣲⋆",
+    image: "assets/hamte.webp",
+    alt: "Nala — busca un hogar",
+    href: "https://www.Kodappstore.com/2026/05/pack-wallpaper-k-on.html",
+    date: "2026-05-27T12:57:00-07:00",
+    snippet: "_______________________________________________;"
+  },
+  {
+    title: "perro rescatado de un incendio busca hogar ˚˖𓍢ִ໋❀",
+    image: "assets/feo.jpg",
+    alt: "Perro rescatado de un incendio busca hogar",
+    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-8.html",
+    date: "2026-05-27T11:55:00-07:00",
+    snippet: "…"
+  },
+  {
+    title: "jimmy - busca un hogar ˚˖𓍢ִ໋❀",
+    image: "assets/images.jpg",
+    alt: "Jimmy - busca un hogar",
+    href: "https://www.Kodappstore.com/2026/05/pack-mascotas-7.html",
+    date: "2026-05-27T10:51:00-07:00",
+    snippet: "…"
+  }
+];
+---
+
+<Layout
+  title="Kodapp"
+  description="Encuentra mascotas que buscan un hogar responsable en Kodapp."
+>
+  <Header />
+
+  <main class="container content-layout">
+    <section class="main-column">
+      <div class="query-message">
+        <span>
+          Se muestran las entradas que coinciden con la búsqueda de
+          <strong>“mascotas en adopción”</strong>
+        </span>
+        <a href="https://www.Kodappstore.com/">Mostrar todo</a>
+      </div>
+
+      <div class="post-grid">
+        {posts.map((post) => <PostCard {...post} />)}
+      </div>
+
+      <div class="load-more">
+        <a href="https://www.Kodappstore.com/search?q=mascotas+pc+y+laptop&by-date=true">
+          Cargar más entradas
+        </a>
+      </div>
+    </section>
+
+    <Sidebar />
+  </main>
+
+  <Footer />
+</Layout>

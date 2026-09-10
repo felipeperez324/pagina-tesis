@@ -1,0 +1,34 @@
+---
+interface Props {
+  title: string;
+  image: string;
+  alt: string;
+  href: string;
+  date: string;
+  snippet?: string;
+}
+
+const { title, image, alt, href, date, snippet = "…" } = Astro.props;
+---
+
+<article class="post-card">
+  <a class="post-image" href={href}>
+    <img src={image} alt={alt} loading="lazy" />
+  </a>
+
+  <div class="post-content">
+    <h2>
+      <a href={href}>{title}</a>
+    </h2>
+
+    <p class="post-snippet">{snippet}</p>
+
+    <footer class="post-meta">
+      <time datetime={date}>{new Date(date).toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      })}</time>
+    </footer>
+  </div>
+</article>

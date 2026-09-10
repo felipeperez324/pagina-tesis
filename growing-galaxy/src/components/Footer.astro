@@ -1,0 +1,52 @@
+---
+const links = [
+  {
+    label: "Pinterest",
+    href: "https://es.pinterest.com/poppycandyy/",
+    icon: "fa-brands fa-pinterest-p"
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@Kodapptutos",
+    icon: "fa-brands fa-youtube"
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/Kodapp_arts/",
+    icon: "fa-brands fa-instagram"
+  }
+];
+
+const legal = [
+  ["Términos y Condiciones.", "https://Kodappstore.blogspot.com/p/terminos-y-condiciones-de-uso-y-servicio.html"],
+  ["Políticas de privacidad.", "https://Kodappstore.blogspot.com/p/politicas-de-privacidad.html"],
+  ["Contacto.", "https://Kodappstore.blogspot.com/p/contactame.html"]
+];
+---
+
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand">
+      <a href="/" aria-label="Kodapp">
+        <img src="/logo.png" alt="Kodapp" />
+      </a>
+      <p>Sigueme ahora en mis redes sociales para estar al tanto de mi contenido:</p>
+    </div>
+
+    <div class="footer-social">
+      {links.map((item) => (
+        <a href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label}>
+          <i class={item.icon}></i>
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <nav aria-label="Enlaces legales">
+        {legal.map(([label, href]) => <a href={href}>{label}</a>)}
+      </nav>
+    </div>
+  </div>
+</footer>
