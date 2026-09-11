@@ -84,17 +84,20 @@ input {
 }
 
 .main-nav {
-  margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
 .main-nav > ul {
   display: flex;
-  align-items: stretch;
-  gap: 0;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem; 
+  list-style: none;
   margin: 0;
   padding: 0;
-  list-style: none;
 }
+
 
 .main-nav li {
   position: relative;
@@ -178,15 +181,7 @@ input {
 
 .mobile-toggle {
   display: none;
-  margin-left: auto;
-  border: 0;
-  background: transparent;
-  color: var(--pink);
-  font-size: 20px;
-  cursor: pointer;
 }
-
-/* Main ---------------------------------------------------- */
 
 .content-layout {
   display: grid;
@@ -776,3 +771,30 @@ input {
     padding: 9px 14px;
   }
 }
+
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+  width: 100%;
+}
+
+.search-shell {
+  margin-left: auto; 
+}
+
+.btn-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #ee00ff; 
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn-login:hover {
+  opacity: 0.8;
+}
+

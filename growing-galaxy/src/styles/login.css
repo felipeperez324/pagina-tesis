@@ -1,0 +1,121 @@
+/* Centra todo vertical y horizontalmente en la pantalla */
+body {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg, #fff5fa);
+  font-family: "Fira Sans", Arial, sans-serif;
+}
+
+/* Tarjeta principal que envuelve todo */
+main, .login-card {
+  background: #ffffff;
+  padding: 40px 32px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(255, 148, 194, 0.15);
+  text-align: center;
+}
+
+/* Icono/Huella superior */
+main > img, .login-card > img, .fa-paw {
+  width: 32px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+/* Encabezados centrados */
+h1 {
+  color: var(--pink, #ff94c2);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+p {
+  color: var(--muted, #8a8a8a);
+  font-size: 14px;
+  margin: 0 0 24px 0;
+}
+
+/* Formulario */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: left;
+}
+
+/* Etiquetas (Labels) */
+label {
+  display: block;
+  color: var(--text, #151a25);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Campos de entrada */
+input[type="email"],
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #f0eaf0;
+  border-radius: 12px;
+  background-color: #fff9fc;
+  font-size: 14px;
+  color: var(--text, #151a25);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input:focus {
+  border-color: var(--pink, #ff94c2);
+  box-shadow: 0 0 0 3px rgba(255, 148, 194, 0.2);
+  background-color: #ffffff;
+}
+
+/* Botón de envío */
+button[type="submit"],
+input[type="submit"] {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  background-color: var(--pink, #ff94c2);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+button[type="submit"]:hover,
+input[type="submit"]:hover {
+  background-color: #e878aa;
+  transform: translateY(-2px);
+}
+
+/* Texto inferior con enlace a registro */
+.register-link, form + p, main > p:last-child {
+  margin-top: 24px;
+  margin-bottom: 0;
+  font-size: 13px;
+  color: var(--muted, #8a8a8a);
+}
+
+a {
+  color: var(--pink, #ff94c2);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
