@@ -215,6 +215,8 @@ input {
 }
 
 .post-grid {
+  max-width: 1024px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 35px;
