@@ -1,11 +1,36 @@
-import { Pool } from "pg";
+import type { APIRoute } from "astro";
+import { db } from "../../lib/db";
 
-const connectionString = process.env.DATABASE_URL;
+export const GET: APIRoute = async () => {
+  try {
+    const result = await db.query("SELECT NOW()");
 
-if (!connectionString) {
-  throw new Error("DATABASE_URL no está siendo encontrada");
-}
+    return new Response(
+      JSON.stringify({
+        conectado: true,
+        fecha: result.rows[0].now,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error(error);
 
-export const db = new Pool({
-  connectionString,
-});
+    return new Response(
+      JSON.stringify({
+        conectado: false,
+        error: String(error),
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }
+};
