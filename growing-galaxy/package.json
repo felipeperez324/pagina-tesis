@@ -5,6 +5,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/node": "^11.1.6",
     "astro": "^7.3.3",
     "bcrypt": "^6.0.0",
     "pg": "^8.23.0"

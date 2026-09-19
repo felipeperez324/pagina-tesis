@@ -1,0 +1,136 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import { getUsuarioDesdeSesion } from "../lib/auth";
+
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+if (
+  usuario.tipo_usuario !== "rescatista" &&
+  usuario.tipo_usuario !== "veterinario"
+) {
+  return Astro.redirect("/usuario");
+}
+---
+
+<Layout
+  title="Gestión | Kodapp"
+  description="Panel de gestión de Kodapp"
+>
+  <Header />
+
+  <main class="gestion-page">
+    <div class="gestion-container">
+
+      <section class="welcome-card">
+        <div class="icon">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div>
+          <p class="small-title">
+            Panel de gestión
+          </p>
+
+          <h1>{usuario.nombre}</h1>
+
+          <p class="subtitle">
+            Cuenta de {
+              usuario.tipo_usuario === "rescatista"
+                ? "rescatista"
+                : "veterinario"
+            }
+          </p>
+        </div>
+      </section>
+
+      <section class="actions">
+
+        <a href="/gestion/mascotas" class="action-card">
+          <div class="action-icon">
+            <i class="fa-solid fa-dog"></i>
+          </div>
+
+          <div>
+            <h2>Mis mascotas</h2>
+            <p>
+              Administra las mascotas que has registrado.
+            </p>
+          </div>
+        </a>
+
+        <a href="/gestion/crear-mascota" class="action-card">
+          <div class="action-icon">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+
+          <div>
+            <h2>Publicar mascota</h2>
+            <p>
+              Registra una nueva mascota para adopción.
+            </p>
+          </div>
+        </a>
+
+        <a href="/perfil" class="action-card">
+          <div class="action-icon">
+            <i class="fa-solid fa-user"></i>
+          </div>
+
+          <div>
+            <h2>Mi perfil</h2>
+            <p>
+              Administra la información de tu cuenta.
+            </p>
+          </div>
+        </a>
+
+        <a href="#" id="logout-button" class="action-card">
+          <div class="action-icon">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </div>
+
+          <div>
+            <h2>Cerrar sesión</h2>
+            <p>
+              Salir de tu cuenta de Kodapp.
+            </p>
+          </div>
+        </a>
+
+      </section>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const logoutButton = document.querySelector("#logout-button");
+
+  logoutButton?.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.ok) {
+        window.location.href = "/login";
+      } else {
+        alert(data.mensaje);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo cerrar la sesión.");
+    }
+  });
+</script>
+

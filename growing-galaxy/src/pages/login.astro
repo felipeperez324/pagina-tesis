@@ -2,51 +2,151 @@
 import Layout from "../layouts/Layout.astro";
 import "../styles/login.css";
 ---
+
 <Layout
   title="Iniciar sesión"
-  description="Inicia sesión en la plataforma de adopción.">
+  description="Inicia sesión en la plataforma de adopción."
+>
   <main class="auth-page">
-
     <div class="auth-card">
+
       <div class="auth-header">
-        <div class="auth-logo">
-          🐾
-        </div>
+        <div class="auth-logo">🐾</div>
+
         <h1>Bienvenido</h1>
+
         <p>
           Inicia sesión para continuar.
         </p>
       </div>
-      <form>
+
+      <form id="login-form">
+
         <label for="email">
           Correo electrónico
         </label>
+
         <input
           id="email"
+          name="correo"
           type="email"
           placeholder="correo@ejemplo.com"
-          required/>
+          required
+        />
+
         <label for="password">
           Contraseña
         </label>
+
         <input
           id="password"
+          name="contrasena"
           type="password"
           placeholder="••••••••"
           required
         />
+
         <button
           type="submit"
-          class="auth-button">
+          class="auth-button"
+        >
           Iniciar sesión
         </button>
+
+        <p id="login-message"></p>
+
       </form>
+
       <p class="auth-register">
         ¿No tienes una cuenta?
-        <a href="/registro">
-          Regístrate
-        </a>
+        <a href="/registro">Regístrate</a>
       </p>
+
     </div>
   </main>
 </Layout>
+
+<script>
+  const form = document.querySelector("#login-form");
+  const message = document.querySelector("#login-message");
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const correoInput =
+      document.querySelector("#email") as HTMLInputElement;
+
+    const contrasenaInput =
+      document.querySelector("#password") as HTMLInputElement;
+
+    const correo = correoInput.value.trim();
+    const contrasena = contrasenaInput.value;
+
+    if (message) {
+      message.textContent = "Iniciando sesión...";
+    }
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          correo,
+          contrasena,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (message) {
+          message.textContent =
+            data.mensaje || "No se pudo iniciar sesión.";
+        }
+
+        return;
+      }
+
+      if (!data.ok || !data.usuario) {
+        if (message) {
+          message.textContent =
+            "La respuesta del servidor no es válida.";
+        }
+
+        return;
+      }
+
+      /*
+       * Redirección según el tipo de usuario
+       */
+
+      if (data.usuario.tipoUsuario === "adoptante") {
+        window.location.href = "/usuario";
+        return;
+      }
+
+      if (
+        data.usuario.tipoUsuario === "rescatista" ||
+        data.usuario.tipoUsuario === "veterinario"
+      ) {
+        window.location.href = "/gestion";
+        return;
+      }
+
+      if (message) {
+        message.textContent =
+          "El tipo de usuario no es válido.";
+      }
+
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+
+      if (message) {
+        message.textContent =
+          "No se pudo conectar con el servidor.";
+      }
+    }
+  });
+</script>
