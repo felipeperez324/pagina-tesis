@@ -1,0 +1,502 @@
+---
+//Layout general de KodApp
+import Layout from "../../layouts/Layout.astro";
+
+// Header principal del sitio 
+import Header from "../../components/Header.astro";
+
+//Función utilizada para comprobar la sesión
+import { getUsuarioDesdeSesion } from "../../lib/auth";
+
+// Obtenemos la sesión actual desde la cookie -->
+const sessionId = Astro.cookies.get("session_id")?.value;
+
+// Buscamos al usuario correspondiente -->
+const usuario = await getUsuarioDesdeSesion(sessionId);
+
+// Si no hay sesión, enviamos al usuario al login -->
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+//  Solo rescatistas y veterinarios pueden publicar mascotas.
+if (
+  usuario.tipo_usuario !== "rescatista" &&
+  usuario.tipo_usuario !== "veterinario"
+) {
+  return Astro.redirect("/usuario");
+}
+---
+
+<!-- Layout general de la página -->
+<Layout
+  title="Publicar mascota | Kodapp"
+  description="Publica una mascota para adopción en Kodapp"
+>
+
+  <!-- Header compartido -->
+  <Header />
+
+  <main class="crear-mascota-page">
+
+    <div class="crear-mascota-container">
+
+      <!-- ========================================= -->
+      <!-- ENCABEZADO -->
+      <!-- ========================================= -->
+
+      <div class="crear-mascota-header">
+
+        <p class="small-title">
+          Publicación
+        </p>
+
+        <h1>
+          Publicar una mascota
+        </h1>
+
+        <p>
+          Completa la información de la mascota para ponerla disponible
+          para adopción.
+        </p>
+
+      </div>
+
+
+      <!-- ========================================= -->
+      <!-- FORMULARIO -->
+      <!-- ========================================= -->
+
+      <form
+        id="mascota-form"
+        class="mascota-form"
+      >
+
+        <!-- FOTO -->
+        <div class="form-group">
+
+          <label for="foto">
+            Foto de la mascota
+          </label>
+
+          <!--
+            El usuario puede seleccionar una imagen.
+            accept="image/*" limita el selector del navegador
+            a archivos de imagen.
+          -->
+          <input
+            type="file"
+            id="foto"
+            name="foto"
+            accept="image/*"
+          />
+
+          <small>
+            Formatos de imagen permitidos. Máximo 5 MB.
+          </small>
+
+          <!-- Aquí se mostrará la vista previa -->
+          <div
+            id="preview-container"
+            class="photo-preview"
+          >
+            <span>
+              Vista previa
+            </span>
+          </div>
+
+        </div>
+
+
+        <!-- NOMBRE -->
+        <div class="form-group">
+
+          <label for="nombre">
+            Nombre de la mascota
+          </label>
+
+          <input
+            type="text"
+            id="nombre"
+            name="nombre"
+            maxlength="100"
+            placeholder="Ej: Firulais"
+            required
+          />
+
+        </div>
+
+
+        <!-- TIPO -->
+        <div class="form-group">
+
+          <label for="tipo-mascota">
+            ¿Qué tipo de mascota es?
+          </label>
+
+          <select
+            id="tipo-mascota"
+            name="tipoMascota"
+            required
+          >
+
+            <option value="">
+              Selecciona una opción
+            </option>
+
+            <option value="perro">
+              Perro
+            </option>
+
+            <option value="gato">
+              Gato
+            </option>
+
+            <option value="otro">
+              Otro
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- DESCRIPCIÓN -->
+        <div class="form-group">
+
+          <label for="descripcion">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="5"
+            placeholder="Cuéntanos sobre la mascota..."
+          ></textarea>
+
+        </div>
+
+
+        <!-- PERSONALIDAD -->
+        <div class="form-group">
+
+          <label for="personalidad">
+            Personalidad
+          </label>
+
+          <textarea
+            id="personalidad"
+            name="personalidad"
+            rows="4"
+            placeholder="Ej: Es tranquila, cariñosa y juguetona."
+          ></textarea>
+
+        </div>
+
+
+        <!-- HISTORIAL MÉDICO -->
+        <div class="form-group">
+
+          <label for="historial-medico">
+            Historial médico
+          </label>
+
+          <textarea
+            id="historial-medico"
+            name="historialMedico"
+            rows="4"
+            placeholder="Información médica relevante, vacunas, tratamientos, etc."
+          ></textarea>
+
+        </div>
+
+
+        <!--
+          Aquí se muestran mensajes de error
+          o confirmación para el usuario.
+        -->
+        <div
+          id="form-message"
+          class="form-message"
+        ></div>
+
+
+        <!-- ========================================= -->
+        <!-- BOTONES -->
+        <!-- ========================================= -->
+
+        <div class="form-actions">
+
+          <!-- Volver al panel de gestión -->
+          <a
+            href="/gestion"
+            class="btn-secondary"
+          >
+            Cancelar
+          </a>
+
+          <!-- Enviar publicación -->
+          <button
+            type="submit"
+            class="btn-primary"
+            id="publish-button"
+          >
+            <i class="fa-solid fa-paw"></i>
+            Publicar mascota
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </main>
+
+</Layout>
+
+
+<script>
+
+  // =========================================
+  // OBTENER ELEMENTOS DEL FORMULARIO
+  // =========================================
+
+  // Formulario principal.
+  const form =
+    document.querySelector(
+      "#mascota-form"
+    ) as HTMLFormElement | null;
+
+
+  // Input donde se selecciona la foto.
+  const photoInput =
+    document.querySelector(
+      "#foto"
+    ) as HTMLInputElement | null;
+
+
+  // Contenedor donde aparecerá la vista previa.
+  const previewContainer =
+    document.querySelector(
+      "#preview-container"
+    );
+
+
+  // Elemento donde mostraremos mensajes.
+  const message =
+    document.querySelector(
+      "#form-message"
+    );
+
+
+  // Botón utilizado para publicar.
+  const publishButton =
+    document.querySelector(
+      "#publish-button"
+    ) as HTMLButtonElement | null;
+
+
+  // =========================================
+  // VISTA PREVIA DE LA FOTO
+  // =========================================
+
+  photoInput?.addEventListener(
+    "change",
+    () => {
+
+      // Obtenemos el primer archivo seleccionado.
+      const file =
+        photoInput.files?.[0];
+
+
+      // Si no hay archivo o no existe el contenedor,
+      // no hacemos nada.
+      if (!file || !previewContainer) {
+        return;
+      }
+
+
+      // Comprobamos que sea una imagen.
+      if (!file.type.startsWith("image/")) {
+
+        alert(
+          "El archivo debe ser una imagen."
+        );
+
+        photoInput.value = "";
+
+        return;
+      }
+
+
+      // Comprobamos que no supere 5 MB.
+      if (
+        file.size >
+        5 * 1024 * 1024
+      ) {
+
+        alert(
+          "La imagen no puede superar los 5 MB."
+        );
+
+        photoInput.value = "";
+
+        return;
+      }
+
+
+      // Creamos una URL temporal para mostrar
+      // la imagen antes de enviarla al servidor.
+      const imageUrl =
+        URL.createObjectURL(file);
+
+
+      // Limpiamos la vista previa anterior.
+      previewContainer.innerHTML = "";
+
+
+      // Creamos un elemento <img>.
+      const image =
+        document.createElement("img");
+
+
+      // Asignamos la URL temporal.
+      image.src = imageUrl;
+
+      // Texto alternativo de la imagen.
+      image.alt =
+        "Vista previa de la mascota";
+
+
+      // Insertamos la imagen en el contenedor.
+      previewContainer.appendChild(
+        image
+      );
+    }
+  );
+
+
+  // =========================================
+  // ENVIAR FORMULARIO
+  // =========================================
+
+  form?.addEventListener(
+    "submit",
+    async (event) => {
+
+      // Evitamos que el navegador recargue la página.
+      event.preventDefault();
+
+
+      // Comprobamos que existan los elementos necesarios.
+      if (
+        !publishButton ||
+        !message
+      ) {
+        return;
+      }
+
+
+      // Desactivamos el botón para evitar
+      // múltiples envíos.
+      publishButton.disabled = true;
+
+      // Cambiamos temporalmente el texto.
+      publishButton.textContent =
+        "Publicando...";
+
+      // Limpiamos mensajes anteriores.
+      message.textContent = "";
+
+
+      // Convertimos los datos del formulario
+      // a FormData.
+      const formData =
+        new FormData(form);
+
+
+      try {
+
+        // Enviamos los datos a la API.
+        const response =
+          await fetch(
+            "/api/mascotas/crear",
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+
+        // Convertimos la respuesta a JSON.
+        const data =
+          await response.json();
+
+
+        // Comprobamos si la API respondió
+        // con algún error.
+        if (
+          !response.ok ||
+          !data.ok
+        ) {
+
+          message.textContent =
+            data.mensaje ||
+            "No se pudo publicar la mascota.";
+
+
+          // Volvemos a habilitar el botón.
+          publishButton.disabled =
+            false;
+
+
+          // Restauramos el contenido original.
+          publishButton.innerHTML =
+            '<i class="fa-solid fa-paw"></i> Publicar mascota';
+
+          return;
+        }
+
+
+        // Si todo salió bien,
+        // mostramos mensaje de confirmación.
+        message.textContent =
+          "¡Mascota publicada correctamente!";
+
+
+        // Después de un breve tiempo,
+        // vamos al listado de mascotas.
+        setTimeout(() => {
+
+          window.location.href =
+            "/gestion/mascotas";
+
+        }, 800);
+
+
+      } catch (error) {
+
+        // Mostramos el error en consola.
+        console.error(error);
+
+
+        // Mensaje visible para el usuario.
+        message.textContent =
+          "Ocurrió un error al publicar la mascota.";
+
+
+        // Volvemos a habilitar el botón.
+        publishButton.disabled =
+          false;
+
+
+        // Restauramos el botón.
+        publishButton.innerHTML =
+          '<i class="fa-solid fa-paw"></i> Publicar mascota';
+      }
+    }
+  );
+
+</script>

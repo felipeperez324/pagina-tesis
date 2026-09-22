@@ -1,64 +1,288 @@
 ---
 import logo from "../assets/logo.png";
+import { getUsuarioDesdeSesion } from "../lib/auth";
+
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
+
 const menu = [
-  { label: "inicio", href: "/" },
-  { 
-    label: "tipo de mascotas", 
-    href: "#", 
+  {
+    label: "inicio",
+    href: "/"
+  },
+  {
+    label: "tipo de mascotas",
+    href: "#",
     children: [
-      { label: "gatos", href: "https://Kodappstore.blogspot.com/search/label/gatos" },
-      { label: "perros", href: "https://Kodappstore.blogspot.com/search/label/perros" },
-      { label: "otros", href: "https://Kodappstore.blogspot.com/search/label/otros" }
+      {
+        label: "gatos",
+        href: "https://Kodappstore.blogspot.com/search/label/gatos"
+      },
+      {
+        label: "perros",
+        href: "https://Kodappstore.blogspot.com/search/label/perros"
+      },
+      {
+        label: "otros",
+        href: "https://Kodappstore.blogspot.com/search/label/otros"
+      }
     ]
   },
 ];
+
+let homeUrl = "/";
+
+if (usuario) {
+  if (usuario.tipo_usuario === "adoptante") {
+    homeUrl = "/usuario";
+  } else {
+    homeUrl = "/gestion";
+  }
+}
 ---
 
 <header class="site-header" id="header-wrap">
+
   <div class="header-inner container">
-    <!-- 1. LOGO (Izquierda) -->
-    <a class="brand" href="/" aria-label="Kodapp">
-      <img src={logo.src} alt="Kodapp" />
+
+    <!-- LOGO -->
+
+    <a
+      class="brand"
+      href={homeUrl}
+      aria-label="Kodapp"
+    >
+      <img
+        src={logo.src}
+        alt="Kodapp"
+      />
     </a>
 
-    <button class="mobile-toggle" type="button" aria-label="Abrir menú" aria-expanded="false">
+
+    <!-- MENÚ MOBILE -->
+
+    <button
+      class="mobile-toggle"
+      type="button"
+      aria-label="Abrir menú"
+      aria-expanded="false"
+    >
       <i class="fa-solid fa-bars"></i>
     </button>
 
-    <nav class="main-nav" aria-label="Navegación principal">
-      <ul>
-        {menu.map((item) => (
-          <li class:list={{ "has-submenu": item.children?.length }}>
-            <a href={item.href}>{item.label}{item.children?.length && <span class="chevron">⌄</span>}</a>
 
-            {item.children?.length && (
-              <ul class="submenu">
-                {item.children.map((child) => (
-                  <li><a href={child.href}>{child.label}</a></li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
+    <!-- MENÚ -->
+
+    <nav
+      class="main-nav"
+      aria-label="Navegación principal"
+    >
+
+      <ul>
+
+        {
+          menu.map((item) => (
+            <li
+              class:list={{
+                "has-submenu":
+                  item.children?.length
+              }}
+            >
+
+              <a href={item.href}>
+
+                {item.label}
+
+                {
+                  item.children?.length && (
+                    <span class="chevron">
+                      ⌄
+                    </span>
+                  )
+                }
+
+              </a>
+
+
+              {
+                item.children?.length && (
+
+                  <ul class="submenu">
+
+                    {
+                      item.children.map(
+                        (child) => (
+
+                          <li>
+
+                            <a href={child.href}>
+                              {child.label}
+                            </a>
+
+                          </li>
+
+                        )
+                      )
+                    }
+
+                  </ul>
+
+                )
+              }
+
+            </li>
+          ))
+        }
+
       </ul>
+
     </nav>
 
-    <!-- 3. BOTÓN LOGIN (Totalmente a la derecha) -->
+
+    <!-- BOTÓN DE CUENTA -->
+
     <div class="search-shell">
-      <a href="/login" class="btn-login">
-        <i class="fa-solid fa-user"></i>
-        <span>Iniciar sesión</span>
-      </a>
+
+      {
+        usuario ? (
+
+          <button
+            type="button"
+            id="header-logout"
+            class="btn-login"
+          >
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+
+            <span>
+              Cerrar sesión
+            </span>
+
+          </button>
+
+        ) : (
+
+          <a
+            href="/login"
+            class="btn-login"
+          >
+
+            <i class="fa-solid fa-user"></i>
+
+            <span>
+              Iniciar sesión
+            </span>
+
+          </a>
+
+        )
+      }
+
     </div>
+
   </div>
+
 </header>
 
-<script>
-  const toggle = document.querySelector(".mobile-toggle");
-  const nav = document.querySelector(".main-nav");
 
-  toggle?.addEventListener("click", () => {
-    const open = nav?.classList.toggle("is-open") ?? false;
-    toggle?.setAttribute("aria-expanded", String(open));
-  });
+<script>
+
+  // =========================================
+  // MENÚ MOBILE
+  // =========================================
+
+  const toggle =
+    document.querySelector(
+      ".mobile-toggle"
+    );
+
+  const nav =
+    document.querySelector(
+      ".main-nav"
+    );
+
+
+  toggle?.addEventListener(
+    "click",
+    () => {
+
+      const open =
+        nav?.classList.toggle(
+          "is-open"
+        ) ?? false;
+
+      toggle?.setAttribute(
+        "aria-expanded",
+        String(open)
+      );
+
+    }
+  );
+
+
+  // =========================================
+  // CERRAR SESIÓN
+  // =========================================
+
+  const logoutButton =
+    document.querySelector(
+      "#header-logout"
+    );
+
+
+  logoutButton?.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/logout",
+            {
+              method: "POST"
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (data.ok) {
+
+          /*
+           * Después de cerrar sesión,
+           * volvemos al inicio público.
+           */
+
+          window.location.href =
+            "/";
+
+          return;
+        }
+
+
+        alert(
+          data.mensaje ||
+          "No se pudo cerrar la sesión."
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Error al cerrar sesión:",
+          error
+        );
+
+        alert(
+          "No se pudo cerrar la sesión."
+        );
+
+      }
+
+    }
+  );
+
 </script>

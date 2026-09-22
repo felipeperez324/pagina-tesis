@@ -1,0 +1,85 @@
+---
+import { db } from "../lib/db";
+
+const resultado = await db.query(`
+  SELECT
+    id,
+    nombre,
+    descripcion,
+    personalidad,
+    historial_medico,
+    tipo_mascota,
+    foto,
+    estado_adopcion
+  FROM mascotas
+  WHERE estado_adopcion = 'disponible'
+  ORDER BY id DESC
+`);
+
+const mascotas = resultado.rows;
+---
+
+<section class="mascotas-disponibles">
+  <div class="mascotas-disponibles-header">
+    <p class="small-title">Encuentra a tu compañero</p>
+    <h2>Mascotas disponibles</h2>
+    <p>
+      Conoce a las mascotas que están esperando encontrar un nuevo hogar.
+    </p>
+  </div>
+
+  {
+    mascotas.length === 0 ? (
+      <div class="mascotas-vacias">
+        <i class="fa-solid fa-paw"></i>
+        <h3>No hay mascotas disponibles</h3>
+        <p>Por ahora no hay mascotas publicadas para adopción.</p>
+      </div>
+    ) : (
+      <div class="mascotas-grid">
+        {mascotas.map((mascota) => (
+          <article class="mascota-card">
+            <div class="mascota-card-image">
+              {mascota.foto ? (
+                <img
+                  src={mascota.foto}
+                  alt={`Foto de ${mascota.nombre}`}
+                />
+              ) : (
+                <div class="mascota-no-image">
+                  <i class="fa-solid fa-paw"></i>
+                </div>
+              )}
+            </div>
+
+            <div class="mascota-card-content">
+              <span class="mascota-tipo">
+                {mascota.tipo_mascota}
+              </span>
+
+              <h3>{mascota.nombre}</h3>
+
+              {mascota.descripcion && (
+                <p>{mascota.descripcion}</p>
+              )}
+
+              {mascota.personalidad && (
+                <div class="mascota-info">
+                  <strong>Personalidad</strong>
+                  <span>{mascota.personalidad}</span>
+                </div>
+              )}
+
+              {mascota.historial_medico && (
+                <div class="mascota-info">
+                  <strong>Historial médico</strong>
+                  <span>{mascota.historial_medico}</span>
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    )
+  }
+</section>

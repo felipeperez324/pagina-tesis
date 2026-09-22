@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
+import MascotasDisponibles from "../components/MascotasDisponibles.astro";
 
 const sessionId = Astro.cookies.get("session_id")?.value;
 
@@ -218,12 +219,7 @@ if (usuario.tipo_usuario !== "adoptante") {
 
         </div>
 
-        <!--
-          ESTE ESPACIO SE DEJA VACÍO.
-
-          Posteriormente las publicaciones
-          serán cargadas desde PostgreSQL.
-        -->
+<MascotasDisponibles />
 
         <div id="publications-container">
         </div>
@@ -251,9 +247,8 @@ if (usuario.tipo_usuario !== "adoptante") {
 
   const profilePhoto =
     document.querySelector(
-      "#profile-photo"
-    );
-
+      "#profile-photo"  
+    ) as HTMLDivElement | null;
 
   photoInput?.addEventListener(
     "change",
@@ -393,9 +388,6 @@ if (usuario.tipo_usuario !== "adoptante") {
   );
 
 
-  // =========================================
-  // CERRAR SESIÓN
-  // =========================================
 
   const logoutButton =
     document.querySelector(
