@@ -1,43 +1,21 @@
 ---
-// Layout general -->
 import Layout from "../../layouts/Layout.astro";
-
-// Header compartido -->
 import Header from "../../components/Header.astro";
-
-// Función para comprobar la sesión -->
 import { getUsuarioDesdeSesion } from "../../lib/auth";
-
-// Conexión con PostgreSQL -->
 import { db } from "../../lib/db";
 
-
-// =========================================
-// COMPROBAR SESIÓN
-// =========================================
-
-// Obtenemos la sesión desde la cookie.
 const sessionId =
   Astro.cookies.get("session_id")?.value;
 
-// Obtenemos el usuario asociado.
 const usuario =
   await getUsuarioDesdeSesion(sessionId);
 
 
-// Si no existe sesión,
-// enviamos al usuario al login.
 if (!usuario) {
   return Astro.redirect("/login");
 }
 
 
-// =========================================
-// COMPROBAR ROL
-// =========================================
-
-// Esta página solamente puede ser utilizada
-// por rescatistas y veterinarios.
 if (
   usuario.tipo_usuario !== "rescatista" &&
   usuario.tipo_usuario !== "veterinario"
@@ -46,15 +24,6 @@ if (
 }
 
 
-// =========================================
-// OBTENER MASCOTAS
-// =========================================
-
-// Buscamos las mascotas publicadas
-// por el usuario que inició sesión.
-//
-// usuario_id permite que cada rescatista
-// o veterinario vea solamente sus propias mascotas.
 const resultado =
   await db.query(
     `SELECT
@@ -69,53 +38,58 @@ const resultado =
     FROM mascotas
     WHERE usuario_id = $1
     ORDER BY id DESC`,
-
     [usuario.id]
   );
 
 
-// Guardamos las filas obtenidas
-// para utilizarlas en el HTML.
 const mascotas =
   resultado.rows;
 ---
 
 <Layout
   title="Mis mascotas | Kodapp"
-  description="Mascotas publicadas por tu cuenta"
+  description="Mascotas publicadas por tu cuenta."
 >
 
-  <!-- Header general -->
   <Header />
 
-  <main class="mis-mascotas-page">
 
-    <div class="mis-mascotas-container">
+  <main class="management-page">
+
+    <div class="management-container">
+
 
       <!-- ========================================= -->
       <!-- ENCABEZADO -->
       <!-- ========================================= -->
 
-      <div class="mis-mascotas-header">
+      <div class="page-header page-header-inline">
 
         <div>
 
-          <p class="small-title">
-            Gestión
-          </p>
+          <a
+            href="/gestion"
+            class="back-link"
+          >
+            <i class="fa-solid fa-arrow-left"></i>
+            Volver al panel
+          </a>
+
+          <span class="section-kicker">
+            Administración
+          </span>
 
           <h1>
             Mis mascotas
           </h1>
 
           <p>
-            Aquí aparecen las mascotas que has publicado.
+            Revisa las mascotas que has publicado.
           </p>
 
         </div>
 
 
-        <!-- Botón para crear una nueva publicación -->
         <a
           href="/gestion/crear-mascota"
           class="btn-primary"
@@ -134,21 +108,19 @@ const mascotas =
       {
         mascotas.length === 0 ? (
 
-          /*
-            Si el usuario todavía no tiene mascotas,
-            mostramos un mensaje indicando que no existen
-            publicaciones.
-          */
           <section class="empty-state">
 
-            <i class="fa-solid fa-paw"></i>
+            <div class="empty-state-icon">
+              <i class="fa-solid fa-paw"></i>
+            </div>
 
             <h2>
-              Aún no has publicado mascotas
+              Todavía no tienes publicaciones
             </h2>
 
             <p>
-              Cuando publiques una mascota aparecerá aquí.
+              Cuando publiques una mascota,
+              aparecerá automáticamente en este espacio.
             </p>
 
             <a
@@ -162,77 +134,67 @@ const mascotas =
 
         ) : (
 
-          /*
-            Si existen mascotas, recorremos todas
-            las filas obtenidas desde PostgreSQL.
-          */
-          <section class="mascotas-grid">
+          <section class="management-pets-grid">
 
             {mascotas.map((mascota) => (
 
-              <article class="mascota-card">
+              <article class="management-pet-card">
 
 
-                <!-- ================================= -->
-                <!-- FOTO -->
-                <!-- ================================= -->
-
-                <div class="mascota-card-image">
+                <div class="management-pet-image">
 
                   {
                     mascota.foto ? (
 
-                      /*
-                        Si la mascota tiene foto,
-                        mostramos la imagen guardada.
-                      */
                       <img
                         src={mascota.foto}
                         alt={`Foto de ${mascota.nombre}`}
+                        loading="lazy"
                       />
 
                     ) : (
 
-                      /*
-                        Si no tiene foto,
-                        mostramos un icono de mascota.
-                      */
-                      <i class="fa-solid fa-paw"></i>
+                      <div class="management-pet-placeholder">
+                        <i class="fa-solid fa-paw"></i>
+                      </div>
 
                     )
                   }
 
+
+                  <span
+                    class:list={{
+                      "pet-status-badge":
+                        true,
+                      "is-available":
+                        mascota.estado_adopcion ===
+                        "disponible",
+                    }}
+                  >
+                    {mascota.estado_adopcion}
+                  </span>
+
                 </div>
 
 
-                <!-- ================================= -->
-                <!-- INFORMACIÓN -->
-                <!-- ================================= -->
+                <div class="management-pet-content">
 
-                <div class="mascota-card-content">
-
-
-                  <!-- Tipo y estado -->
-                  <div class="mascota-card-top">
-
-                    <span class="mascota-type">
-                      {mascota.tipo_mascota}
-                    </span>
-
-                    <span class="mascota-status">
-                      {mascota.estado_adopcion}
-                    </span>
-
+                  <div class="pet-card-meta">
+                    {
+                      mascota.tipo_mascota === "perro"
+                        ? "Perro"
+                        : mascota.tipo_mascota === "gato"
+                          ? "Gato"
+                          : "Otro"
+                    }
                   </div>
 
 
-                  <!-- Nombre -->
                   <h2>
                     {mascota.nombre}
                   </h2>
 
 
-                  <!-- Descripción -->
                   {
                     mascota.descripcion && (
 
@@ -244,44 +206,66 @@ const mascotas =
                   }
 
 
-                  <!-- Personalidad -->
-                  {
-                    mascota.personalidad && (
+                  <div class="management-pet-info">
 
-                      <div>
+                    {
+                      mascota.personalidad && (
 
-                        <strong>
-                          Personalidad
-                        </strong>
+                        <div>
 
-                        <p>
-                          {mascota.personalidad}
-                        </p>
+                          <strong>
+                            Personalidad
+                          </strong>
 
-                      </div>
+                          <span>
+                            {mascota.personalidad}
+                          </span>
 
-                    )
-                  }
+                        </div>
+
+                      )
+                    }
 
 
-                  <!-- Historial médico -->
-                  {
-                    mascota.historial_medico && (
+                    {
+                      mascota.historial_medico && (
 
-                      <div>
+                        <div>
 
-                        <strong>
-                          Historial médico
-                        </strong>
+                          <strong>
+                            Historial médico
+                          </strong>
 
-                        <p>
-                          {mascota.historial_medico}
-                        </p>
+                          <span>
+                            {mascota.historial_medico}
+                          </span>
 
-                      </div>
+                        </div>
 
-                    )
-                  }
+                      )
+                    }
+
+                  </div>
+
+
+                  <div class="management-pet-actions">
+
+                    <a
+                      href={`/mascotas/${mascota.id}`}
+                      class="btn-outline"
+                    >
+                      Ver publicación
+                    </a>
+
+                    <a
+                      href={`/gestion/mascotas/${mascota.id}/editar`}
+                      class="icon-button"
+                      aria-label={`Editar ${mascota.nombre}`}
+                    >
+                      <i class="fa-solid fa-pen"></i>
+                    </a>
+
+                  </div>
 
                 </div>
 

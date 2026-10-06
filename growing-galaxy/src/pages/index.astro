@@ -1,24 +1,224 @@
-  ---
-  import Layout from "../layouts/Layout.astro";
-  import Header from "../components/Header.astro";
-  import PostCard from "../components/PostCard.astro";
-  import Sidebar from "../components/Sidebar.astro";
-  import Footer from "../components/Footer.astro";
-  import MascotasDisponibles from "../components/MascotasDisponibles.astro";
-  ---
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import MascotasDisponibles from "../components/MascotasDisponibles.astro";
+---
 
-  <Layout
-    title="Kodapp"
-    description="Encuentra mascotas que buscan un hogar responsable en Kodapp."
-  >
-    <Header />
+<Layout
+  title="Kodapp | Adopta con confianza"
+  description="Encuentra mascotas que buscan un hogar responsable en Kodapp."
+>
 
-  
+  <Header />
 
-<MascotasDisponibles />
 
-    
-  
+  <main class="home-page">
 
-    <Footer />
-  </Layout>
+    <!-- ========================================= -->
+    <!-- HERO -->
+    <!-- ========================================= -->
+
+    <section class="hero-section">
+
+      <div class="hero-content">
+
+        <span class="hero-kicker">
+          Adopción responsable
+        </span>
+
+        <h1>
+          Encuentra a tu
+          <span>próximo compañero.</span>
+        </h1>
+
+        <p>
+          Conoce mascotas que buscan un hogar,
+          descubre cuáles pueden ser compatibles contigo
+          y comienza una nueva historia.
+        </p>
+
+
+        <div class="hero-actions">
+
+          <a
+            href="#mascotas"
+            class="btn-primary"
+          >
+            Explorar mascotas
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+
+          <a
+            href="/match"
+            class="btn-secondary"
+          >
+            Descubrir mi compatibilidad
+          </a>
+
+        </div>
+
+      </div>
+
+
+      <div class="hero-visual">
+
+        <div class="hero-glow hero-glow-one"></div>
+        <div class="hero-glow hero-glow-two"></div>
+
+        <div class="hero-paw hero-paw-one">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div class="hero-paw hero-paw-two">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div class="hero-visual-card">
+
+          <div class="hero-placeholder">
+            <i class="fa-solid fa-dog"></i>
+            <i class="fa-solid fa-cat"></i>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- BENEFICIOS -->
+    <!-- ========================================= -->
+
+    <section class="features-section">
+
+      <article class="feature-item">
+
+        <div class="feature-icon">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div>
+          <h3>
+            Perfiles detallados
+          </h3>
+
+          <p>
+            Conoce la personalidad,
+            historia y necesidades de cada mascota.
+          </p>
+        </div>
+
+      </article>
+
+
+      <article class="feature-item">
+
+        <div class="feature-icon">
+          <i class="fa-solid fa-heart-circle-check"></i>
+        </div>
+
+        <div>
+          <h3>
+            Compatibilidad inteligente
+          </h3>
+
+          <p>
+            Descubre qué mascotas pueden
+            encajar mejor con tu estilo de vida.
+          </p>
+        </div>
+
+      </article>
+
+
+      <article class="feature-item">
+
+        <div class="feature-icon">
+          <i class="fa-solid fa-clipboard-check"></i>
+        </div>
+
+        <div>
+          <h3>
+            Proceso organizado
+          </h3>
+
+          <p>
+            Mantén tus postulaciones y formularios
+            en un solo lugar.
+          </p>
+        </div>
+
+      </article>
+
+
+      <article class="feature-item">
+
+        <div class="feature-icon">
+          <i class="fa-solid fa-hand-holding-heart"></i>
+        </div>
+
+        <div>
+          <h3>
+            Apoyo a rescatistas
+          </h3>
+
+          <p>
+            Herramientas pensadas para facilitar
+            la gestión de adopciones.
+          </p>
+        </div>
+
+      </article>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- MASCOTAS -->
+    <!-- ========================================= -->
+
+    <MascotasDisponibles />
+
+
+    <!-- ========================================= -->
+    <!-- SOBRE NOSOTROS -->
+    <!-- ========================================= -->
+
+    <section
+      class="about-section"
+      id="sobre-nosotros"
+    >
+
+      <div class="about-content">
+
+        <span class="section-kicker">
+          Sobre Kodapp
+        </span>
+
+        <h2>
+          Una adopción empieza con una buena conexión.
+        </h2>
+
+        <p>
+          Kodapp busca facilitar el encuentro entre
+          personas que quieren adoptar y mascotas
+          que necesitan un hogar responsable.
+        </p>
+
+        <a
+          href="/match"
+          class="btn-primary"
+        >
+          Conocer compatibilidad
+          <i class="fa-solid fa-arrow-right"></i>
+        </a>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</Layout>

@@ -4,13 +4,17 @@ import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 import MascotasDisponibles from "../components/MascotasDisponibles.astro";
 
-const sessionId = Astro.cookies.get("session_id")?.value;
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
 
-const usuario = await getUsuarioDesdeSesion(sessionId);
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
+
 
 if (usuario.tipo_usuario !== "adoptante") {
   return Astro.redirect("/gestion");
@@ -19,45 +23,74 @@ if (usuario.tipo_usuario !== "adoptante") {
 
 <Layout
   title="Mi cuenta | Kodapp"
-  description="Panel del usuario de Kodapp"
+  description="Panel del adoptante de Kodapp."
 >
+
   <Header />
 
-  <main class="user-page">
 
-    <div class="user-container">
+  <main class="dashboard-page">
 
-      <!-- ========================= -->
-      <!-- PERFIL / BIENVENIDA -->
-      <!-- ========================= -->
+    <div class="dashboard-container">
 
-      <section class="welcome-card">
 
-        <div class="profile-photo-container">
+      <!-- ========================================= -->
+      <!-- CABECERA -->
+      <!-- ========================================= -->
 
-          <div class="profile-photo" id="profile-photo">
+      <section class="dashboard-welcome">
+
+        <div class="dashboard-welcome-content">
+
+          <span class="section-kicker">
+            Mi espacio
+          </span>
+
+          <h1>
+            Hola, {usuario.nombre}.
+          </h1>
+
+          <p>
+            Descubre mascotas, encuentra compatibilidades
+            y administra tus procesos de adopción.
+          </p>
+
+        </div>
+
+
+        <div class="dashboard-profile">
+
+          <div
+            class="dashboard-avatar"
+            id="profile-photo"
+          >
 
             {
               usuario.foto_perfil ? (
+
                 <img
                   src={usuario.foto_perfil}
                   alt="Foto de perfil"
                 />
+
               ) : (
-                <i class="fa-solid fa-paw"></i>
+
+                <i class="fa-solid fa-user"></i>
+
               )
             }
 
           </div>
 
+
           <label
             for="photo-input"
-            class="change-photo"
+            class="photo-change-button"
           >
             <i class="fa-solid fa-camera"></i>
-
             Cambiar foto
           </label>
+
 
           <input
             id="photo-input"
@@ -68,96 +101,78 @@ if (usuario.tipo_usuario !== "adoptante") {
 
         </div>
 
-
-        <div class="welcome-info">
-
-          <p class="small-title">
-            Bienvenido/a
-          </p>
-
-          <h1>
-            {usuario.nombre}
-          </h1>
-
-          <p class="subtitle">
-            Encuentra una mascota que pueda formar parte de tu familia.
-          </p>
-
-        </div>
-
       </section>
 
 
-      <!-- ========================= -->
-      <!-- OPCIONES -->
-      <!-- ========================= -->
+      <!-- ========================================= -->
+      <!-- ACCIONES -->
+      <!-- ========================================= -->
 
-      <section class="actions">
-
-        <!-- MATCH -->
+      <section class="dashboard-actions">
 
         <a
           href="/match"
-          class="action-card"
+          class="dashboard-action-card dashboard-action-primary"
         >
 
-          <div class="action-icon">
-            <i class="fa-solid fa-paw"></i>
+          <div class="dashboard-action-icon">
+            <i class="fa-solid fa-heart-circle-bolt"></i>
           </div>
 
           <div>
+            <span>Encuentra tu match</span>
 
             <h2>
-              Match
+              Compatibilidad
             </h2>
 
             <p>
-              Encuentra mascotas compatibles contigo.
+              Descubre qué mascotas pueden encajar mejor contigo.
             </p>
-
           </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
 
         </a>
 
 
-        <!-- PERFIL -->
-
         <a
           href="/perfil"
-          class="action-card"
+          class="dashboard-action-card"
         >
 
-          <div class="action-icon">
+          <div class="dashboard-action-icon">
             <i class="fa-solid fa-user"></i>
           </div>
 
           <div>
+            <span>Tu información</span>
 
             <h2>
               Mi perfil
             </h2>
 
             <p>
-              Revisa y administra la información de tu cuenta.
+              Revisa y administra tus datos personales.
             </p>
-
           </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
 
         </a>
 
 
-        <!-- FORMULARIOS -->
-
         <a
           href="/formularios"
-          class="action-card"
+          class="dashboard-action-card"
         >
 
-          <div class="action-icon">
+          <div class="dashboard-action-icon">
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
 
           <div>
+            <span>Tu proceso</span>
 
             <h2>
               Formularios respondidos
@@ -166,65 +181,20 @@ if (usuario.tipo_usuario !== "adoptante") {
             <p>
               Revisa los formularios que has completado.
             </p>
-
           </div>
 
-        </a>
-
-
-        <!-- CERRAR SESIÓN -->
-
-        <a
-          href="#"
-          id="logout-button"
-          class="action-card logout-card"
-        >
-
-          <div class="action-icon">
-            <i class="fa-solid fa-right-from-bracket"></i>
-          </div>
-
-          <div>
-
-            <h2>
-              Cerrar sesión
-            </h2>
-
-            <p>
-              Salir de tu cuenta de Kodapp.
-            </p>
-
-          </div>
+          <i class="fa-solid fa-arrow-right"></i>
 
         </a>
 
       </section>
 
 
-      <!-- ========================= -->
-      <!-- FUTURAS PUBLICACIONES -->
-      <!-- ========================= -->
+      <!-- ========================================= -->
+      <!-- MASCOTAS -->
+      <!-- ========================================= -->
 
-      <section class="publications-section">
-
-        <div class="publications-header">
-
-          <h2>
-            Mascotas disponibles
-          </h2>
-
-          <p>
-            Aquí aparecerán las mascotas disponibles para adopción.
-          </p>
-
-        </div>
-
-<MascotasDisponibles />
-
-        <div id="publications-container">
-        </div>
-
-      </section>
+      <MascotasDisponibles />
 
     </div>
 
@@ -234,7 +204,6 @@ if (usuario.tipo_usuario !== "adoptante") {
 
 
 <script>
-
   // =========================================
   // CAMBIAR FOTO DE PERFIL
   // =========================================
@@ -247,8 +216,9 @@ if (usuario.tipo_usuario !== "adoptante") {
 
   const profilePhoto =
     document.querySelector(
-      "#profile-photo"  
+      "#profile-photo"
     ) as HTMLDivElement | null;
+
 
   photoInput?.addEventListener(
     "change",
@@ -263,21 +233,22 @@ if (usuario.tipo_usuario !== "adoptante") {
       }
 
 
-      // Comprobar que sea una imagen
-
-      if (!file.type.startsWith("image/")) {
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
 
         alert(
           "El archivo debe ser una imagen."
         );
 
-        photoInput.value = "";
+        photoInput.value =
+          "";
 
         return;
       }
 
-
-      // Comprobar tamaño
 
       if (
         file.size >
@@ -288,16 +259,16 @@ if (usuario.tipo_usuario !== "adoptante") {
           "La imagen no puede superar los 5 MB."
         );
 
-        photoInput.value = "";
+        photoInput.value =
+          "";
 
         return;
       }
 
 
-      // Preparar formulario
-
       const formData =
         new FormData();
+
 
       formData.append(
         "foto",
@@ -339,8 +310,6 @@ if (usuario.tipo_usuario !== "adoptante") {
         }
 
 
-        // Mostrar la foto guardada
-
         profilePhoto.innerHTML =
           "";
 
@@ -354,7 +323,6 @@ if (usuario.tipo_usuario !== "adoptante") {
         image.src =
           data.foto;
 
-
         image.alt =
           "Foto de perfil";
 
@@ -367,7 +335,7 @@ if (usuario.tipo_usuario !== "adoptante") {
       } catch (error) {
 
         console.error(
-          "Error:",
+          "Error al guardar foto:",
           error
         );
 
@@ -386,67 +354,4 @@ if (usuario.tipo_usuario !== "adoptante") {
 
     }
   );
-
-
-
-  const logoutButton =
-    document.querySelector(
-      "#logout-button"
-    );
-
-
-  logoutButton?.addEventListener(
-    "click",
-    async (event) => {
-
-      event.preventDefault();
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/logout",
-            {
-              method: "POST",
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (data.ok) {
-
-          window.location.href =
-            "/login";
-
-          return;
-        }
-
-
-        alert(
-          data.mensaje ||
-          "No se pudo cerrar la sesión."
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Error:",
-          error
-        );
-
-
-        alert(
-          "No se pudo cerrar la sesión."
-        );
-
-      }
-
-    }
-  );
-
 </script>

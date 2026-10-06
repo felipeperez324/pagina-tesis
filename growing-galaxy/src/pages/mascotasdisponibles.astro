@@ -1,0 +1,207 @@
+<!-- src/components/MascotasDisponibles.astro -->
+---
+import { db } from "../lib/db";
+
+const resultado =
+  await db.query(`
+    SELECT
+      id,
+      nombre,
+      descripcion,
+      personalidad,
+      historial_medico,
+      tipo_mascota,
+      foto,
+      estado_adopcion
+    FROM mascotas
+    WHERE estado_adopcion = 'disponible'
+    ORDER BY id DESC
+  `);
+
+const mascotas =
+  resultado.rows;
+---
+
+<section
+  class="pets-section"
+  id="mascotas"
+>
+
+  <div class="pets-section-header">
+
+    <div>
+      <span class="section-kicker">
+        Adopción responsable
+      </span>
+
+      <h2>
+        Conoce a nuestros compañeros
+      </h2>
+
+      <p>
+        Estas mascotas están esperando encontrar
+        un hogar donde puedan sentirse parte de una familia.
+      </p>
+    </div>
+
+    <span class="pets-count">
+      {mascotas.length} disponibles
+    </span>
+
+  </div>
+
+
+  {
+    mascotas.length === 0 ? (
+
+      <div class="pets-empty">
+
+        <div class="pets-empty-icon">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <h3>
+          No hay mascotas disponibles
+        </h3>
+
+        <p>
+          Por ahora no existen mascotas publicadas
+          para adopción.
+        </p>
+
+      </div>
+
+    ) : (
+
+      <div class="pets-grid">
+
+        {mascotas.map((mascota) => (
+
+          <article class="pet-card">
+
+            <div class="pet-card-image">
+
+              {
+                mascota.foto ? (
+
+                  <img
+                    src={mascota.foto}
+                    alt={`Foto de ${mascota.nombre}`}
+                    loading="lazy"
+                  />
+
+                ) : (
+
+                  <div class="pet-card-placeholder">
+                    <i class="fa-solid fa-paw"></i>
+                  </div>
+
+                )
+              }
+
+
+              <span class="pet-status">
+                <i class="fa-solid fa-heart"></i>
+                Disponible
+              </span>
+
+            </div>
+
+
+            <div class="pet-card-content">
+
+              <div class="pet-card-meta">
+
+                <span>
+                  {
+                    mascota.tipo_mascota === "perro"
+                      ? "Perro"
+                      : mascota.tipo_mascota === "gato"
+                        ? "Gato"
+                        : "Otro"
+                  }
+                </span>
+
+              </div>
+
+
+              <h3>
+                {mascota.nombre}
+              </h3>
+
+
+              {
+                mascota.descripcion && (
+
+                  <p class="pet-description">
+                    {mascota.descripcion}
+                  </p>
+
+                )
+              }
+
+
+              <div class="pet-details">
+
+                {
+                  mascota.personalidad && (
+
+                    <div class="pet-detail">
+
+                      <i class="fa-solid fa-face-smile"></i>
+
+                      <div>
+                        <strong>Personalidad</strong>
+                        <span>
+                          {mascota.personalidad}
+                        </span>
+                      </div>
+
+                    </div>
+
+                  )
+                }
+
+
+                {
+                  mascota.historial_medico && (
+
+                    <div class="pet-detail">
+
+                      <i class="fa-solid fa-heart-pulse"></i>
+
+                      <div>
+                        <strong>Salud</strong>
+                        <span>
+                          {mascota.historial_medico}
+                        </span>
+                      </div>
+
+                    </div>
+
+                  )
+                }
+
+              </div>
+
+
+              <a
+                href={`/mascotas/${mascota.id}`}
+                class="pet-card-button"
+              >
+                Ver perfil
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+
+            </div>
+
+          </article>
+
+        ))}
+
+      </div>
+
+    )
+  }
+
+</section>

@@ -3,12 +3,17 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId = Astro.cookies.get("session_id")?.value;
-const usuario = await getUsuarioDesdeSesion(sessionId);
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
+
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
+
 
 if (
   usuario.tipo_usuario !== "rescatista" &&
@@ -19,118 +24,210 @@ if (
 ---
 
 <Layout
-  title="Gestión | Kodapp"
-  description="Panel de gestión de Kodapp"
+  title="Panel de gestión | Kodapp"
+  description="Panel de gestión para rescatistas y veterinarios."
 >
+
   <Header />
 
-  <main class="gestion-page">
-    <div class="gestion-container">
 
-      <section class="welcome-card">
-        <div class="icon">
-          <i class="fa-solid fa-paw"></i>
-        </div>
+  <main class="dashboard-page">
 
-        <div>
-          <p class="small-title">
+    <div class="dashboard-container">
+
+
+      <!-- ========================================= -->
+      <!-- CABECERA -->
+      <!-- ========================================= -->
+
+      <section class="dashboard-welcome management-welcome">
+
+        <div class="dashboard-welcome-content">
+
+          <span class="section-kicker">
             Panel de gestión
+          </span>
+
+          <h1>
+            Hola, {usuario.nombre}.
+          </h1>
+
+          <p>
+            Administra tus mascotas y organiza
+            el proceso de adopción.
           </p>
 
-          <h1>{usuario.nombre}</h1>
-
-          <p class="subtitle">
-            Cuenta de {
-              usuario.tipo_usuario === "rescatista"
-                ? "rescatista"
-                : "veterinario"
-            }
-          </p>
         </div>
-      </section>
 
-      <section class="actions">
 
-        <a href="/gestion/mascotas" class="action-card">
-          <div class="action-icon">
-            <i class="fa-solid fa-dog"></i>
-          </div>
+        <div class="management-role">
+
+          <i class="fa-solid fa-shield-heart"></i>
 
           <div>
-            <h2>Mis mascotas</h2>
-            <p>
-              Administra las mascotas que has registrado.
-            </p>
-          </div>
-        </a>
 
-        <a href="/gestion/crear-mascota" class="action-card">
-          <div class="action-icon">
+            <span>
+              Tipo de cuenta
+            </span>
+
+            <strong>
+              {
+                usuario.tipo_usuario === "rescatista"
+                  ? "Rescatista"
+                  : "Veterinario"
+              }
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ========================================= -->
+      <!-- ACCIONES -->
+      <!-- ========================================= -->
+
+      <section class="management-grid">
+
+        <a
+          href="/gestion/crear-mascota"
+          class="management-card management-card-primary"
+        >
+
+          <div class="management-card-icon">
             <i class="fa-solid fa-plus"></i>
           </div>
 
           <div>
-            <h2>Publicar mascota</h2>
+            <span>Adopción</span>
+
+            <h2>
+              Publicar mascota
+            </h2>
+
             <p>
-              Registra una nueva mascota para adopción.
+              Registra una mascota y ponla disponible
+              para encontrar un hogar.
             </p>
           </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
+
         </a>
 
-        <a href="/perfil" class="action-card">
-          <div class="action-icon">
+
+        <a
+          href="/gestion/mascotas"
+          class="management-card"
+        >
+
+          <div class="management-card-icon">
+            <i class="fa-solid fa-paw"></i>
+          </div>
+
+          <div>
+            <span>Administración</span>
+
+            <h2>
+              Mis mascotas
+            </h2>
+
+            <p>
+              Revisa las mascotas que has publicado
+              y su estado actual.
+            </p>
+          </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
+
+        </a>
+
+
+        <a
+          href="/perfil"
+          class="management-card"
+        >
+
+          <div class="management-card-icon">
             <i class="fa-solid fa-user"></i>
           </div>
 
           <div>
-            <h2>Mi perfil</h2>
+            <span>Cuenta</span>
+
+            <h2>
+              Mi perfil
+            </h2>
+
             <p>
               Administra la información de tu cuenta.
             </p>
           </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
+
         </a>
 
-        <a href="#" id="logout-button" class="action-card">
-          <div class="action-icon">
-            <i class="fa-solid fa-right-from-bracket"></i>
+
+        <a
+          href="/formularios"
+          class="management-card"
+        >
+
+          <div class="management-card-icon">
+            <i class="fa-solid fa-clipboard-list"></i>
           </div>
 
           <div>
-            <h2>Cerrar sesión</h2>
+            <span>Postulaciones</span>
+
+            <h2>
+              Formularios respondidos
+            </h2>
+
             <p>
-              Salir de tu cuenta de Kodapp.
+              Revisa los formularios completados
+              por los adoptantes.
             </p>
           </div>
+
+          <i class="fa-solid fa-arrow-right"></i>
+
         </a>
 
       </section>
 
+
+      <!-- ========================================= -->
+      <!-- AVISO -->
+      <!-- ========================================= -->
+
+      <section class="dashboard-note">
+
+        <div class="dashboard-note-icon">
+          <i class="fa-solid fa-heart"></i>
+        </div>
+
+        <div>
+
+          <h3>
+            Una buena publicación hace la diferencia.
+          </h3>
+
+          <p>
+            Agrega información clara y completa
+            para que los adoptantes puedan conocer
+            mejor a cada mascota.
+          </p>
+
+        </div>
+
+      </section>
+
     </div>
+
   </main>
+
 </Layout>
-
-<script>
-  const logoutButton = document.querySelector("#logout-button");
-
-  logoutButton?.addEventListener("click", async (event) => {
-    event.preventDefault();
-
-    try {
-      const response = await fetch("/api/logout", {
-        method: "POST",
-      });
-
-      const data = await response.json();
-
-      if (data.ok) {
-        window.location.href = "/login";
-      } else {
-        alert(data.mensaje);
-      }
-    } catch (error) {
-      console.error(error);
-      alert("No se pudo cerrar la sesión.");
-    }
-  });
-</script>
-

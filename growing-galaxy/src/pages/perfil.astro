@@ -1,421 +1,207 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
+import { getUsuarioDesdeSesion } from "../lib/auth";
+
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
+
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
 ---
 
 <Layout
   title="Mi perfil | Kodapp"
-  description="Perfil de usuario de Kodapp"
+  description="Configuración del perfil de usuario."
 >
+
   <Header />
+
 
   <main class="profile-page">
 
     <div class="profile-container">
 
-      <!-- PERFIL IZQUIERDO -->
-      <section class="profile-card">
 
-        <div class="profile-icon">
-          <i class="fa-solid fa-paw"></i>
-        </div>
+      <!-- ========================================= -->
+      <!-- CABECERA -->
+      <!-- ========================================= -->
 
-        <h1>Mi perfil</h1>
+      <div class="page-header">
 
-        <p class="profile-subtitle">
-          Información de tu cuenta
+        <a
+          href={
+            usuario.tipo_usuario === "adoptante"
+              ? "/usuario"
+              : "/gestion"
+          }
+          class="back-link"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver
+        </a>
+
+        <span class="section-kicker">
+          Cuenta
+        </span>
+
+        <h1>
+          Mi perfil
+        </h1>
+
+        <p>
+          Consulta la información asociada a tu cuenta.
         </p>
 
-        <div class="profile-info">
+      </div>
 
-          <div class="info-item">
-            <span>Nombre</span>
-            <strong>Nombre del usuario</strong>
+
+      <!-- ========================================= -->
+      <!-- PERFIL -->
+      <!-- ========================================= -->
+
+      <section class="profile-layout">
+
+
+        <article class="profile-summary">
+
+          <div class="profile-summary-avatar">
+
+            {
+              usuario.foto_perfil ? (
+
+                <img
+                  src={usuario.foto_perfil}
+                  alt="Foto de perfil"
+                />
+
+              ) : (
+
+                <i class="fa-solid fa-user"></i>
+
+              )
+            }
+
           </div>
 
-          <div class="info-item">
-            <span>Correo electrónico</span>
-            <strong>correo@ejemplo.com</strong>
-          </div>
 
-          <div class="info-item">
-            <span>RUT</span>
-            <strong>12.345.678-9</strong>
-          </div>
-
-          <div class="info-item">
-            <span>Tipo de usuario</span>
-            <strong class="user-type">
-              Adoptante
-            </strong>
-          </div>
-
-        </div>
-
-      </section>
-
-
-      <!-- OPCIONES DERECHA -->
-      <section class="profile-settings">
-
-        <div class="settings-header">
-
-          <h2>Configuración de perfil</h2>
+          <h2>
+            {usuario.nombre}
+          </h2>
 
           <p>
-            Administra la información de tu cuenta.
+            {
+              usuario.tipo_usuario === "adoptante"
+                ? "Adoptante"
+                : usuario.tipo_usuario === "rescatista"
+                  ? "Rescatista"
+                  : "Veterinario"
+            }
           </p>
 
-        </div>
+        </article>
 
 
-        <div class="settings-option">
+        <article class="profile-details">
 
-          <div>
-            <h3>Información personal</h3>
+          <div class="profile-details-header">
 
-            <p>
-              Modifica tu nombre, correo electrónico o RUT.
-            </p>
+            <span class="section-kicker">
+              Información personal
+            </span>
+
+            <h2>
+              Datos de tu cuenta
+            </h2>
+
           </div>
 
-          <button type="button">
-            Editar
-          </button>
 
-        </div>
+          <div class="profile-data-grid">
+
+            <div class="profile-data-item">
+
+              <span>
+                Nombre completo
+              </span>
+
+              <strong>
+                {usuario.nombre}
+              </strong>
+
+            </div>
 
 
-        <div class="settings-option">
+            <div class="profile-data-item">
 
-          <div>
-            <h3>Contraseña</h3>
+              <span>
+                Correo electrónico
+              </span>
 
-            <p>
-              Cambia la contraseña de tu cuenta.
-            </p>
+              <strong>
+                {usuario.correo}
+              </strong>
+
+            </div>
+
+
+            <div class="profile-data-item">
+
+              <span>
+                RUT
+              </span>
+
+              <strong>
+                {usuario.rut}
+              </strong>
+
+            </div>
+
+
+            <div class="profile-data-item">
+
+              <span>
+                Tipo de usuario
+              </span>
+
+              <strong>
+                {
+                  usuario.tipo_usuario === "adoptante"
+                    ? "Adoptante"
+                    : usuario.tipo_usuario === "rescatista"
+                      ? "Rescatista"
+                      : "Veterinario"
+                }
+              </strong>
+
+            </div>
+
+
+            <div class="profile-data-item">
+
+              <span>
+                Estado de cuenta
+              </span>
+
+              <strong>
+                {usuario.estado_cuenta}
+              </strong>
+
+            </div>
+
           </div>
 
-          <button type="button">
-            Cambiar
-          </button>
-
-        </div>
-
-
-        <div class="settings-option">
-
-          <div>
-            <h3>Tipo de usuario</h3>
-
-            <p>
-              Tipo de cuenta asociada a tu perfil.
-            </p>
-          </div>
-
-          <span class="current-type">
-            Adoptante
-          </span>
-
-        </div>
-
-
-        <div class="settings-option danger">
-
-          <div>
-            <h3>Cerrar sesión</h3>
-
-            <p>
-              Salir de tu cuenta actual.
-            </p>
-          </div>
-
-          <button type="button">
-            Salir
-          </button>
-
-        </div>
+        </article>
 
       </section>
 
     </div>
 
   </main>
+
 </Layout>
-
-
-<style>
-
-  .profile-page {
-    min-height: calc(100vh - 70px);
-    padding: 60px 20px;
-  }
-
-
-  .profile-container {
-    width: min(1100px, 100%);
-    margin: 0 auto;
-
-    display: grid;
-    grid-template-columns: 0.85fr 1.15fr;
-
-    gap: 30px;
-    align-items: start;
-  }
-
-
-  /* PERFIL */
-
-  .profile-card {
-    background: var(--white);
-    border-radius: 30px;
-    padding: 35px;
-
-    box-shadow:
-      0 10px 30px rgba(255, 148, 194, 0.15);
-
-    text-align: center;
-  }
-
-
-  .profile-icon {
-    width: 90px;
-    height: 90px;
-
-    margin: 0 auto 20px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: var(--pink-light);
-    color: var(--pink);
-
-    font-size: 35px;
-  }
-
-
-  .profile-card h1 {
-    margin: 0;
-
-    color: var(--pink);
-
-    font-size: 28px;
-    font-weight: 700;
-  }
-
-
-  .profile-subtitle {
-    margin: 5px 0 30px;
-
-    color: var(--muted);
-  }
-
-
-  .profile-info {
-    text-align: left;
-
-    border-top: 1px solid var(--border);
-  }
-
-
-  .info-item {
-    padding: 18px 0;
-
-    border-bottom: 1px solid var(--border);
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 4px;
-  }
-
-
-  .info-item span {
-    color: var(--muted);
-
-    font-size: 12px;
-
-    font-weight: 600;
-
-    text-transform: uppercase;
-  }
-
-
-  .info-item strong {
-    color: var(--text);
-
-    font-size: 15px;
-  }
-
-
-  .user-type {
-    color: var(--pink) !important;
-  }
-
-
-  /* CONFIGURACIÓN */
-
-  .profile-settings {
-    background: var(--white);
-
-    border-radius: 30px;
-
-    padding: 35px;
-
-    box-shadow:
-      0 10px 30px rgba(255, 148, 194, 0.15);
-  }
-
-
-  .settings-header {
-    margin-bottom: 25px;
-  }
-
-
-  .settings-header h2 {
-    margin: 0 0 6px;
-
-    color: var(--text);
-
-    font-size: 22px;
-  }
-
-
-  .settings-header p {
-    margin: 0;
-
-    color: var(--muted);
-  }
-
-
-  .settings-option {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    padding: 22px 0;
-
-    border-bottom: 1px solid var(--border);
-  }
-
-
-  .settings-option h3 {
-    margin: 0 0 5px;
-
-    color: var(--text);
-
-    font-size: 15px;
-  }
-
-
-  .settings-option p {
-    margin: 0;
-
-    color: var(--muted);
-
-    font-size: 13px;
-  }
-
-
-  .settings-option button {
-    flex-shrink: 0;
-
-    padding: 9px 18px;
-
-    border: none;
-
-    border-radius: 999px;
-
-    background: var(--pink);
-
-    color: white;
-
-    font-size: 13px;
-
-    font-weight: 700;
-
-    cursor: pointer;
-
-    transition:
-      transform 0.2s ease,
-      background 0.2s ease;
-  }
-
-
-  .settings-option button:hover {
-    background: #e878aa;
-
-    transform: translateY(-2px);
-  }
-
-
-  .current-type {
-    flex-shrink: 0;
-
-    padding: 7px 14px;
-
-    border-radius: 999px;
-
-    background: var(--pink-light);
-
-    color: var(--pink);
-
-    font-size: 12px;
-
-    font-weight: 700;
-  }
-
-
-  .settings-option.danger {
-    border-bottom: none;
-  }
-
-
-  .settings-option.danger button {
-    background: #f3a0bd;
-  }
-
-
-  @media (max-width: 800px) {
-
-    .profile-container {
-      grid-template-columns: 1fr;
-    }
-
-    .profile-page {
-      padding: 35px 15px;
-    }
-
-  }
-
-
-  @media (max-width: 500px) {
-
-    .profile-card,
-    .profile-settings {
-      padding: 25px 20px;
-      border-radius: 22px;
-    }
-
-
-    .settings-option {
-      align-items: flex-start;
-
-      flex-direction: column;
-    }
-
-
-    .settings-option button,
-    .current-type {
-      align-self: flex-start;
-    }
-
-  }
-
-</style>

@@ -2,68 +2,51 @@
 import logo from "../assets/logo.png";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId = Astro.cookies.get("session_id")?.value;
-const usuario = await getUsuarioDesdeSesion(sessionId);
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
 
-const menu = [
-  {
-    label: "inicio",
-    href: "/"
-  },
-  {
-    label: "tipo de mascotas",
-    href: "#",
-    children: [
-      {
-        label: "gatos",
-        href: "https://Kodappstore.blogspot.com/search/label/gatos"
-      },
-      {
-        label: "perros",
-        href: "https://Kodappstore.blogspot.com/search/label/perros"
-      },
-      {
-        label: "otros",
-        href: "https://Kodappstore.blogspot.com/search/label/otros"
-      }
-    ]
-  },
-];
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
+const pathname =
+  Astro.url.pathname;
 
 let homeUrl = "/";
 
 if (usuario) {
-  if (usuario.tipo_usuario === "adoptante") {
-    homeUrl = "/usuario";
-  } else {
-    homeUrl = "/gestion";
-  }
+  homeUrl =
+    usuario.tipo_usuario === "adoptante"
+      ? "/usuario"
+      : "/gestion";
 }
 ---
 
-<header class="site-header" id="header-wrap">
+<header class="site-header">
 
-  <div class="header-inner container">
+  <div class="header-inner">
 
     <!-- LOGO -->
 
     <a
-      class="brand"
       href={homeUrl}
-      aria-label="Kodapp"
+      class="brand"
+      aria-label="Ir al inicio de Kodapp"
     >
       <img
         src={logo.src}
         alt="Kodapp"
       />
+
+      <span>Kodapp</span>
     </a>
 
 
     <!-- MENÚ MOBILE -->
 
     <button
-      class="mobile-toggle"
       type="button"
+      class="mobile-toggle"
+      id="mobile-toggle"
       aria-label="Abrir menú"
       aria-expanded="false"
     >
@@ -71,108 +54,145 @@ if (usuario) {
     </button>
 
 
-    <!-- MENÚ -->
+    <!-- NAVEGACIÓN -->
 
     <nav
       class="main-nav"
+      id="main-nav"
       aria-label="Navegación principal"
     >
 
-      <ul>
+      <a
+        href={usuario ? homeUrl : "/"}
+        class:list={{
+          "is-active":
+            pathname === "/" ||
+            pathname === "/usuario" ||
+            pathname === "/gestion"
+        }}
+      >
+        Inicio
+      </a>
 
-        {
-          menu.map((item) => (
-            <li
-              class:list={{
-                "has-submenu":
-                  item.children?.length
-              }}
-            >
+      <a
+        href="/#mascotas"
+        class:list={{
+          "is-active":
+            pathname === "/mascotas"
+        }}
+      >
+        Mascotas
+      </a>
 
-              <a href={item.href}>
+      <a
+        href="/match"
+        class:list={{
+          "is-active":
+            pathname.startsWith("/match")
+        }}
+      >
+        Compatibilidad
+      </a>
 
-                {item.label}
-
-                {
-                  item.children?.length && (
-                    <span class="chevron">
-                      ⌄
-                    </span>
-                  )
-                }
-
-              </a>
-
-
-              {
-                item.children?.length && (
-
-                  <ul class="submenu">
-
-                    {
-                      item.children.map(
-                        (child) => (
-
-                          <li>
-
-                            <a href={child.href}>
-                              {child.label}
-                            </a>
-
-                          </li>
-
-                        )
-                      )
-                    }
-
-                  </ul>
-
-                )
-              }
-
-            </li>
-          ))
-        }
-
-      </ul>
+      <a href="/#sobre-nosotros">
+        Sobre nosotros
+      </a>
 
     </nav>
 
 
-    <!-- BOTÓN DE CUENTA -->
+    <!-- CUENTA -->
 
-    <div class="search-shell">
+    <div class="header-account">
 
       {
         usuario ? (
 
-          <button
-            type="button"
-            id="header-logout"
-            class="btn-login"
-          >
+          <div class="account-menu">
 
-            <i class="fa-solid fa-right-from-bracket"></i>
+            <button
+              type="button"
+              class="account-trigger"
+              id="account-trigger"
+              aria-expanded="false"
+            >
 
-            <span>
-              Cerrar sesión
-            </span>
+              <span class="account-avatar">
+                {
+                  usuario.foto_perfil ? (
+                    <img
+                      src={usuario.foto_perfil}
+                      alt="Foto de perfil"
+                    />
+                  ) : (
+                    <i class="fa-solid fa-user"></i>
+                  )
+                }
+              </span>
 
-          </button>
+              <span class="account-name">
+                {usuario.nombre}
+              </span>
+
+              <i class="fa-solid fa-chevron-down"></i>
+
+            </button>
+
+
+            <div
+              class="account-dropdown"
+              id="account-dropdown"
+            >
+
+              <div class="account-dropdown-header">
+
+                <strong>
+                  {usuario.nombre}
+                </strong>
+
+                <span>
+                  {
+                    usuario.tipo_usuario === "adoptante"
+                      ? "Adoptante"
+                      : usuario.tipo_usuario === "rescatista"
+                        ? "Rescatista"
+                        : "Veterinario"
+                  }
+                </span>
+
+              </div>
+
+
+              <a href={homeUrl}>
+                <i class="fa-solid fa-house"></i>
+                Mi cuenta
+              </a>
+
+              <a href="/perfil">
+                <i class="fa-solid fa-user"></i>
+                Mi perfil
+              </a>
+
+              <button
+                type="button"
+                id="header-logout"
+              >
+                <i class="fa-solid fa-right-from-bracket"></i>
+                Cerrar sesión
+              </button>
+
+            </div>
+
+          </div>
 
         ) : (
 
           <a
             href="/login"
-            class="btn-login"
+            class="header-login"
           >
-
             <i class="fa-solid fa-user"></i>
-
-            <span>
-              Iniciar sesión
-            </span>
-
+            <span>Iniciar sesión</span>
           </a>
 
         )
@@ -186,34 +206,66 @@ if (usuario) {
 
 
 <script>
-
   // =========================================
   // MENÚ MOBILE
   // =========================================
 
-  const toggle =
+  const mobileToggle =
     document.querySelector(
-      ".mobile-toggle"
-    );
+      "#mobile-toggle"
+    ) as HTMLButtonElement | null;
 
-  const nav =
+  const mainNav =
     document.querySelector(
-      ".main-nav"
-    );
+      "#main-nav"
+    ) as HTMLElement | null;
 
 
-  toggle?.addEventListener(
+  mobileToggle?.addEventListener(
     "click",
     () => {
 
-      const open =
-        nav?.classList.toggle(
+      const isOpen =
+        mainNav?.classList.toggle(
           "is-open"
         ) ?? false;
 
-      toggle?.setAttribute(
+      mobileToggle.setAttribute(
         "aria-expanded",
-        String(open)
+        String(isOpen)
+      );
+
+    }
+  );
+
+
+  // =========================================
+  // MENÚ DE CUENTA
+  // =========================================
+
+  const accountTrigger =
+    document.querySelector(
+      "#account-trigger"
+    ) as HTMLButtonElement | null;
+
+  const accountDropdown =
+    document.querySelector(
+      "#account-dropdown"
+    ) as HTMLElement | null;
+
+
+  accountTrigger?.addEventListener(
+    "click",
+    () => {
+
+      const isOpen =
+        accountDropdown?.classList.toggle(
+          "is-open"
+        ) ?? false;
+
+      accountTrigger.setAttribute(
+        "aria-expanded",
+        String(isOpen)
       );
 
     }
@@ -227,7 +279,7 @@ if (usuario) {
   const logoutButton =
     document.querySelector(
       "#header-logout"
-    );
+    ) as HTMLButtonElement | null;
 
 
   logoutButton?.addEventListener(
@@ -250,11 +302,6 @@ if (usuario) {
 
 
         if (data.ok) {
-
-          /*
-           * Después de cerrar sesión,
-           * volvemos al inicio público.
-           */
 
           window.location.href =
             "/";
@@ -284,5 +331,4 @@ if (usuario) {
 
     }
   );
-
 </script>
