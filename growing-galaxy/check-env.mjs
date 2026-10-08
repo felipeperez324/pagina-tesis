@@ -1,3 +1,4 @@
+// esto es para conectar con la base de datos de forma local
 import "dotenv/config";
 
 console.log("DB_HOST:", process.env.DB_HOST);
