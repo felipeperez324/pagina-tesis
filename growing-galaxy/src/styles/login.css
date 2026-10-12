@@ -413,3 +413,135 @@
   font-family: "Oxanium", sans-serif;
   font-weight: 700;
 }
+
+
+
+/* =========================================
+   KODAPP - VERIFICACIÓN DE CORREO
+   ========================================= */
+
+.ka-verification {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+
+  padding: 20px;
+
+  background: rgba(78, 190, 150, 0.045);
+  border: 1px solid rgba(78, 190, 150, 0.24);
+  border-radius: 13px;
+}
+
+/* Encabezado */
+.ka-verification__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  color: #4ebe96;
+  font-size: 14px;
+}
+
+.ka-verification__title i {
+  font-size: 19px;
+}
+
+.ka-verification > p:not(.ka-verification__message) {
+  margin: 0;
+  color: #aeb7c0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Botón pequeño para enviar el código */
+.ka-verify-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 16px;
+
+  background: rgba(255, 107, 74, 0.09);
+  color: #ff9277;
+
+  border: 1px solid #ff6b4a;
+  border-radius: 9px;
+
+  font-family: "Oxanium", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.25s,
+    box-shadow 0.25s,
+    transform 0.25s;
+}
+
+.ka-verify-button:hover:not(:disabled) {
+  background: rgba(255, 107, 74, 0.2);
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 0 8px rgba(255, 107, 74, 0.3),
+    0 0 18px rgba(255, 107, 74, 0.15);
+}
+
+/* Botón confirmar en verde menta */
+.ka-verify-button--confirm {
+  color: #4ebe96;
+  background: rgba(78, 190, 150, 0.09);
+  border-color: #4ebe96;
+}
+
+.ka-verify-button--confirm:hover:not(:disabled) {
+  background: rgba(78, 190, 150, 0.18);
+
+  box-shadow:
+    0 0 8px rgba(78, 190, 150, 0.3),
+    0 0 18px rgba(78, 190, 150, 0.15);
+}
+
+.ka-verify-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Campo del código */
+.ka-verification__input {
+  margin-top: 4px;
+}
+
+.ka-verification__input input {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 5px;
+}
+
+.ka-verification__input input:disabled {
+  opacity: 0.55;
+}
+
+/* Mensajes */
+.ka-verification__message {
+  min-height: 20px;
+  margin: 0;
+
+  color: #aeb7c0;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.ka-verification__message[data-status="success"] {
+  color: #4ebe96;
+}
+
+.ka-verification__message[data-status="error"] {
+  color: #ff9384;
+}

@@ -7,17 +7,17 @@ import "../styles/login.css";
 
 <Layout
   title="Crear cuenta | KodApp"
-  description="Regístrate en KodApp."
+  description="Regístrate en KodApp con verificación de correo."
 >
   <main class="ka-auth">
     <div class="ka-auth__layout">
 
-      <!-- IZQUIERDA: MASCOTAS ANIMADAS -->
+      <!-- MASCOTAS ANIMADAS -->
       <div class="ka-auth__visual">
         <MascotasAuth />
       </div>
 
-      <!-- DERECHA: REGISTRO -->
+      <!-- FORMULARIO -->
       <section class="ka-auth__card">
 
         <a href="/" class="ka-auth__brand">
@@ -29,6 +29,7 @@ import "../styles/login.css";
 
         <p class="ka-auth__description">
           Crea tu cuenta y comienza una nueva historia.
+          Primero verificaremos tu correo electrónico.
         </p>
 
         <form id="registro-form" class="ka-form">
@@ -58,12 +59,16 @@ import "../styles/login.css";
               required
             />
             <label for="rut">RUT</label>
+
             <small class="ka-field__hint">
               Ejemplo: 12.345.678-9
             </small>
           </div>
 
-          <!-- CORREO -->
+          <!-- ================================= -->
+          <!-- CORREO ELECTRÓNICO -->
+          <!-- ================================= -->
+
           <div class="ka-field">
             <input
               id="email"
@@ -74,12 +79,83 @@ import "../styles/login.css";
               autocomplete="email"
               required
             />
-            <label for="email">Correo electrónico</label>
+
+            <label for="email">
+              Correo electrónico
+            </label>
           </div>
 
+          <!-- VERIFICACIÓN DE CORREO -->
+          <div class="ka-verification">
+
+            <div class="ka-verification__title">
+              <i class="fa-solid fa-shield-halved"></i>
+              <strong>Verificación de correo</strong>
+            </div>
+
+            <p>
+              Enviaremos un código de seguridad
+              de 6 dígitos a tu correo.
+            </p>
+
+            <!-- ENVIAR / REENVIAR CÓDIGO -->
+            <button
+              type="button"
+              id="send-code"
+              class="ka-verify-button"
+            >
+              <i class="fa-solid fa-envelope"></i>
+              Enviar código
+            </button>
+
+            <!-- CAMPO PARA INTRODUCIR CÓDIGO -->
+            <div class="ka-field ka-verification__input">
+              <input
+                id="verification-code"
+                name="codigo"
+                type="text"
+                placeholder=" "
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="6"
+                disabled
+              />
+
+              <label for="verification-code">
+                Código de seguridad
+              </label>
+            </div>
+
+            <!-- CONFIRMAR CÓDIGO -->
+            <button
+              type="button"
+              id="verify-code"
+              class="ka-verify-button ka-verify-button--confirm"
+              disabled
+            >
+              <i class="fa-solid fa-check-circle"></i>
+              Verificar código
+            </button>
+
+            <!-- MENSAJES -->
+            <p
+              id="verification-message"
+              class="ka-verification__message"
+              role="status"
+              aria-live="polite"
+            >
+              Tu correo todavía no está verificado.
+            </p>
+
+          </div>
+
+          <!-- ================================= -->
           <!-- TIPO DE CUENTA -->
+          <!-- ================================= -->
+
           <div class="ka-field ka-field--select">
             <label for="role">Tipo de cuenta</label>
+
             <select
               id="role"
               name="tipoUsuario"
@@ -103,8 +179,10 @@ import "../styles/login.css";
               autocomplete="new-password"
               required
             />
+
             <label for="password">Contraseña</label>
 
+            <!-- Mostrar contraseña -->
             <button
               type="button"
               class="ka-password-toggle"
@@ -116,8 +194,16 @@ import "../styles/login.css";
             </button>
           </div>
 
-          <!-- BOTÓN ANIMADO -->
-          <button type="submit" class="ka-submit" id="register-submit">
+          <!-- ================================= -->
+          <!-- CREAR CUENTA -->
+          <!-- ================================= -->
+
+          <button
+            type="submit"
+            class="ka-submit"
+            id="register-submit"
+            disabled
+          >
             <span></span>
             <span></span>
             <span></span>
@@ -153,66 +239,363 @@ import "../styles/login.css";
 
 <script>
   // =========================================
-  // CONEXIÓN CON LA API DE REGISTRO
+  // ELEMENTOS DEL FORMULARIO
   // =========================================
 
-  const form = document.querySelector<HTMLFormElement>("#registro-form");
-  const message = document.querySelector<HTMLElement>("#registro-message");
-  const submit = document.querySelector<HTMLButtonElement>("#register-submit");
+  const form =
+    document.querySelector<HTMLFormElement>("#registro-form");
+
+  const name =
+    document.querySelector<HTMLInputElement>("#name");
+
+  const rut =
+    document.querySelector<HTMLInputElement>("#rut");
+
+  const email =
+    document.querySelector<HTMLInputElement>("#email");
+
+  const role =
+    document.querySelector<HTMLSelectElement>("#role");
+
+  const password =
+    document.querySelector<HTMLInputElement>("#password");
+
+  const sendButton =
+    document.querySelector<HTMLButtonElement>("#send-code");
+
+  const verifyButton =
+    document.querySelector<HTMLButtonElement>("#verify-code");
+
+  const codeInput =
+    document.querySelector<HTMLInputElement>("#verification-code");
+
+  const verificationMessage =
+    document.querySelector<HTMLElement>("#verification-message");
+
+  const registerButton =
+    document.querySelector<HTMLButtonElement>("#register-submit");
+
+  const registerMessage =
+    document.querySelector<HTMLElement>("#registro-message");
+
+  // =========================================
+  // ESTADO DE VERIFICACIÓN
+  // =========================================
+
+  // El comprobante solamente lo entrega
+  // el servidor después de verificar el código.
+  let comprobante = "";
+  let correoConfirmado = "";
+
+  const normalizarCorreo = (valor: string) =>
+    valor.trim().toLowerCase();
+
+  function actualizarRegistro() {
+    if (!registerButton || !email) return;
+
+    const puedeRegistrarse =
+      comprobante.length > 0 &&
+      correoConfirmado === normalizarCorreo(email.value);
+
+    registerButton.disabled = !puedeRegistrarse;
+  }
+
+  function mostrarEstado(
+    texto: string,
+    estado: "success" | "error" | "" = ""
+  ) {
+    if (!verificationMessage) return;
+
+    verificationMessage.textContent = texto;
+    verificationMessage.dataset.status = estado;
+  }
+
+  // =========================================
+  // SI CAMBIAN EL CORREO
+  // =========================================
+
+  // Cambiar el correo invalida la verificación
+  // anterior, incluso si ya había sido confirmada.
+  email?.addEventListener("input", () => {
+    comprobante = "";
+    correoConfirmado = "";
+
+    if (codeInput) {
+      codeInput.value = "";
+      codeInput.disabled = true;
+    }
+
+    if (verifyButton) {
+      verifyButton.disabled = true;
+    }
+
+    if (sendButton) {
+      sendButton.disabled = false;
+      sendButton.innerHTML =
+        '<i class="fa-solid fa-envelope"></i> Enviar código';
+    }
+
+    mostrarEstado("Tu correo todavía no está verificado.");
+    actualizarRegistro();
+  });
+
+  // Solo aceptar números.
+  codeInput?.addEventListener("input", () => {
+    codeInput.value = codeInput.value
+      .replace(/\D/g, "")
+      .slice(0, 6);
+  });
+
+  // =========================================
+  // ENVIAR CÓDIGO
+  // =========================================
+
+  sendButton?.addEventListener("click", async () => {
+    if (
+      !email ||
+      !sendButton ||
+      !codeInput ||
+      !verifyButton
+    ) {
+      return;
+    }
+
+    if (!email.reportValidity()) return;
+
+    const correoSolicitud = normalizarCorreo(email.value);
+
+    // Volver a solicitar un código invalida
+    // cualquier comprobante anterior.
+    comprobante = "";
+    correoConfirmado = "";
+    actualizarRegistro();
+
+    sendButton.disabled = true;
+    mostrarEstado("Enviando código...");
+
+    try {
+      const response = await fetch("/api/reenviarcodigo", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          correo: correoSolicitud
+        })
+      });
+
+      const data = await response.json();
+
+      // Si el usuario cambió el correo durante el
+      // envío, no conservamos el estado anterior.
+      if (normalizarCorreo(email.value) !== correoSolicitud) {
+        return;
+      }
+
+      if (!response.ok || !data.ok) {
+        mostrarEstado(
+          data.mensaje || "No se pudo enviar el código.",
+          "error"
+        );
+        return;
+      }
+
+      codeInput.disabled = false;
+      verifyButton.disabled = false;
+
+      sendButton.innerHTML =
+        '<i class="fa-solid fa-rotate"></i> Reenviar código';
+
+      mostrarEstado(
+        "¡Código enviado! Revisa tu correo.",
+        "success"
+      );
+
+    } catch (error) {
+      console.error("Error al enviar código:", error);
+
+      mostrarEstado(
+        "No se pudo conectar con el servidor.",
+        "error"
+      );
+
+    } finally {
+      sendButton.disabled = false;
+    }
+  });
+
+  // =========================================
+  // VERIFICAR CÓDIGO
+  // =========================================
+
+  verifyButton?.addEventListener("click", async () => {
+    if (
+      !email ||
+      !codeInput ||
+      !verifyButton
+    ) {
+      return;
+    }
+
+    const correoSolicitud = normalizarCorreo(email.value);
+    const codigo = codeInput.value.trim();
+
+    if (!/^\d{6}$/.test(codigo)) {
+      mostrarEstado(
+        "El código debe tener 6 números.",
+        "error"
+      );
+      return;
+    }
+
+    verifyButton.disabled = true;
+    mostrarEstado("Verificando código...");
+
+    try {
+      const response = await fetch("/api/verificarcorreo", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          correo: correoSolicitud,
+          codigo
+        })
+      });
+
+      const data = await response.json();
+
+      if (normalizarCorreo(email.value) !== correoSolicitud) {
+        return;
+      }
+
+      if (!response.ok || !data.ok || !data.comprobante) {
+        mostrarEstado(
+          data.mensaje || "Código incorrecto.",
+          "error"
+        );
+        return;
+      }
+
+      // Guardar la autorización que nos devolvió
+      // la API. No se guarda en localStorage.
+      comprobante = data.comprobante;
+      correoConfirmado = correoSolicitud;
+
+      codeInput.disabled = true;
+
+      if (sendButton) {
+        sendButton.disabled = true;
+      }
+
+      mostrarEstado(
+        "¡Correo verificado correctamente!",
+        "success"
+      );
+
+      actualizarRegistro();
+
+    } catch (error) {
+      console.error("Error de verificación:", error);
+
+      mostrarEstado(
+        "No se pudo verificar el código.",
+        "error"
+      );
+
+    } finally {
+      // Solo habilitamos nuevos intentos
+      // cuando todavía no está verificado.
+      verifyButton.disabled = comprobante.length > 0;
+    }
+  });
+
+  // =========================================
+  // CREAR CUENTA
+  // =========================================
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    if (!message || !submit) return;
+    if (
+      !name ||
+      !rut ||
+      !email ||
+      !role ||
+      !password ||
+      !registerButton ||
+      !registerMessage
+    ) {
+      return;
+    }
 
-    const name = form.querySelector<HTMLInputElement>("#name");
-    const rut = form.querySelector<HTMLInputElement>("#rut");
-    const email = form.querySelector<HTMLInputElement>("#email");
-    const role = form.querySelector<HTMLSelectElement>("#role");
-    const password = form.querySelector<HTMLInputElement>("#password");
+    if (
+      !comprobante ||
+      correoConfirmado !== normalizarCorreo(email.value)
+    ) {
+      registerMessage.textContent =
+        "Debes verificar tu correo antes de registrarte.";
+      return;
+    }
 
-    if (!name || !rut || !email || !role || !password) return;
+    if (!form.reportValidity()) return;
 
-    submit.disabled = true;
-    message.textContent = "Creando tu cuenta...";
-    message.dataset.status = "";
+    registerButton.disabled = true;
+
+    registerMessage.textContent = "Creando tu cuenta...";
+    registerMessage.dataset.status = "";
 
     try {
-      // Se mantienen los nombres de campos de la API existente.
       const response = await fetch("/api/registro", {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json"
         },
+
         body: JSON.stringify({
           nombre: name.value.trim(),
           rut: rut.value.trim(),
-          correo: email.value.trim(),
+          correo: normalizarCorreo(email.value),
           tipoUsuario: role.value,
-          contrasena: password.value
+          contrasena: password.value,
+          comprobante
         })
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        message.textContent =
-          data.mensaje || "No se pudo crear tu cuenta.";
+        registerMessage.textContent =
+          data.mensaje || "No se pudo crear la cuenta.";
         return;
       }
 
-      message.dataset.status = "success";
-      message.textContent = "¡Cuenta creada correctamente!";
+      // El comprobante ya ha sido consumido
+      // al crear la cuenta.
+      comprobante = "";
 
-      // Continuamos con el mismo flujo que ya funcionaba.
+      registerMessage.dataset.status = "success";
+      registerMessage.textContent =
+        "¡Cuenta creada correctamente!";
+
       window.location.href = "/login";
 
     } catch (error) {
-      console.error("Error de registro:", error);
-      message.textContent = "No se pudo conectar con el servidor.";
+      console.error("Error al registrarse:", error);
+
+      registerMessage.textContent =
+        "No se pudo conectar con el servidor.";
 
     } finally {
-      submit.disabled = false;
+      actualizarRegistro();
     }
   });
+
+  // Estado inicial: el registro está bloqueado.
+  actualizarRegistro();
 </script>
