@@ -1,400 +1,218 @@
+
 ---
 import Layout from "../layouts/Layout.astro";
+import MascotasAuth from "../components/MascotasAuth.astro";
+import "../styles/login.css";
 ---
 
 <Layout
-  title="Crear cuenta | Kodapp"
-  description="Crea tu cuenta en Kodapp."
+  title="Crear cuenta | KodApp"
+  description="Regístrate en KodApp."
 >
+  <main class="ka-auth">
+    <div class="ka-auth__layout">
 
-  <main class="auth-page">
-
-    <section class="auth-layout auth-layout-register">
-
-      <div class="auth-intro">
-
-        <a
-          href="/"
-          class="auth-brand"
-        >
-          Kodapp
-        </a>
-
-        <span class="section-kicker">
-          Únete a Kodapp
-        </span>
-
-        <h1>
-          Empieza una nueva historia.
-        </h1>
-
-        <p>
-          Crea tu cuenta y forma parte del proceso
-          de adopción responsable.
-        </p>
-
-
-        <div class="register-benefits">
-
-          <div class="register-benefit">
-            <i class="fa-solid fa-heart"></i>
-            <span>
-              Encuentra mascotas compatibles contigo.
-            </span>
-          </div>
-
-          <div class="register-benefit">
-            <i class="fa-solid fa-clipboard-check"></i>
-            <span>
-              Gestiona tus formularios y postulaciones.
-            </span>
-          </div>
-
-          <div class="register-benefit">
-            <i class="fa-solid fa-paw"></i>
-            <span>
-              Participa en adopciones responsables.
-            </span>
-          </div>
-
-        </div>
-
+      <!-- IZQUIERDA: MASCOTAS ANIMADAS -->
+      <div class="ka-auth__visual">
+        <MascotasAuth />
       </div>
 
+      <!-- DERECHA: REGISTRO -->
+      <section class="ka-auth__card">
 
-      <div class="auth-card">
+        <a href="/" class="ka-auth__brand">
+          <i class="fa-solid fa-paw"></i>
+          KodApp
+        </a>
 
-        <div class="auth-card-header">
+        <h1>¡Únete a nuestra familia!</h1>
 
-          <div class="auth-icon">
-            <i class="fa-solid fa-user-plus"></i>
+        <p class="ka-auth__description">
+          Crea tu cuenta y comienza una nueva historia.
+        </p>
+
+        <form id="registro-form" class="ka-form">
+
+          <!-- NOMBRE -->
+          <div class="ka-field">
+            <input
+              id="name"
+              name="nombre"
+              type="text"
+              placeholder=" "
+              maxlength="100"
+              autocomplete="name"
+              required
+            />
+            <label for="name">Nombre completo</label>
           </div>
 
-          <h2>
+          <!-- RUT -->
+          <div class="ka-field">
+            <input
+              id="rut"
+              name="rut"
+              type="text"
+              placeholder=" "
+              maxlength="12"
+              required
+            />
+            <label for="rut">RUT</label>
+            <small class="ka-field__hint">
+              Ejemplo: 12.345.678-9
+            </small>
+          </div>
+
+          <!-- CORREO -->
+          <div class="ka-field">
+            <input
+              id="email"
+              name="correo"
+              type="email"
+              placeholder=" "
+              maxlength="150"
+              autocomplete="email"
+              required
+            />
+            <label for="email">Correo electrónico</label>
+          </div>
+
+          <!-- TIPO DE CUENTA -->
+          <div class="ka-field ka-field--select">
+            <label for="role">Tipo de cuenta</label>
+            <select
+              id="role"
+              name="tipoUsuario"
+              required
+            >
+              <option value="">Selecciona una opción</option>
+              <option value="adoptante">Adoptante</option>
+              <option value="rescatista">Rescatista</option>
+              <option value="veterinario">Veterinario</option>
+            </select>
+          </div>
+
+          <!-- CONTRASEÑA -->
+          <div class="ka-field">
+            <input
+              id="password"
+              name="contrasena"
+              type="password"
+              placeholder=" "
+              minlength="6"
+              autocomplete="new-password"
+              required
+            />
+            <label for="password">Contraseña</label>
+
+            <button
+              type="button"
+              class="ka-password-toggle"
+              data-ka-toggle
+              aria-label="Mostrar contraseña"
+              aria-pressed="false"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+
+          <!-- BOTÓN ANIMADO -->
+          <button type="submit" class="ka-submit" id="register-submit">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+
             Crear cuenta
-          </h2>
-
-          <p>
-            Completa tus datos para registrarte.
-          </p>
-
-        </div>
-
-
-        <form id="registro-form">
-
-          <div class="form-field">
-
-            <label for="name">
-              Nombre completo
-            </label>
-
-            <div class="input-shell">
-
-              <i class="fa-solid fa-user"></i>
-
-              <input
-                id="name"
-                name="nombre"
-                type="text"
-                placeholder="Tu nombre"
-                autocomplete="name"
-                required
-              />
-
-            </div>
-
-          </div>
-
-
-          <div class="form-field">
-
-            <label for="rut">
-              RUT
-            </label>
-
-            <div class="input-shell">
-
-              <i class="fa-solid fa-id-card"></i>
-
-              <input
-                id="rut"
-                name="rut"
-                type="text"
-                placeholder="12.345.678-9"
-                required
-              />
-
-            </div>
-
-          </div>
-
-
-          <div class="form-field">
-
-            <label for="email">
-              Correo electrónico
-            </label>
-
-            <div class="input-shell">
-
-              <i class="fa-solid fa-envelope"></i>
-
-              <input
-                id="email"
-                name="correo"
-                type="email"
-                placeholder="correo@ejemplo.com"
-                autocomplete="email"
-                required
-              />
-
-            </div>
-
-          </div>
-
-
-          <div class="form-field">
-
-            <label for="role">
-              Tipo de cuenta
-            </label>
-
-            <div class="input-shell">
-
-              <i class="fa-solid fa-users"></i>
-
-              <select
-                id="role"
-                name="tipoUsuario"
-                required
-              >
-
-                <option value="adoptante">
-                  Adoptante
-                </option>
-
-                <option value="rescatista">
-                  Rescatista
-                </option>
-
-                <option value="veterinario">
-                  Veterinario
-                </option>
-
-              </select>
-
-            </div>
-
-          </div>
-
-
-          <div class="form-field">
-
-            <label for="password">
-              Contraseña
-            </label>
-
-            <div class="input-shell">
-
-              <i class="fa-solid fa-lock"></i>
-
-              <input
-                id="password"
-                name="contrasena"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                minlength="6"
-                autocomplete="new-password"
-                required
-              />
-
-            </div>
-
-          </div>
-
-
-          <button
-            type="submit"
-            class="btn-primary auth-submit"
-          >
-            Crear cuenta
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-heart"></i>
           </button>
-
 
           <p
             id="registro-message"
-            class="form-message"
+            class="ka-form__message"
+            role="status"
+            aria-live="polite"
           ></p>
 
         </form>
 
-
-        <p class="auth-switch">
+        <p class="ka-auth__footer">
           ¿Ya tienes una cuenta?
-
-          <a href="/login">
-            Inicia sesión
-          </a>
+          <a href="/login">Inicia sesión</a>
         </p>
 
-      </div>
+        <a href="/" class="ka-auth__back">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al inicio
+        </a>
 
-    </section>
-
+      </section>
+    </div>
   </main>
-
 </Layout>
-
 
 <script>
   // =========================================
-  // REGISTRO
+  // CONEXIÓN CON LA API DE REGISTRO
   // =========================================
 
-  const registerForm =
-    document.querySelector(
-      "#registro-form"
-    ) as HTMLFormElement | null;
+  const form = document.querySelector<HTMLFormElement>("#registro-form");
+  const message = document.querySelector<HTMLElement>("#registro-message");
+  const submit = document.querySelector<HTMLButtonElement>("#register-submit");
 
-  const registerMessage =
-    document.querySelector(
-      "#registro-message"
-    ) as HTMLElement | null;
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
+    if (!message || !submit) return;
 
-  registerForm?.addEventListener(
-    "submit",
-    async (event) => {
+    const name = form.querySelector<HTMLInputElement>("#name");
+    const rut = form.querySelector<HTMLInputElement>("#rut");
+    const email = form.querySelector<HTMLInputElement>("#email");
+    const role = form.querySelector<HTMLSelectElement>("#role");
+    const password = form.querySelector<HTMLInputElement>("#password");
 
-      event.preventDefault();
+    if (!name || !rut || !email || !role || !password) return;
 
+    submit.disabled = true;
+    message.textContent = "Creando tu cuenta...";
+    message.dataset.status = "";
 
-      const nombreInput =
-        document.querySelector(
-          "#name"
-        ) as HTMLInputElement | null;
+    try {
+      // Se mantienen los nombres de campos de la API existente.
+      const response = await fetch("/api/registro", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: name.value.trim(),
+          rut: rut.value.trim(),
+          correo: email.value.trim(),
+          tipoUsuario: role.value,
+          contrasena: password.value
+        })
+      });
 
-      const rutInput =
-        document.querySelector(
-          "#rut"
-        ) as HTMLInputElement | null;
+      const data = await response.json();
 
-      const correoInput =
-        document.querySelector(
-          "#email"
-        ) as HTMLInputElement | null;
-
-      const tipoUsuarioInput =
-        document.querySelector(
-          "#role"
-        ) as HTMLSelectElement | null;
-
-      const contrasenaInput =
-        document.querySelector(
-          "#password"
-        ) as HTMLInputElement | null;
-
-
-      if (
-        !nombreInput ||
-        !rutInput ||
-        !correoInput ||
-        !tipoUsuarioInput ||
-        !contrasenaInput
-      ) {
+      if (!response.ok || !data.ok) {
+        message.textContent =
+          data.mensaje || "No se pudo crear tu cuenta.";
         return;
       }
 
+      message.dataset.status = "success";
+      message.textContent = "¡Cuenta creada correctamente!";
 
-      const nombre =
-        nombreInput.value.trim();
+      // Continuamos con el mismo flujo que ya funcionaba.
+      window.location.href = "/login";
 
-      const rut =
-        rutInput.value.trim();
+    } catch (error) {
+      console.error("Error de registro:", error);
+      message.textContent = "No se pudo conectar con el servidor.";
 
-      const correo =
-        correoInput.value.trim();
-
-      const tipoUsuario =
-        tipoUsuarioInput.value;
-
-      const contrasena =
-        contrasenaInput.value;
-
-
-      if (registerMessage) {
-        registerMessage.textContent =
-          "Creando cuenta...";
-      }
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/registro",
-            {
-              method: "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                nombre,
-                rut,
-                correo,
-                tipoUsuario,
-                contrasena,
-              }),
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          if (registerMessage) {
-            registerMessage.textContent =
-              data.mensaje ||
-              "No se pudo crear la cuenta.";
-          }
-
-          return;
-        }
-
-
-        if (registerMessage) {
-          registerMessage.textContent =
-            "¡Cuenta creada correctamente!";
-        }
-
-
-        window.location.href =
-          "/login";
-
-
-      } catch (error) {
-
-        console.error(
-          "Error al registrarse:",
-          error
-        );
-
-
-        if (registerMessage) {
-          registerMessage.textContent =
-            "No se pudo conectar con el servidor.";
-        }
-
-      }
-
+    } finally {
+      submit.disabled = false;
     }
-  );
+  });
 </script>

@@ -1,0 +1,108 @@
+/* =========================================
+   KODAPP - FONDO ANIMADO PANTALLA COMPLETA
+   ========================================= */
+
+/* Contenedores principales */
+.home-page,
+.dashboard-page,
+.management-page,
+.user-page,
+.profile-page {
+  position: relative;
+  isolation: isolate;
+}
+
+/* =========================================
+   FONDO DECORATIVO
+   ========================================= */
+
+.home-page::before,
+.dashboard-page::before,
+.management-page::before,
+.user-page::before,
+.profile-page::before {
+  content: "";
+
+  /* Ocupa toda la pantalla, no solo el contenido */
+  position: fixed;
+  inset: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  z-index: 0;
+  pointer-events: none;
+
+  /* Imagen decorativa */
+  background-image: url("/background.png");
+
+  /* Repetir en toda la pantalla */
+  background-repeat: repeat;
+
+  /* Tamaño de cada repetición */
+  background-size: 845px 466px;
+
+  background-position: 0 0;
+
+  /* Transparencia */
+  opacity: 0.08;
+
+  /* Movimiento diagonal */
+  animation: kodappFondo 75s linear infinite;
+}
+
+/* =========================================
+   CONTENIDO SOBRE EL FONDO
+   ========================================= */
+
+.home-page > *,
+.dashboard-page > *,
+.management-page > *,
+.user-page > *,
+.profile-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================
+   ANIMACIÓN CONTINUA
+   ========================================= */
+
+@keyframes kodappFondo {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 845px -466px;
+  }
+}
+
+/* =========================================
+   DISPOSITIVOS MÓVILES
+   ========================================= */
+
+@media (max-width: 768px) {
+  .home-page::before,
+  .dashboard-page::before,
+  .management-page::before,
+  .user-page::before,
+  .profile-page::before {
+    opacity: 0.06;
+    animation-duration: 110s;
+  }
+}
+
+/* =========================================
+   ACCESIBILIDAD
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page::before,
+  .dashboard-page::before,
+  .management-page::before,
+  .user-page::before,
+  .profile-page::before {
+    animation: none;
+  }
+}

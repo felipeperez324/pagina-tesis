@@ -1,584 +1,415 @@
 
+/* =========================================
+   LOGIN Y REGISTRO - WARM MODERN
+   ========================================= */
 
-/* =========================================================
-   CONTENEDOR PRINCIPAL
-   ========================================================= */
+.ka-auth {
+  --ka-bg: #1e2229;
+  --ka-card: #282e37;
+  --ka-accent: #ff6b4a;
+  --ka-mint: #4ebe96;
+  --ka-text: #f8f9fa;
+  --ka-muted: #acb5bf;
 
-.auth-page {
   min-height: 100vh;
-
+  min-height: 100svh;
   display: grid;
   place-items: center;
-
-  padding:
-    55px 20px;
-
-  position: relative;
-
-  overflow: hidden;
-}
-
-.auth-page::before {
-  content: "";
-
-  position: absolute;
-
-  width: 500px;
-  height: 500px;
-
-  top: -220px;
-  right: -160px;
-
-  border-radius: 50%;
+  padding: 45px 24px;
 
   background:
-    radial-gradient(
-      circle,
-      rgba(251, 186, 5, 0.12),
-      transparent 70%
-    );
+    radial-gradient(circle at 16% 40%, rgba(255,107,74,.12), transparent 37%),
+    radial-gradient(circle at 85% 75%, rgba(78,190,150,.08), transparent 38%),
+    var(--ka-bg);
 
-  pointer-events: none;
+  color: var(--ka-text);
+  font-family: "Sora", sans-serif;
 }
 
-.auth-page::after {
-  content: "";
-
-  position: absolute;
-
-  width: 400px;
-  height: 400px;
-
-  bottom: -180px;
-  left: -120px;
-
-  border-radius: 50%;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(32, 207, 255, 0.09),
-      transparent 70%
-    );
-
-  pointer-events: none;
+.ka-auth *,
+.ka-auth *::before,
+.ka-auth *::after {
+  box-sizing: border-box;
 }
 
-
-/* =========================================================
-   LAYOUT LOGIN
-   ========================================================= */
-
-.auth-layout {
-  position: relative;
-  z-index: 2;
-
-  width: min(
-    1050px,
-    100%
-  );
-
+.ka-auth__layout {
   display: grid;
-
-  grid-template-columns:
-    minmax(0, 1fr)
-    minmax(360px, 430px);
-
+  grid-template-columns: minmax(0, 1fr) minmax(350px, 440px);
   align-items: center;
-
-  gap: 70px;
+  gap: clamp(24px, 4vw, 70px);
+  width: min(1160px, 100%);
 }
 
-
-/* REGISTRO */
-
-.auth-layout-register {
-  align-items: start;
-}
-
-
-/* =========================================================
-   BLOQUE IZQUIERDO
-   ========================================================= */
-
-.auth-intro {
-  max-width: 570px;
-}
-
-.auth-brand {
-  display: inline-flex;
-  align-items: center;
-
-  margin-bottom: 40px;
-
-  color: var(--text);
-
-  font-size: 24px;
-  font-weight: 900;
-
-  letter-spacing: -0.04em;
-}
-
-.auth-brand::before {
-  content: "";
-
-  width: 30px;
-  height: 30px;
-
-  margin-right: 9px;
-
-  background:
-    url("../assets/logo.png")
-    center / contain
-    no-repeat;
-}
-
-.auth-intro h1 {
-  margin: 0 0 16px;
-
-  color: var(--text);
-
-  font-size: clamp(
-    38px,
-    5vw,
-    62px
-  );
-
-  font-weight: 900;
-
-  line-height: 1;
-
-  letter-spacing: -0.055em;
-}
-
-.auth-intro p {
-  max-width: 520px;
-
-  margin: 0;
-
-  color: var(--muted);
-
-  font-size: 14px;
-
-  line-height: 1.8;
-}
-
-
-/* BENEFICIOS REGISTRO */
-
-.register-benefits {
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-
-  margin-top: 30px;
-}
-
-.register-benefit {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  color: var(--text-soft);
-
-  font-size: 11px;
-}
-
-.register-benefit > i {
-  width: 35px;
-  height: 35px;
-
-  display: grid;
-  place-items: center;
-
-  flex-shrink: 0;
-
-  background: var(--red-soft);
-
-  color: var(--red);
-
-  border-radius: 9px;
-}
-
-
-/* =========================================================
-   TARJETA
-   ========================================================= */
-
-.auth-card {
-  width: 100%;
-
-  padding: 30px;
-
-  background:
-    linear-gradient(
-      150deg,
-      #0d1721,
-      #091018
-    );
-
-  border:
-    1px solid var(--border-light);
-
-  border-radius: 20px;
-
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.42);
-
-  position: relative;
-
-  overflow: hidden;
-}
-
-.auth-card::before {
-  content: "";
-
-  position: absolute;
-
-  left: 0;
-  right: 0;
-  top: 0;
-
-  height: 2px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--red),
-      var(--cyan)
-    );
-}
-
-
-/* =========================================================
-   CABECERA TARJETA
-   ========================================================= */
-
-.auth-card-header {
-  margin-bottom: 25px;
-}
-
-.auth-icon {
-  width: 44px;
-  height: 44px;
-
-  display: grid;
-  place-items: center;
-
-  margin-bottom: 15px;
-
-  background: var(--red-soft);
-
-  color: var(--red);
-
-  border:
-    1px solid rgba(255, 63, 97, 0.2);
-
-  border-radius: 12px;
-
-  font-size: 17px;
-}
-
-.auth-card-header h2 {
-  margin: 0;
-
-  color: var(--text);
-
-  font-size: 25px;
-  font-weight: 900;
-
-  letter-spacing: -0.03em;
-}
-
-.auth-card-header p {
-  margin: 5px 0 0;
-
-  color: var(--muted);
-
-  font-size: 11px;
-}
-
-
-/* =========================================================
-   FORMULARIO
-   ========================================================= */
-
-.auth-card form {
-  display: flex;
-  flex-direction: column;
-
-  gap: 17px;
-}
-
-.auth-card .form-field {
+.ka-auth__visual {
   min-width: 0;
 }
 
-.auth-card .form-field label {
-  display: block;
-
-  margin-bottom: 7px;
-
-  color: var(--text-soft);
-
-  font-size: 10px;
-  font-weight: 800;
-
-  letter-spacing: 0.04em;
+.ka-auth__card {
+  width: 100%;
+  padding: clamp(26px, 3vw, 42px);
+  background: linear-gradient(145deg, #2b303a, #20252d);
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 22px;
+  box-shadow: 0 28px 65px rgba(0,0,0,.34);
+  animation: kaCardIn .6s ease both;
 }
 
+.ka-auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 26px;
+  color: var(--ka-text);
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 900;
+}
 
-/* =========================================================
-   INPUTS
-   ========================================================= */
+.ka-auth__brand i {
+  color: var(--ka-accent);
+  font-size: 25px;
+}
 
-.input-shell {
+.ka-auth__card h1 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -.7px;
+}
+
+.ka-auth__description {
+  margin: 0 0 30px;
+  color: var(--ka-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ka-form {
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+/* =========================================
+   INPUTS FLOTANTES
+   ========================================= */
+
+.ka-field {
   position: relative;
-
   width: 100%;
 }
 
-.input-shell > i {
-  position: absolute;
-
-  left: 13px;
-  top: 50%;
-
-  width: 16px;
-
-  color: var(--muted-2);
-
-  text-align: center;
-
-  transform:
-    translateY(-50%);
-
-  pointer-events: none;
-
-  transition:
-    color 0.2s ease;
-}
-
-.input-shell input,
-.input-shell select {
+.ka-field input,
+.ka-field select {
+  display: block;
   width: 100%;
+  height: 56px;
+  padding: 21px 48px 8px 15px;
 
-  min-height: 45px;
-
-  padding:
-    0 13px 0 40px;
-
-  background:
-    #070e15;
-
-  color: var(--text);
-
-  border:
-    1px solid var(--border);
-
+  background: rgba(10,14,19,.55);
+  color: #fff;
+  border: 1px solid #454d59;
   border-radius: 9px;
-
   outline: none;
 
-  font-size: 12px;
-
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  font: inherit;
+  font-size: 14px;
+  transition: border-color .25s, box-shadow .25s;
 }
 
-.input-shell input::placeholder {
-  color: #53616e;
+.ka-field input:focus,
+.ka-field select:focus {
+  border-color: var(--ka-accent);
+  box-shadow: 0 0 0 3px rgba(255,107,74,.13);
 }
 
-.input-shell input:focus,
-.input-shell select:focus {
-  background: #09131c;
-
-  border-color: var(--cyan);
-
-  box-shadow:
-    0 0 0 3px var(--cyan-soft);
+.ka-field label {
+  position: absolute;
+  top: 18px;
+  left: 15px;
+  color: var(--ka-muted);
+  font-size: 14px;
+  pointer-events: none;
+  transition: all .2s ease;
 }
 
-.input-shell:focus-within > i {
-  color: var(--cyan);
+/* El label sube cuando hay foco o contenido */
+.ka-field input:focus + label,
+.ka-field input:not(:placeholder-shown) + label,
+.ka-field--select label {
+  top: 7px;
+  font-size: 10px;
+  font-weight: 900;
+  color: var(--ka-accent);
 }
 
-
-/* SELECT */
-
-.input-shell select {
+.ka-field select {
   appearance: none;
+  padding-top: 23px;
+}
 
+.ka-field select option {
+  color: #fff;
+  background: #282e37;
+}
+
+.ka-field--select::after {
+  content: "⌄";
+  position: absolute;
+  top: 15px;
+  right: 16px;
+  color: var(--ka-muted);
+  pointer-events: none;
+}
+
+/* =========================================
+   MOSTRAR / OCULTAR CONTRASEÑA
+   ========================================= */
+
+.ka-password-toggle {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  z-index: 2;
+
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+
+  background: transparent;
+  color: #b8c0ca;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 16px;
 }
 
-.input-shell select option {
-  background: #091018;
-  color: var(--text);
+.ka-password-toggle:hover,
+.ka-password-toggle[aria-pressed="true"] {
+  color: var(--ka-accent);
+  background: rgba(255,107,74,.10);
 }
 
+/* =========================================
+   BOTÓN CON BORDES ANIMADOS
+   ========================================= */
 
-/* =========================================================
-   BOTÓN LOGIN
-   ========================================================= */
+.ka-submit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 
-.auth-submit {
   width: 100%;
+  min-height: 52px;
+  margin-top: 7px;
+  padding: 13px 22px;
 
-  min-height: 46px;
+  background: rgba(255,107,74,.09);
+  color: var(--ka-accent);
+  border: 1px solid rgba(255,107,74,.25);
+  border-radius: 9px;
 
-  margin-top: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .7px;
+
+  transition: background .25s, color .25s, box-shadow .25s;
 }
 
-.auth-submit i {
+.ka-submit:hover:not(:disabled) {
+  background: var(--ka-accent);
+  color: #182026;
+  box-shadow:
+    0 0 12px rgba(255,107,74,.35),
+    0 0 32px rgba(255,107,74,.22);
+}
+
+.ka-submit:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.ka-submit > span {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+}
+
+.ka-submit > span:nth-child(1) {
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ka-accent));
+  animation: kaEdge1 2s linear infinite;
+}
+
+.ka-submit > span:nth-child(2) {
+  top: -100%;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, var(--ka-accent));
+  animation: kaEdge2 2s linear infinite;
+  animation-delay: .5s;
+}
+
+.ka-submit > span:nth-child(3) {
+  bottom: 0;
+  right: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(270deg, transparent, var(--ka-accent));
+  animation: kaEdge3 2s linear infinite;
+  animation-delay: 1s;
+}
+
+.ka-submit > span:nth-child(4) {
+  bottom: -100%;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(360deg, transparent, var(--ka-accent));
+  animation: kaEdge4 2s linear infinite;
+  animation-delay: 1.5s;
+}
+
+@keyframes kaEdge1 {
+  0% { left: -100%; }
+  50%, 100% { left: 100%; }
+}
+
+@keyframes kaEdge2 {
+  0% { top: -100%; }
+  50%, 100% { top: 100%; }
+}
+
+@keyframes kaEdge3 {
+  0% { right: -100%; }
+  50%, 100% { right: 100%; }
+}
+
+@keyframes kaEdge4 {
+  0% { bottom: -100%; }
+  50%, 100% { bottom: 100%; }
+}
+
+@keyframes kaCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   MENSAJES Y ENLACES
+   ========================================= */
+
+.ka-form__message {
+  min-height: 20px;
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: #ff9384;
+}
+
+.ka-form__message[data-status="success"] {
+  color: var(--ka-mint);
+}
+
+.ka-auth__footer {
+  margin: 25px 0 0;
+  color: var(--ka-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ka-auth__footer a {
+  color: var(--ka-mint);
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.ka-auth__footer a:hover {
+  text-decoration: underline;
+}
+
+.ka-auth__back {
+  display: inline-block;
+  margin-top: 22px;
+  color: var(--ka-muted);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.ka-auth__back:hover {
+  color: var(--ka-accent);
+}
+
+.ka-field__hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--ka-muted);
   font-size: 11px;
 }
 
-
-/* =========================================================
-   MENSAJE
-   ========================================================= */
-
-.auth-card .form-message {
-  min-height: 18px;
-
-  margin: 0;
-
-  color: var(--red);
-
-  font-size: 10px;
-  font-weight: 800;
-
-  text-align: center;
-}
-
-
-/* =========================================================
-   DIVISOR
-   ========================================================= */
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  margin:
-    22px 0 18px;
-}
-
-.auth-divider::before,
-.auth-divider::after {
-  content: "";
-
-  height: 1px;
-
-  flex: 1;
-
-  background: var(--border);
-}
-
-.auth-divider span {
-  color: var(--muted-2);
-
-  font-size: 9px;
-  font-weight: 700;
-
-  white-space: nowrap;
-}
-
-
-/* =========================================================
-   BOTÓN REGISTRO
-   ========================================================= */
-
-.auth-card > .btn-outline {
-  width: 100%;
-}
-
-.auth-switch {
-  margin:
-    18px 0 0;
-
-  color: var(--muted);
-
-  font-size: 10px;
-
-  text-align: center;
-}
-
-.auth-switch a {
-  color: var(--cyan);
-
-  font-weight: 800;
-}
-
-.auth-switch a:hover {
-  color: var(--text);
-}
-
-
-/* =========================================================
+/* =========================================
    RESPONSIVE
-   ========================================================= */
+   ========================================= */
 
 @media (max-width: 900px) {
-  .auth-layout {
-    grid-template-columns: 1fr;
-
-    gap: 35px;
-
+  .ka-auth__layout {
+    grid-template-columns: minmax(0, 1fr);
     max-width: 520px;
+    gap: 18px;
   }
 
-  .auth-intro {
-    max-width: none;
-
-    text-align: center;
+  .ka-auth {
+    padding: 25px 15px;
   }
 
-  .auth-brand {
-    margin-bottom: 25px;
+  .ka-auth__card {
+    padding: 27px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ka-auth__card {
+    padding: 23px 19px;
   }
 
-  .auth-intro p {
-    margin-inline: auto;
+  .ka-auth__card h1 {
+    font-size: 25px;
   }
 
-  .section-kicker {
-    justify-content: center;
+  .ka-form {
+    gap: 17px;
   }
+}
 
-  .register-benefits {
-    max-width: 390px;
-
-    margin-inline: auto;
-
-    text-align: left;
+@media (prefers-reduced-motion: reduce) {
+  .ka-auth__card,
+  .ka-submit > span {
+    animation: none !important;
   }
 }
 
 
-@media (max-width: 520px) {
-  .auth-page {
-    padding:
-      30px 15px;
-  }
-
-  .auth-card {
-    padding: 22px;
-  }
-
-  .auth-intro h1 {
-    font-size: 37px;
-  }
-
-  .auth-card-header h2 {
-    font-size: 22px;
-  }
+/* Títulos y botón del login animado */
+.ka-auth__card h1,
+.ka-auth__brand,
+.ka-submit {
+  font-family: "Oxanium", sans-serif;
+  font-weight: 700;
 }

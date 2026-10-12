@@ -1,0 +1,713 @@
+
+---
+import "../styles/mascotas-auth.css";
+---
+
+<section class="ka-pets" data-ka-pets data-mode="idle">
+
+  <!-- ========================================= -->
+  <!-- PRESENTACIÓN -->
+  <!-- ========================================= -->
+
+  <div class="ka-pets__intro">
+    <span class="ka-pets__eyebrow">
+      HOGARES CON AMOR
+    </span>
+
+    <h2>
+      ¡Ellos también quieren conocerte!
+    </h2>
+
+    <p>
+      Dos curiosos guardianes de KodApp te acompañarán en el acceso.
+    </p>
+  </div>
+
+  <div class="ka-pets__duo">
+
+    <!-- ========================================= -->
+    <!-- PERRO -->
+    <!-- ========================================= -->
+
+    <svg
+      class="ka-animal ka-animal--dog"
+      viewBox="0 0 300 350"
+      role="img"
+      aria-label="Perrito animado"
+    >
+
+      <!-- Sombra -->
+      <ellipse
+        cx="150" cy="325" rx="98" ry="13"
+        fill="#000"
+        opacity=".16"
+      />
+
+      <!-- Cuerpo -->
+      <path
+        d="M70 320 Q74 242 150 236 Q226 242 230 320Z"
+        fill="#B97B55"
+      />
+
+      <path
+        d="M115 255 Q150 237 185 255 L181 320 L119 320Z"
+        fill="#F4D5A7"
+      />
+
+      <!-- CABEZA -->
+      <g class="ka-animal__head">
+
+        <!-- Orejas -->
+        <path
+          d="M85 101 Q27 82 35 180 Q42 225 87 186Z"
+          fill="#83503F"
+        />
+
+        <path
+          d="M215 101 Q273 82 265 180 Q258 225 213 186Z"
+          fill="#83503F"
+        />
+
+        <!-- Cara -->
+        <ellipse
+          cx="150" cy="163" rx="88" ry="100"
+          fill="#D99B70"
+        />
+
+        <ellipse
+          cx="150" cy="184" rx="72" ry="72"
+          fill="#F0C393"
+        />
+
+        <!-- Mechón -->
+        <path
+          d="M128 78 Q150 66 172 78 L163 117 Q150 129 137 117Z"
+          fill="#F7D8AD"
+        />
+
+        <!-- ================================= -->
+        <!-- OJOS DEL PERRO -->
+        <!-- ================================= -->
+
+        <!--
+          Este grupo contiene ojos y pupilas.
+          En el parpadeo se comprime verticalmente.
+          Así evitamos mover los párpados sospechosos.
+        -->
+
+        <g class="ka-animal__eyes">
+
+          <!-- Ojos blancos -->
+          <ellipse
+            cx="116" cy="149" rx="20" ry="24"
+            fill="#FFF9ED"
+          />
+
+          <ellipse
+            cx="184" cy="149" rx="20" ry="24"
+            fill="#FFF9ED"
+          />
+
+          <!-- Pupilas -->
+          <g class="ka-animal__pupils">
+
+            <circle
+              cx="116" cy="151" r="9"
+              fill="#2F292B"
+            />
+
+            <circle
+              cx="184" cy="151" r="9"
+              fill="#2F292B"
+            />
+
+            <circle
+              cx="119" cy="147" r="3"
+              fill="white"
+            />
+
+            <circle
+              cx="187" cy="147" r="3"
+              fill="white"
+            />
+
+          </g>
+
+        </g>
+
+        <!-- Línea suave al parpadear -->
+        <g
+          class="ka-animal__blinkline"
+          fill="none"
+          stroke="#9E654A"
+          stroke-width="3.5"
+          stroke-linecap="round"
+        >
+          <path d="M98 150 Q116 154 134 150" />
+          <path d="M166 150 Q184 154 202 150" />
+        </g>
+
+        <!-- ================================= -->
+        <!-- PÁRPADOS SOSPECHOSOS -->
+        <!-- ================================= -->
+
+        <!-- Superior: media luna rellena -->
+        <g
+          class="ka-animal__eyelids"
+          fill="#D99B70"
+        >
+          <path
+            d="M94 150 Q90 125 116 124 Q142 125 138 150 Q116 142 94 150 Z"
+          />
+
+          <path
+            d="M162 150 Q158 125 184 124 Q210 125 206 150 Q184 142 162 150 Z"
+          />
+        </g>
+
+        <!-- Inferior: media luna rellena -->
+        <g
+          class="ka-animal__lowerlids"
+          fill="#D99B70"
+        >
+          <path
+            d="M94 157 Q116 165 138 157 Q142 176 116 175 Q90 176 94 157 Z"
+          />
+
+          <path
+            d="M162 157 Q184 165 206 157 Q210 176 184 175 Q158 176 162 157 Z"
+          />
+        </g>
+
+        <!-- ================================= -->
+        <!-- HOCICO -->
+        <!-- ================================= -->
+
+        <ellipse
+          cx="132" cy="198" rx="32" ry="27"
+          fill="#FBE6C5"
+        />
+
+        <ellipse
+          cx="168" cy="198" rx="32" ry="27"
+          fill="#FBE6C5"
+        />
+
+        <!-- Nariz -->
+        <path
+          d="M136 191 Q150 180 164 191 Q162 207 150 209 Q138 207 136 191Z"
+          fill="#493333"
+        />
+
+        <!-- Sonrisa -->
+        <path
+          d="M150 209 Q147 231 128 221 M150 209 Q153 231 172 221"
+          fill="none"
+          stroke="#6B493B"
+          stroke-width="4"
+          stroke-linecap="round"
+        />
+
+        <!-- Lengua -->
+        <ellipse
+          cx="150" cy="235" rx="13" ry="17"
+          fill="#F47B84"
+        />
+
+      </g>
+
+      <!-- ================================= -->
+      <!-- PATITAS DEL PERRO -->
+      <!-- ================================= -->
+
+      <g class="ka-animal__paw ka-animal__paw--left">
+
+        <ellipse
+          cx="113" cy="274" rx="26" ry="27"
+          fill="#D99B70"
+        />
+
+        <circle cx="103" cy="268" r="4" fill="#F3BE9A" />
+        <circle cx="116" cy="263" r="4" fill="#F3BE9A" />
+        <circle cx="129" cy="268" r="4" fill="#F3BE9A" />
+
+      </g>
+
+      <g class="ka-animal__paw ka-animal__paw--right">
+
+        <ellipse
+          cx="187" cy="274" rx="26" ry="27"
+          fill="#D99B70"
+        />
+
+        <circle cx="177" cy="268" r="4" fill="#F3BE9A" />
+        <circle cx="190" cy="263" r="4" fill="#F3BE9A" />
+        <circle cx="203" cy="268" r="4" fill="#F3BE9A" />
+
+      </g>
+
+    </svg>
+
+
+    <!-- ========================================= -->
+    <!-- GATO -->
+    <!-- ========================================= -->
+
+    <svg
+      class="ka-animal ka-animal--cat"
+      viewBox="0 0 300 350"
+      role="img"
+      aria-label="Gatito animado"
+    >
+
+      <!-- Sombra -->
+      <ellipse
+        cx="150" cy="325" rx="98" ry="13"
+        fill="#000"
+        opacity=".16"
+      />
+
+      <!-- Cuerpo -->
+      <path
+        d="M82 320 Q82 238 150 235 Q218 238 218 320Z"
+        fill="#8F96AB"
+      />
+
+      <path
+        d="M122 251 Q150 240 178 251 L183 320 L117 320Z"
+        fill="#D6D7E2"
+      />
+
+      <!-- CABEZA -->
+      <g class="ka-animal__head">
+
+        <!-- Orejas -->
+        <path
+          d="M76 140 L68 46 L135 94Z"
+          fill="#9199B1"
+        />
+
+        <path
+          d="M224 140 L232 46 L165 94Z"
+          fill="#9199B1"
+        />
+
+        <!-- Interior de las orejas -->
+        <path
+          d="M85 110 L81 67 L117 99Z"
+          fill="#E4A8AE"
+        />
+
+        <path
+          d="M215 110 L219 67 L183 99Z"
+          fill="#E4A8AE"
+        />
+
+        <!-- Cara -->
+        <ellipse
+          cx="150" cy="169" rx="87" ry="91"
+          fill="#A6AEC2"
+        />
+
+        <ellipse
+          cx="150" cy="202" rx="64" ry="49"
+          fill="#D9DBE6"
+        />
+
+        <!-- Rayitas de la frente -->
+        <path
+          d="M132 94 L141 117 M150 91 L150 116 M168 94 L159 117"
+          stroke="#737C98"
+          stroke-width="6"
+          stroke-linecap="round"
+        />
+
+        <!-- ================================= -->
+        <!-- OJOS DEL GATO -->
+        <!-- ================================= -->
+
+        <!--
+          El parpadeo funciona cerrando este grupo,
+          sin desplazar los párpados de media luna.
+        -->
+
+        <g class="ka-animal__eyes">
+
+          <!-- Ojos amarillos -->
+          <ellipse
+            cx="115" cy="159" rx="22" ry="26"
+            fill="#F3E7AB"
+          />
+
+          <ellipse
+            cx="185" cy="159" rx="22" ry="26"
+            fill="#F3E7AB"
+          />
+
+          <!-- Pupilas -->
+          <g class="ka-animal__pupils">
+
+            <ellipse
+              cx="115" cy="160" rx="7" ry="14"
+              fill="#263A3A"
+            />
+
+            <ellipse
+              cx="185" cy="160" rx="7" ry="14"
+              fill="#263A3A"
+            />
+
+            <circle
+              cx="118" cy="154" r="3"
+              fill="white"
+            />
+
+            <circle
+              cx="188" cy="154" r="3"
+              fill="white"
+            />
+
+          </g>
+
+        </g>
+
+        <!-- Línea del parpadeo -->
+        <g
+          class="ka-animal__blinkline"
+          fill="none"
+          stroke="#77809A"
+          stroke-width="3.5"
+          stroke-linecap="round"
+        >
+          <path d="M95 160 Q115 165 135 160" />
+          <path d="M165 160 Q185 165 205 160" />
+        </g>
+
+        <!-- ================================= -->
+        <!-- PÁRPADOS SOSPECHOSOS -->
+        <!-- ================================= -->
+
+        <!-- Párpado superior -->
+        <g
+          class="ka-animal__eyelids"
+          fill="#A6AEC2"
+        >
+
+          <path
+            d="M91 160 Q87 133 115 132 Q143 133 139 160 Q115 152 91 160 Z"
+          />
+
+          <path
+            d="M161 160 Q157 133 185 132 Q213 133 209 160 Q185 152 161 160 Z"
+          />
+
+        </g>
+
+        <!-- Párpado inferior -->
+        <g
+          class="ka-animal__lowerlids"
+          fill="#A6AEC2"
+        >
+
+          <path
+            d="M91 166 Q115 174 139 166 Q143 188 115 187 Q87 188 91 166 Z"
+          />
+
+          <path
+            d="M161 166 Q185 174 209 166 Q213 188 185 187 Q157 188 161 166 Z"
+          />
+
+        </g>
+
+        <!-- Nariz -->
+        <path
+          d="M139 198 Q150 190 161 198 L150 208Z"
+          fill="#E48C9B"
+        />
+
+        <!-- Sonrisa -->
+        <path
+          d="M150 209 L150 216 M150 216 Q138 227 127 215 M150 216 Q162 227 173 215"
+          fill="none"
+          stroke="#60647A"
+          stroke-width="3.5"
+          stroke-linecap="round"
+        />
+
+        <!-- Bigotes -->
+        <g
+          stroke="#D9DBE6"
+          stroke-width="3"
+          stroke-linecap="round"
+        >
+
+          <path d="M99 207 L54 198 M99 216 L55 220" />
+
+          <path d="M201 207 L246 198 M201 216 L245 220" />
+
+        </g>
+
+      </g>
+
+      <!-- ================================= -->
+      <!-- PATITAS DEL GATO -->
+      <!-- ================================= -->
+
+      <g class="ka-animal__paw ka-animal__paw--left">
+
+        <ellipse
+          cx="113" cy="274" rx="26" ry="27"
+          fill="#A6AEC2"
+        />
+
+        <circle cx="103" cy="267" r="4" fill="#E6B1BE" />
+        <circle cx="116" cy="262" r="4" fill="#E6B1BE" />
+        <circle cx="129" cy="267" r="4" fill="#E6B1BE" />
+
+      </g>
+
+      <g class="ka-animal__paw ka-animal__paw--right">
+
+        <ellipse
+          cx="187" cy="274" rx="26" ry="27"
+          fill="#A6AEC2"
+        />
+
+        <circle cx="177" cy="267" r="4" fill="#E6B1BE" />
+        <circle cx="190" cy="262" r="4" fill="#E6B1BE" />
+        <circle cx="203" cy="267" r="4" fill="#E6B1BE" />
+
+      </g>
+
+    </svg>
+
+  </div>
+
+  <!-- ========================================= -->
+  <!-- MENSAJES -->
+  <!-- ========================================= -->
+
+  <div class="ka-pets__status">
+    <span data-ka-pet-message>
+      Identifícate para continuar 🐾
+    </span>
+  </div>
+
+</section>
+
+
+<script>
+  // =========================================
+  // ELEMENTOS
+  // =========================================
+
+  const pets =
+    document.querySelector<HTMLElement>(
+      "[data-ka-pets]"
+    );
+
+  const password =
+    document.querySelector<HTMLInputElement>(
+      "#password"
+    );
+
+  const toggle =
+    document.querySelector<HTMLButtonElement>(
+      "[data-ka-toggle]"
+    );
+
+  const petMessage =
+    document.querySelector<HTMLElement>(
+      "[data-ka-pet-message]"
+    );
+
+  const reduceMotion =
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+
+  // =========================================
+  // ESTADOS DE LAS MASCOTAS
+  // =========================================
+
+  type PetMode =
+    | "idle"
+    | "curious"
+    | "secret"
+    | "shy";
+
+  const messages: Record<PetMode, string> = {
+    idle: "Identifícate para continuar 🐾",
+    curious: "¡Qué interesante! Cuéntanos más.",
+    secret: "Shhh... eso es secreto.",
+    shy: "Tranquilo, no estamos mirando."
+  };
+
+
+  function setPetMode(mode: PetMode) {
+    if (!pets) return;
+
+    pets.dataset.mode = mode;
+
+    if (petMessage) {
+      petMessage.textContent = messages[mode];
+    }
+  }
+
+
+  // =========================================
+  // SEGUIR EL CURSOR
+  // =========================================
+
+  function lookAt(x: number, y: number) {
+    if (!pets || reduceMotion.matches) return;
+
+    // Durante la contraseña mantenemos la
+    // mirada orientada hacia el formulario.
+    if (
+      pets.dataset.mode === "secret" ||
+      pets.dataset.mode === "shy"
+    ) {
+      return;
+    }
+
+    const bounds = pets.getBoundingClientRect();
+
+    const centerX =
+      bounds.left + bounds.width / 2;
+
+    const centerY =
+      bounds.top + bounds.height / 2;
+
+    const eyeX = Math.max(
+      -8,
+      Math.min(8, (x - centerX) / 30)
+    );
+
+    const eyeY = Math.max(
+      -6,
+      Math.min(6, (y - centerY) / 40)
+    );
+
+    pets.style.setProperty(
+      "--eye-x",
+      `${eyeX}px`
+    );
+
+    pets.style.setProperty(
+      "--eye-y",
+      `${eyeY}px`
+    );
+  }
+
+
+  // =========================================
+  // EXPRESIÓN SEGÚN CAMPO
+  // =========================================
+
+  function refreshExpression() {
+    if (!pets) return;
+
+    // Contraseña visible:
+    // las mascotas se tapan los ojos.
+    if (password?.type === "text") {
+      setPetMode("shy");
+      return;
+    }
+
+    // Contraseña oculta:
+    // mirada sospechosa.
+    if (document.activeElement === password) {
+      setPetMode("secret");
+      return;
+    }
+
+    const active = document.activeElement;
+
+    // Campos normales:
+    // expresión curiosa.
+    if (
+      active instanceof HTMLInputElement ||
+      active instanceof HTMLSelectElement
+    ) {
+      setPetMode("curious");
+      return;
+    }
+
+    // Sin campo seleccionado.
+    setPetMode("idle");
+  }
+
+
+  // =========================================
+  // EVENTOS
+  // =========================================
+
+  document.addEventListener(
+    "pointermove",
+    (event) => {
+      lookAt(event.clientX, event.clientY);
+    }
+  );
+
+  document.addEventListener(
+    "focusin",
+    refreshExpression
+  );
+
+  document.addEventListener(
+    "focusout",
+    () => {
+      requestAnimationFrame(refreshExpression);
+    }
+  );
+
+
+  // =========================================
+  // MOSTRAR / OCULTAR CONTRASEÑA
+  // =========================================
+
+  toggle?.addEventListener(
+    "click",
+    () => {
+      if (!password) return;
+
+      const show =
+        password.type === "password";
+
+      password.type =
+        show ? "text" : "password";
+
+      toggle.setAttribute(
+        "aria-pressed",
+        String(show)
+      );
+
+      toggle.setAttribute(
+        "aria-label",
+        show
+          ? "Ocultar contraseña"
+          : "Mostrar contraseña"
+      );
+
+      const icon = toggle.querySelector("i");
+
+      if (icon) {
+        icon.className = show
+          ? "fa-solid fa-eye-slash"
+          : "fa-solid fa-eye";
+      }
+
+      // Mantiene el foco en la contraseña.
+      password.focus({
+        preventScroll: true
+      });
+
+      refreshExpression();
+    }
+  );
+
+  // Estado inicial.
+  refreshExpression();
+</script>

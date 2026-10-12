@@ -2,6 +2,9 @@
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import MascotasDisponibles from "../components/MascotasDisponibles.astro";
+import caniche from "../assets/caniche.jpg";
+import siames from "../assets/siames.jpg";
+import "../styles/hero.css";
 ---
 
 <Layout
@@ -18,74 +21,86 @@ import MascotasDisponibles from "../components/MascotasDisponibles.astro";
     <!-- HERO -->
     <!-- ========================================= -->
 
-    <section class="hero-section">
-
-      <div class="hero-content">
-
-        <span class="hero-kicker">
-          Adopción responsable
-        </span>
-
-        <h1>
-          Encuentra a tu
-          <span>próximo compañero.</span>
-        </h1>
-
-        <p>
-          Conoce mascotas que buscan un hogar,
-          descubre cuáles pueden ser compatibles contigo
-          y comienza una nueva historia.
-        </p>
 
 
-        <div class="hero-actions">
+<section class="hero-section">
 
-          <a
-            href="#mascotas"
-            class="btn-primary"
-          >
-            Explorar mascotas
-            <i class="fa-solid fa-arrow-right"></i>
-          </a>
+  <div class="hero-content">
 
-          <a
-            href="/match"
-            class="btn-secondary"
-          >
-            Descubrir mi compatibilidad
-          </a>
+    <span class="hero-kicker">
+      Adopción responsable
+    </span>
 
-        </div>
+    <h1>
+      Encuentra a tu
+      <span>próximo compañero.</span>
+    </h1>
+
+    <p>
+      Conoce mascotas que buscan un hogar,
+      descubre cuáles pueden ser compatibles contigo
+      y comienza una nueva historia.
+    </p>
+
+    <div class="hero-actions">
+
+      <a href="#mascotas" class="btn-primary">
+        Explorar mascotas
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+
+      <a href="/match" class="btn-secondary">
+        Descubrir mi compatibilidad
+      </a>
+
+    </div>
+
+  </div>
+
+  <!-- ========================================= -->
+  <!-- CARRUSEL DE IMÁGENES -->
+  <!-- ========================================= -->
+
+  <div class="hero-visual">
+
+    <!-- Efectos decorativos -->
+    <div class="hero-glow hero-glow-one"></div>
+    <div class="hero-glow hero-glow-two"></div>
+
+    <div class="hero-paw hero-paw-one">
+      <i class="fa-solid fa-paw"></i>
+    </div>
+
+    <div class="hero-paw hero-paw-two">
+      <i class="fa-solid fa-paw"></i>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="hero-visual-card">
+
+      <div class="hero-slideshow">
+
+        <!-- Gato -->
+        <img
+          src={siames.src}
+          alt="Gato siamés"
+          class="hero-slideshow-image hero-slideshow-cat"
+        />
+
+        <!-- Perro -->
+        <img
+          src={caniche.src}
+          alt="Perro caniche"
+          class="hero-slideshow-image hero-slideshow-dog"
+        />
 
       </div>
 
+    </div>
 
-      <div class="hero-visual">
+  </div>
 
-        <div class="hero-glow hero-glow-one"></div>
-        <div class="hero-glow hero-glow-two"></div>
-
-        <div class="hero-paw hero-paw-one">
-          <i class="fa-solid fa-paw"></i>
-        </div>
-
-        <div class="hero-paw hero-paw-two">
-          <i class="fa-solid fa-paw"></i>
-        </div>
-
-        <div class="hero-visual-card">
-
-          <div class="hero-placeholder">
-            <i class="fa-solid fa-dog"></i>
-            <i class="fa-solid fa-cat"></i>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
+</section>
 
     <!-- ========================================= -->
     <!-- BENEFICIOS -->

@@ -1,0 +1,505 @@
+
+/* =========================================
+   MASCOTAS ANIMADAS - KODAPP
+   ========================================= */
+
+.ka-pets {
+  --eye-x: 0px;
+  --eye-y: 0px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+  padding: 20px 0;
+
+  text-align: center;
+}
+
+/* =========================================
+   TEXTOS
+   ========================================= */
+
+.ka-pets__intro {
+  max-width: 420px;
+  margin-bottom: 25px;
+}
+
+.ka-pets__eyebrow {
+  color: #4ebe96;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+
+.ka-pets__intro h2 {
+  margin: 15px 0 12px;
+
+  color: #fff8ed;
+  font-size: clamp(28px, 3.5vw, 43px);
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.ka-pets__intro p {
+  color: #aeb7c0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* =========================================
+   CONTENEDOR DE MASCOTAS
+   ========================================= */
+
+.ka-pets__duo {
+  position: relative;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  width: 100%;
+  max-width: 600px;
+  min-height: 270px;
+
+  isolation: isolate;
+}
+
+.ka-pets__duo::before {
+  content: "";
+
+  position: absolute;
+  z-index: -1;
+  bottom: 28px;
+  left: 50%;
+
+  width: 76%;
+  height: 60%;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+  background: rgba(255, 107, 74, 0.12);
+  filter: blur(52px);
+}
+
+/* =========================================
+   PERSONAJES
+   ========================================= */
+
+.ka-animal {
+  width: 50%;
+  max-width: 270px;
+  height: auto;
+
+  overflow: visible;
+
+  filter: drop-shadow(
+    0 15px 12px rgba(0, 0, 0, 0.2)
+  );
+
+  transform-origin: center bottom;
+
+  animation:
+    kaAnimalFloat 3.6s ease-in-out infinite;
+}
+
+.ka-animal--dog {
+  margin-right: -23px;
+}
+
+.ka-animal--cat {
+  margin-left: -23px;
+  animation-delay: -1.8s;
+}
+
+/* =========================================
+   MOVIMIENTO DE LA CABEZA
+   ========================================= */
+
+.ka-animal__head {
+  transform-box: fill-box;
+  transform-origin: center center;
+
+  transition:
+    transform 0.45s ease-in-out;
+}
+
+/* =========================================
+   OJOS Y PUPILAS
+   ========================================= */
+
+/*
+  CORRECCIÓN PRINCIPAL:
+
+  En vez de bajar los párpados sospechosos,
+  comprimimos todo el grupo de ojos.
+
+  Esto permite un parpadeo natural sin
+  generar formas raras sobre la cara.
+*/
+
+.ka-animal__eyes {
+  transform-box: fill-box;
+  transform-origin: center center;
+
+  animation:
+    kaEyesBlink 6s ease-in-out infinite;
+}
+
+/* El gato parpadea en un momento diferente */
+.ka-animal--cat .ka-animal__eyes {
+  animation-delay: -2.4s;
+}
+
+/* Pupilas que siguen el cursor */
+.ka-animal__pupils {
+  transform: translate(
+    var(--eye-x),
+    var(--eye-y)
+  );
+
+  transition:
+    transform 0.2s ease-out;
+}
+
+/* =========================================
+   LÍNEAS DEL PARPADEO
+   ========================================= */
+
+/*
+  Cuando los ojos se comprimen,
+  aparece momentáneamente una línea curva.
+
+  No utiliza los párpados de media luna.
+*/
+
+.ka-animal__blinkline {
+  opacity: 0;
+
+  animation:
+    kaBlinkLine 6s linear infinite;
+}
+
+.ka-animal--cat .ka-animal__blinkline {
+  animation-delay: -2.4s;
+}
+
+/* =========================================
+   PÁRPADOS SOSPECHOSOS
+   ========================================= */
+
+/*
+  Estas medias lunas SOLO aparecen
+  cuando se escribe una contraseña oculta.
+
+  No participan en el parpadeo normal.
+*/
+
+.ka-animal__eyelids,
+.ka-animal__lowerlids {
+  opacity: 0;
+
+  transition:
+    opacity 0.2s ease;
+}
+
+/* =========================================
+   PATITAS
+   ========================================= */
+
+.ka-animal__paw {
+  transform: translateY(0);
+
+  transition:
+    transform 0.55s cubic-bezier(
+      0.2,
+      1.2,
+      0.4,
+      1
+    );
+}
+
+/* =========================================
+   MODO NORMAL
+   ========================================= */
+
+.ka-pets[data-mode="idle"] .ka-animal__head {
+  transform: none;
+}
+
+.ka-pets[data-mode="idle"] .ka-animal__eyelids,
+.ka-pets[data-mode="idle"] .ka-animal__lowerlids {
+  opacity: 0;
+}
+
+/* =========================================
+   MODO CURIOSO
+   CORREO, NOMBRE Y RUT
+   ========================================= */
+
+/* Cabeza inclinada hacia el formulario */
+.ka-pets[data-mode="curious"] .ka-animal__head {
+  transform:
+    translate(10px, -2px)
+    rotate(7deg);
+}
+
+/* Mirada hacia la derecha */
+.ka-pets[data-mode="curious"] .ka-animal__pupils {
+  transform:
+    translate(8px, -2px);
+}
+
+/* Ojos abiertos sin medias lunas */
+.ka-pets[data-mode="curious"] .ka-animal__eyelids,
+.ka-pets[data-mode="curious"] .ka-animal__lowerlids {
+  opacity: 0;
+}
+
+/*
+  El parpadeo normal continúa funcionando
+  también mientras están curiosos.
+*/
+
+/* =========================================
+   MODO SECRET
+   CONTRASEÑA OCULTA - MIRADA TIPO FRY
+   ========================================= */
+
+/* Cabeza mirando a la derecha */
+.ka-pets[data-mode="secret"] .ka-animal__head {
+  transform:
+    translate(14px, 0)
+    rotate(3deg);
+}
+
+/* Desactivar parpadeo mientras están sospechosos */
+.ka-pets[data-mode="secret"] .ka-animal__eyes {
+  animation: none;
+  transform: scaleY(1);
+}
+
+.ka-pets[data-mode="secret"] .ka-animal__blinkline {
+  animation: none;
+  opacity: 0;
+}
+
+/* Pupilas mirando al campo de contraseña */
+.ka-pets[data-mode="secret"] .ka-animal__pupils {
+  transform:
+    translate(10px, 1px);
+}
+
+/*
+  Activamos las dos medias lunas rellenas.
+
+  Superior + inferior = ojos entrecerrados.
+*/
+
+.ka-pets[data-mode="secret"] .ka-animal__eyelids {
+  opacity: 1;
+}
+
+.ka-pets[data-mode="secret"] .ka-animal__lowerlids {
+  opacity: 1;
+}
+
+/* =========================================
+   MODO SHY
+   CONTRASEÑA VISIBLE - TAPARSE LOS OJOS
+   ========================================= */
+
+/* Cabeza al centro */
+.ka-pets[data-mode="shy"] .ka-animal__head {
+  transform: none;
+}
+
+/* Cerrar los ojos */
+.ka-pets[data-mode="shy"] .ka-animal__eyes {
+  animation: none;
+
+  transform: scaleY(0.06);
+}
+
+/* Mostrar una línea de ojo cerrado */
+.ka-pets[data-mode="shy"] .ka-animal__blinkline {
+  animation: none;
+  opacity: 1;
+}
+
+/* Ocultar medias lunas sospechosas */
+.ka-pets[data-mode="shy"] .ka-animal__eyelids,
+.ka-pets[data-mode="shy"] .ka-animal__lowerlids {
+  opacity: 0;
+}
+
+/* Subir ambas patitas sobre los ojos */
+.ka-pets[data-mode="shy"] .ka-animal__paw--left,
+.ka-pets[data-mode="shy"] .ka-animal__paw--right {
+  transform: translateY(-119px);
+}
+
+/* Movimiento tímido */
+.ka-pets[data-mode="shy"] .ka-animal--dog {
+  animation:
+    kaEmbarrassed 1.3s ease-in-out
+    infinite alternate;
+}
+
+.ka-pets[data-mode="shy"] .ka-animal--cat {
+  animation:
+    kaEmbarrassed 1.5s ease-in-out
+    infinite alternate-reverse;
+}
+
+/* =========================================
+   MENSAJES
+   ========================================= */
+
+.ka-pets__status {
+  min-height: 45px;
+  margin-top: 5px;
+  padding: 11px 23px;
+
+  color: #f8dfc7;
+  background: #30343a;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 50px;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =========================================
+   ANIMACIONES
+   ========================================= */
+
+/* Movimiento suave del cuerpo */
+@keyframes kaAnimalFloat {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+/*
+  NUEVO PARPADEO:
+
+  Ojos abiertos la mayor parte del tiempo.
+  Se comprimen durante aproximadamente
+  una fracción de segundo y vuelven a abrirse.
+*/
+
+@keyframes kaEyesBlink {
+  0%,
+  44%,
+  51%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  46%,
+  49% {
+    transform: scaleY(0.06);
+  }
+}
+
+/*
+  La línea del ojo cerrado aparece únicamente
+  durante el breve parpadeo.
+*/
+
+@keyframes kaBlinkLine {
+  0%,
+  45%,
+  50%,
+  100% {
+    opacity: 0;
+  }
+
+  46%,
+  49% {
+    opacity: 1;
+  }
+}
+
+/* Movimiento al taparse los ojos */
+@keyframes kaEmbarrassed {
+  from {
+    rotate: -2deg;
+  }
+
+  to {
+    rotate: 3deg;
+  }
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+
+@media (max-width: 900px) {
+  .ka-pets__intro {
+    margin-bottom: 5px;
+  }
+
+  .ka-pets__duo {
+    max-width: 400px;
+    min-height: auto;
+  }
+
+  .ka-pets__intro h2 {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ka-pets__intro h2 {
+    font-size: 25px;
+  }
+
+  .ka-pets__intro p {
+    font-size: 13px;
+  }
+
+  .ka-animal {
+    max-width: 175px;
+  }
+
+  .ka-pets__status {
+    font-size: 11px;
+  }
+}
+
+/* =========================================
+   ACCESIBILIDAD
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .ka-animal,
+  .ka-animal__eyes,
+  .ka-animal__blinkline {
+    animation: none !important;
+  }
+
+  .ka-animal__head,
+  .ka-animal__pupils,
+  .ka-animal__paw {
+    transition: none;
+  }
+
+  .ka-animal__blinkline {
+    opacity: 0;
+  }
+}

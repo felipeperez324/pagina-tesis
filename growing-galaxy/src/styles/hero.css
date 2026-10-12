@@ -1,0 +1,56 @@
+/* =========================================
+   HERO - CARRUSEL AUTOMÁTICO
+   ========================================= */
+
+.hero-slideshow {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #101820;
+}
+
+/* Las imágenes ocupan exactamente el mismo lugar */
+.hero-slideshow-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gato: imagen de fondo */
+.hero-slideshow-cat {
+  z-index: 1;
+}
+
+/* Perro: imagen superior animada */
+.hero-slideshow-dog {
+  z-index: 2;
+  animation: heroFade 10s ease-in-out infinite;
+}
+
+/* Transición automática */
+@keyframes heroFade {
+  0%, 40% {
+    opacity: 1;
+  }
+
+  50%, 90% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Respetar preferencias de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .hero-slideshow-dog {
+    animation: none;
+  }
+}
