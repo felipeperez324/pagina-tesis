@@ -1,15 +1,12 @@
+
 ---
 import logo from "../assets/logo.png";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId =
-  Astro.cookies.get("session_id")?.value;
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
 
-const usuario =
-  await getUsuarioDesdeSesion(sessionId);
-
-const pathname =
-  Astro.url.pathname;
+const pathname = Astro.url.pathname;
 
 let homeUrl = "/";
 
@@ -26,20 +23,15 @@ if (usuario) {
   <div class="header-inner">
 
     <!-- LOGO -->
-
     <a
       href={homeUrl}
       class="brand"
-      aria-label="Ir al inicio de Kodapp"
+      aria-label="Ir al inicio de KodApp"
     >
-      <img
-        src={logo.src}
-      />
+      <img src={logo.src} alt="KodApp" />
     </a>
 
-
-    <!-- MENÚ MOBILE -->
-
+    <!-- MENÚ MÓVIL -->
     <button
       type="button"
       class="mobile-toggle"
@@ -50,15 +42,12 @@ if (usuario) {
       <i class="fa-solid fa-bars"></i>
     </button>
 
-
     <!-- NAVEGACIÓN -->
-
     <nav
       class="main-nav"
       id="main-nav"
       aria-label="Navegación principal"
     >
-
       <a
         href={usuario ? homeUrl : "/"}
         class:list={{
@@ -94,12 +83,9 @@ if (usuario) {
       <a href="/#sobre-nosotros">
         Sobre nosotros
       </a>
-
     </nav>
 
-
     <!-- CUENTA -->
-
     <div class="header-account">
 
       {
@@ -113,7 +99,6 @@ if (usuario) {
               id="account-trigger"
               aria-expanded="false"
             >
-
               <span class="account-avatar">
                 {
                   usuario.foto_perfil ? (
@@ -132,33 +117,25 @@ if (usuario) {
               </span>
 
               <i class="fa-solid fa-chevron-down"></i>
-
             </button>
-
 
             <div
               class="account-dropdown"
               id="account-dropdown"
             >
-
               <div class="account-dropdown-header">
 
-                <strong>
-                  {usuario.nombre}
-                </strong>
+                <strong>{usuario.nombre}</strong>
 
                 <span>
                   {
-                    usuario.tipo_usuario === "adoptante"
-                      ? "Adoptante"
-                      : usuario.tipo_usuario === "rescatista"
-                        ? "Rescatista"
-                        : "Veterinario"
+                    usuario.tipo_usuario === "organizacion"
+                      ? "Organización"
+                      : "Adoptante"
                   }
                 </span>
 
               </div>
-
 
               <a href={homeUrl}>
                 <i class="fa-solid fa-house"></i>
@@ -184,10 +161,7 @@ if (usuario) {
 
         ) : (
 
-          <a
-            href="/login"
-            class="header-login"
-          >
+          <a href="/login" class="header-login">
             <i class="fa-solid fa-user"></i>
             <span>Iniciar sesión</span>
           </a>
@@ -201,131 +175,70 @@ if (usuario) {
 
 </header>
 
-
 <script>
-  // =========================================
-  // MENÚ MOBILE
-  // =========================================
-
-  const mobileToggle =
-    document.querySelector(
-      "#mobile-toggle"
-    ) as HTMLButtonElement | null;
-
-  const mainNav =
-    document.querySelector(
-      "#main-nav"
-    ) as HTMLElement | null;
-
-
-  mobileToggle?.addEventListener(
-    "click",
-    () => {
-
-      const isOpen =
-        mainNav?.classList.toggle(
-          "is-open"
-        ) ?? false;
-
-      mobileToggle.setAttribute(
-        "aria-expanded",
-        String(isOpen)
-      );
-
-    }
+  // MENÚ MÓVIL
+  const mobileToggle = document.querySelector<HTMLButtonElement>(
+    "#mobile-toggle"
   );
 
-
-  // =========================================
-  // MENÚ DE CUENTA
-  // =========================================
-
-  const accountTrigger =
-    document.querySelector(
-      "#account-trigger"
-    ) as HTMLButtonElement | null;
-
-  const accountDropdown =
-    document.querySelector(
-      "#account-dropdown"
-    ) as HTMLElement | null;
-
-
-  accountTrigger?.addEventListener(
-    "click",
-    () => {
-
-      const isOpen =
-        accountDropdown?.classList.toggle(
-          "is-open"
-        ) ?? false;
-
-      accountTrigger.setAttribute(
-        "aria-expanded",
-        String(isOpen)
-      );
-
-    }
+  const mainNav = document.querySelector<HTMLElement>(
+    "#main-nav"
   );
 
+  mobileToggle?.addEventListener("click", () => {
+    const abierto =
+      mainNav?.classList.toggle("is-open") ?? false;
 
-  // =========================================
+    mobileToggle.setAttribute(
+      "aria-expanded",
+      String(abierto)
+    );
+  });
+
+  // MENÚ DE USUARIO
+  const accountTrigger = document.querySelector<HTMLButtonElement>(
+    "#account-trigger"
+  );
+
+  const accountDropdown = document.querySelector<HTMLElement>(
+    "#account-dropdown"
+  );
+
+  accountTrigger?.addEventListener("click", () => {
+    const abierto =
+      accountDropdown?.classList.toggle("is-open") ?? false;
+
+    accountTrigger.setAttribute(
+      "aria-expanded",
+      String(abierto)
+    );
+  });
+
   // CERRAR SESIÓN
-  // =========================================
+  const logoutButton = document.querySelector<HTMLButtonElement>(
+    "#header-logout"
+  );
 
-  const logoutButton =
-    document.querySelector(
-      "#header-logout"
-    ) as HTMLButtonElement | null;
+  logoutButton?.addEventListener("click", async () => {
+    try {
+      const respuesta = await fetch("/api/logout", {
+        method: "POST"
+      });
 
+      const datos = await respuesta.json();
 
-  logoutButton?.addEventListener(
-    "click",
-    async () => {
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/logout",
-            {
-              method: "POST"
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (data.ok) {
-
-          window.location.href =
-            "/";
-
-          return;
-        }
-
-
+      if (!respuesta.ok || !datos.ok) {
         alert(
-          data.mensaje ||
-          "No se pudo cerrar la sesión."
+          datos.mensaje || "No se pudo cerrar la sesión."
         );
-
-
-      } catch (error) {
-
-        console.error(
-          "Error al cerrar sesión:",
-          error
-        );
-
-        alert(
-          "No se pudo cerrar la sesión."
-        );
-
+        return;
       }
 
+      window.location.href = "/";
+
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      alert("No se pudo cerrar la sesión.");
     }
-  );
+  });
 </script>

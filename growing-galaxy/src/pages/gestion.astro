@@ -15,17 +15,14 @@ if (!usuario) {
 }
 
 
-if (
-  usuario.tipo_usuario !== "rescatista" &&
-  usuario.tipo_usuario !== "veterinario"
-) {
+if (usuario.tipo_usuario !== "organizacion") {
   return Astro.redirect("/usuario");
 }
 ---
 
 <Layout
   title="Panel de gestión | Kodapp"
-  description="Panel de gestión para rescatistas y veterinarios."
+  description="Panel de gestión de organizaciones."
 >
 
   <Header />
@@ -70,13 +67,7 @@ if (
               Tipo de cuenta
             </span>
 
-            <strong>
-              {
-                usuario.tipo_usuario === "rescatista"
-                  ? "Rescatista"
-                  : "Veterinario"
-              }
-            </strong>
+            <strong>Organización</strong>
 
           </div>
 

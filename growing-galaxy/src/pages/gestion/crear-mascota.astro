@@ -15,10 +15,7 @@ if (!usuario) {
 }
 
 
-if (
-  usuario.tipo_usuario !== "rescatista" &&
-  usuario.tipo_usuario !== "veterinario"
-) {
+if (usuario.tipo_usuario !== "organizacion") {
   return Astro.redirect("/usuario");
 }
 ---

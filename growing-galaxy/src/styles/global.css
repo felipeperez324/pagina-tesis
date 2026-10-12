@@ -3141,3 +3141,100 @@ body > footer {
     animation: none;
   }
 }
+
+
+/* =========================================
+   DESCRIPCIÓN DEL PERFIL - KODAPP
+   ========================================= */
+
+.profile-description {
+  margin-top: 28px;
+  padding-top: 25px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.profile-description h2 {
+  margin-bottom: 10px;
+}
+
+.profile-description > p {
+  margin-bottom: 18px;
+  opacity: 0.75;
+}
+
+.profile-description label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.profile-description textarea {
+  display: block;
+  width: 100%;
+  min-height: 130px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.profile-description textarea:focus {
+  border-color: #4ebe96;
+}
+
+.profile-description-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.profile-action-message {
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+
+
+
+/* ==========================================
+   BOTÓN ELIMINAR PUBLICACIÓN
+   ========================================== */
+
+.btn-eliminar-publicacion {
+  margin-right: auto;
+  padding: 12px 18px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--danger);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-eliminar-publicacion:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-eliminar-publicacion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .publication-form .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .btn-eliminar-publicacion {
+    margin-right: 0;
+  }
+}

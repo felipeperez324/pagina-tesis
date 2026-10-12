@@ -1,76 +1,53 @@
+
 ---
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../../lib/auth";
 import { db } from "../../lib/db";
+import { agregarFotosMascotas } from "../../lib/fotos";
 
-const sessionId =
-  Astro.cookies.get("session_id")?.value;
-
-const usuario =
-  await getUsuarioDesdeSesion(sessionId);
-
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
 
-
-if (
-  usuario.tipo_usuario !== "rescatista" &&
-  usuario.tipo_usuario !== "veterinario"
-) {
+if (usuario.tipo_usuario !== "organizacion") {
   return Astro.redirect("/usuario");
 }
 
+const resultado = await db.query(
+  `SELECT
+    id,
+    nombre,
+    descripcion,
+    personalidad,
+    historial_medico,
+    estado_adopcion,
+    tipo_mascota
+   FROM mascotas
+   WHERE usuario_id = $1
+   ORDER BY id DESC`,
+  [usuario.id]
+);
 
-const resultado =
-  await db.query(
-    `SELECT
-      id,
-      nombre,
-      descripcion,
-      personalidad,
-      historial_medico,
-      estado_adopcion,
-      tipo_mascota,
-      foto
-    FROM mascotas
-    WHERE usuario_id = $1
-    ORDER BY id DESC`,
-    [usuario.id]
-  );
-
-
-const mascotas =
-  resultado.rows;
+const mascotas = await agregarFotosMascotas(resultado.rows);
 ---
 
 <Layout
-  title="Mis mascotas | Kodapp"
-  description="Mascotas publicadas por tu cuenta."
+  title="Mis mascotas | KodApp"
+  description="Mascotas publicadas por mi organización."
 >
-
   <Header />
 
-
   <main class="management-page">
-
     <div class="management-container">
-
-
-      <!-- ========================================= -->
-      <!-- ENCABEZADO -->
-      <!-- ========================================= -->
 
       <div class="page-header page-header-inline">
 
         <div>
-
-          <a
-            href="/gestion"
-            class="back-link"
-          >
+          <a href="/gestion" class="back-link">
             <i class="fa-solid fa-arrow-left"></i>
             Volver al panel
           </a>
@@ -79,16 +56,12 @@ const mascotas =
             Administración
           </span>
 
-          <h1>
-            Mis mascotas
-          </h1>
+          <h1>Mis mascotas</h1>
 
           <p>
-            Revisa las mascotas que has publicado.
+            Revisa y edita las mascotas que has publicado.
           </p>
-
         </div>
-
 
         <a
           href="/gestion/crear-mascota"
@@ -100,27 +73,19 @@ const mascotas =
 
       </div>
 
-
-      <!-- ========================================= -->
-      <!-- LISTADO -->
-      <!-- ========================================= -->
-
       {
         mascotas.length === 0 ? (
-
           <section class="empty-state">
 
             <div class="empty-state-icon">
               <i class="fa-solid fa-paw"></i>
             </div>
 
-            <h2>
-              Todavía no tienes publicaciones
-            </h2>
+            <h2>Todavía no tienes publicaciones</h2>
 
             <p>
               Cuando publiques una mascota,
-              aparecerá automáticamente en este espacio.
+              aparecerá automáticamente aquí.
             </p>
 
             <a
@@ -131,51 +96,37 @@ const mascotas =
             </a>
 
           </section>
-
         ) : (
-
           <section class="management-pets-grid">
 
             {mascotas.map((mascota) => (
-
               <article class="management-pet-card">
-
 
                 <div class="management-pet-image">
 
-                  {
-                    mascota.foto ? (
-
-                      <img
-                        src={mascota.foto}
-                        alt={`Foto de ${mascota.nombre}`}
-                        loading="lazy"
-                      />
-
-                    ) : (
-
-                      <div class="management-pet-placeholder">
-                        <i class="fa-solid fa-paw"></i>
-                      </div>
-
-                    )
-                  }
-
+                  {mascota.foto ? (
+                    <img
+                      src={mascota.foto}
+                      alt={`Foto de ${mascota.nombre}`}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="management-pet-placeholder">
+                      <i class="fa-solid fa-paw"></i>
+                    </div>
+                  )}
 
                   <span
                     class:list={{
-                      "pet-status-badge":
-                        true,
+                      "pet-status-badge": true,
                       "is-available":
-                        mascota.estado_adopcion ===
-                        "disponible",
+                        mascota.estado_adopcion === "disponible"
                     }}
                   >
                     {mascota.estado_adopcion}
                   </span>
 
                 </div>
-
 
                 <div class="management-pet-content">
 
@@ -189,97 +140,50 @@ const mascotas =
                     }
                   </div>
 
+                  <h2>{mascota.nombre}</h2>
 
-                  <h2>
-                    {mascota.nombre}
-                  </h2>
-
-
-                  {
-                    mascota.descripcion && (
-
-                      <p>
-                        {mascota.descripcion}
-                      </p>
-
-                    )
-                  }
-
+                  {mascota.descripcion && (
+                    <p>{mascota.descripcion}</p>
+                  )}
 
                   <div class="management-pet-info">
 
-                    {
-                      mascota.personalidad && (
+                    {mascota.personalidad && (
+                      <div>
+                        <strong>Personalidad</strong>
+                        <span>{mascota.personalidad}</span>
+                      </div>
+                    )}
 
-                        <div>
-
-                          <strong>
-                            Personalidad
-                          </strong>
-
-                          <span>
-                            {mascota.personalidad}
-                          </span>
-
-                        </div>
-
-                      )
-                    }
-
-
-                    {
-                      mascota.historial_medico && (
-
-                        <div>
-
-                          <strong>
-                            Historial médico
-                          </strong>
-
-                          <span>
-                            {mascota.historial_medico}
-                          </span>
-
-                        </div>
-
-                      )
-                    }
+                    {mascota.historial_medico && (
+                      <div>
+                        <strong>Historial médico</strong>
+                        <span>{mascota.historial_medico}</span>
+                      </div>
+                    )}
 
                   </div>
-
 
                   <div class="management-pet-actions">
 
                     <a
-                      href={`/mascotas/${mascota.id}`}
+                      href={`/gestion/mascotas/${mascota.id}/editar`}
                       class="btn-outline"
                     >
-                      Ver publicación
-                    </a>
-
-                    <a
-                      href={`/gestion/mascotas/${mascota.id}/editar`}
-                      class="icon-button"
-                      aria-label={`Editar ${mascota.nombre}`}
-                    >
                       <i class="fa-solid fa-pen"></i>
+                      Editar publicación
                     </a>
 
                   </div>
 
                 </div>
-
               </article>
-
             ))}
 
           </section>
-
         )
       }
 
     </div>
-
   </main>
-
 </Layout>

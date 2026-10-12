@@ -1,20 +1,16 @@
+
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-import { getUsuarioDesdeSesion } from "../lib/auth";
 import MascotasDisponibles from "../components/MascotasDisponibles.astro";
+import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId =
-  Astro.cookies.get("session_id")?.value;
-
-const usuario =
-  await getUsuarioDesdeSesion(sessionId);
-
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
-
 
 if (usuario.tipo_usuario !== "adoptante") {
   return Astro.redirect("/gestion");
@@ -22,22 +18,15 @@ if (usuario.tipo_usuario !== "adoptante") {
 ---
 
 <Layout
-  title="Mi cuenta | Kodapp"
-  description="Panel del adoptante de Kodapp."
+  title="Mi cuenta | KodApp"
+  description="Panel del adoptante de KodApp."
 >
-
   <Header />
 
-
   <main class="dashboard-page">
-
     <div class="dashboard-container">
 
-
-      <!-- ========================================= -->
-      <!-- CABECERA -->
-      <!-- ========================================= -->
-
+      <!-- BIENVENIDA -->
       <section class="dashboard-welcome">
 
         <div class="dashboard-welcome-content">
@@ -57,31 +46,24 @@ if (usuario.tipo_usuario !== "adoptante") {
 
         </div>
 
-
+        <!-- FOTO DE PERFIL -->
         <div class="dashboard-profile">
 
           <div
             class="dashboard-avatar"
             id="profile-photo"
           >
-
             {
               usuario.foto_perfil ? (
-
                 <img
                   src={usuario.foto_perfil}
                   alt="Foto de perfil"
                 />
-
               ) : (
-
                 <i class="fa-solid fa-user"></i>
-
               )
             }
-
           </div>
-
 
           <label
             for="photo-input"
@@ -91,11 +73,10 @@ if (usuario.tipo_usuario !== "adoptante") {
             Cambiar foto
           </label>
 
-
           <input
             id="photo-input"
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpeg,image/webp"
             hidden
           />
 
@@ -103,255 +84,141 @@ if (usuario.tipo_usuario !== "adoptante") {
 
       </section>
 
-
-      <!-- ========================================= -->
       <!-- ACCIONES -->
-      <!-- ========================================= -->
-
       <section class="dashboard-actions">
 
         <a
           href="/match"
           class="dashboard-action-card dashboard-action-primary"
         >
-
           <div class="dashboard-action-icon">
             <i class="fa-solid fa-heart-circle-bolt"></i>
           </div>
 
           <div>
             <span>Encuentra tu match</span>
-
-            <h2>
-              Compatibilidad
-            </h2>
-
+            <h2>Compatibilidad</h2>
             <p>
-              Descubre qué mascotas pueden encajar mejor contigo.
+              Descubre qué mascotas pueden
+              encajar mejor contigo.
             </p>
           </div>
 
           <i class="fa-solid fa-arrow-right"></i>
-
         </a>
-
 
         <a
           href="/perfil"
           class="dashboard-action-card"
         >
-
           <div class="dashboard-action-icon">
             <i class="fa-solid fa-user"></i>
           </div>
 
           <div>
             <span>Tu información</span>
-
-            <h2>
-              Mi perfil
-            </h2>
-
+            <h2>Mi perfil</h2>
             <p>
               Revisa y administra tus datos personales.
             </p>
           </div>
 
           <i class="fa-solid fa-arrow-right"></i>
-
         </a>
-
 
         <a
           href="/formularios"
           class="dashboard-action-card"
         >
-
           <div class="dashboard-action-icon">
             <i class="fa-solid fa-clipboard-check"></i>
           </div>
 
           <div>
             <span>Tu proceso</span>
-
-            <h2>
-              Formularios respondidos
-            </h2>
-
+            <h2>Formularios respondidos</h2>
             <p>
               Revisa los formularios que has completado.
             </p>
           </div>
 
           <i class="fa-solid fa-arrow-right"></i>
-
         </a>
 
       </section>
 
-
-      <!-- ========================================= -->
-      <!-- MASCOTAS -->
-      <!-- ========================================= -->
-
+      <!-- LISTADO DE MASCOTAS -->
       <MascotasDisponibles />
 
     </div>
-
   </main>
-
 </Layout>
 
-
 <script>
-  // =========================================
-  // CAMBIAR FOTO DE PERFIL
-  // =========================================
-
-  const photoInput =
-    document.querySelector(
-      "#photo-input"
-    ) as HTMLInputElement | null;
-
-
-  const profilePhoto =
-    document.querySelector(
-      "#profile-photo"
-    ) as HTMLDivElement | null;
-
-
-  photoInput?.addEventListener(
-    "change",
-    async () => {
-
-      const file =
-        photoInput.files?.[0];
-
-
-      if (!file || !profilePhoto) {
-        return;
-      }
-
-
-      if (
-        !file.type.startsWith(
-          "image/"
-        )
-      ) {
-
-        alert(
-          "El archivo debe ser una imagen."
-        );
-
-        photoInput.value =
-          "";
-
-        return;
-      }
-
-
-      if (
-        file.size >
-        5 * 1024 * 1024
-      ) {
-
-        alert(
-          "La imagen no puede superar los 5 MB."
-        );
-
-        photoInput.value =
-          "";
-
-        return;
-      }
-
-
-      const formData =
-        new FormData();
-
-
-      formData.append(
-        "foto",
-        file
-      );
-
-
-      try {
-
-        profilePhoto.style.opacity =
-          "0.5";
-
-
-        const response =
-          await fetch(
-            "/api/perfil/foto",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (
-          !response.ok ||
-          !data.ok
-        ) {
-
-          alert(
-            data.mensaje ||
-            "No se pudo guardar la foto."
-          );
-
-          return;
-        }
-
-
-        profilePhoto.innerHTML =
-          "";
-
-
-        const image =
-          document.createElement(
-            "img"
-          );
-
-
-        image.src =
-          data.foto;
-
-        image.alt =
-          "Foto de perfil";
-
-
-        profilePhoto.appendChild(
-          image
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Error al guardar foto:",
-          error
-        );
-
-
-        alert(
-          "No se pudo guardar la foto."
-        );
-
-
-      } finally {
-
-        profilePhoto.style.opacity =
-          "1";
-
-      }
-
-    }
+  const photoInput = document.querySelector<HTMLInputElement>(
+    "#photo-input"
   );
+
+  const profilePhoto = document.querySelector<HTMLElement>(
+    "#profile-photo"
+  );
+
+  photoInput?.addEventListener("change", async () => {
+    const archivo = photoInput.files?.[0];
+
+    if (!archivo || !profilePhoto) return;
+
+    if (
+      !["image/jpeg", "image/png", "image/webp"]
+        .includes(archivo.type)
+    ) {
+      alert("La imagen debe ser JPG, PNG o WebP.");
+      photoInput.value = "";
+      return;
+    }
+
+    if (archivo.size > 5 * 1024 * 1024) {
+      alert("La imagen no puede superar los 5 MB.");
+      photoInput.value = "";
+      return;
+    }
+
+    const datos = new FormData();
+    datos.append("foto", archivo);
+
+    profilePhoto.style.opacity = "0.5";
+
+    try {
+      const respuesta = await fetch("/api/perfil/foto", {
+        method: "POST",
+        body: datos
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || !resultado.ok) {
+        alert(
+          resultado.mensaje || "No se pudo guardar la foto."
+        );
+        return;
+      }
+
+      // Actualizar el avatar.
+      const imagen = document.createElement("img");
+      imagen.src = resultado.foto;
+      imagen.alt = "Foto de perfil";
+
+      profilePhoto.replaceChildren(imagen);
+
+      // Recargar para actualizar también el encabezado.
+      window.location.reload();
+
+    } catch (error) {
+      console.error("Error al cambiar foto:", error);
+      alert("No se pudo guardar la foto.");
+
+    } finally {
+      profilePhoto.style.opacity = "1";
+    }
+  });
 </script>

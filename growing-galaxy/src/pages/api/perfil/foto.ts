@@ -3,7 +3,8 @@
 import type { APIRoute } from "astro";
 
 // Importamos la conexión con PostgreSQL.
-import { db } from "../../../lib/db";
+import { dbFotos } from "../../../lib/dbfotos";
+
 
 // Importamos la función que permite obtener
 // el usuario asociado a una sesión.
@@ -149,16 +150,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     // Actualizamos la foto del usuario actual.
     //
     // usuario.id identifica al usuario que inició sesión.
-    await db.query(
-      `UPDATE usuarios
-       SET foto_perfil = $1
-       WHERE id = $2`,
+    await dbFotos.query(
+      `INSERT INTO fotos_perfil (
+        usuario_id,
+        imagen,
+        tipo_mime
+      )
+      VALUES ($1, $2, $3)
+
+      ON CONFLICT (usuario_id)
+      DO UPDATE SET
+        imagen = EXCLUDED.imagen,
+        tipo_mime = EXCLUDED.tipo_mime,
+        fecha_actualizacion = NOW()`,
       [
-        imagenBase64,
-        usuario.id
+        usuario.id,
+        buffer,
+        archivo.type,
       ]
     );
-
 
     // =========================================
     // RESPUESTA EXITOSA

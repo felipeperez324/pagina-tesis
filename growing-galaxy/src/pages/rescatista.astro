@@ -1,34 +1,17 @@
+
 ---
-import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId =
-  Astro.cookies.get("session_id")?.value;
-
-const usuario =
-  await getUsuarioDesdeSesion(sessionId);
-
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
 
-
-if (
-  usuario.tipo_usuario !== "rescatista" &&
-  usuario.tipo_usuario !== "veterinario"
-) {
-  return Astro.redirect("/usuario");
+if (usuario.tipo_usuario === "organizacion") {
+  return Astro.redirect("/gestion");
 }
 
-
-return Astro.redirect("/gestion");
+return Astro.redirect("/usuario");
 ---
-
-<Layout
-  title="Redirigiendo | Kodapp"
-  description="Panel de gestión de Kodapp."
->
-  <Header />
-</Layout>

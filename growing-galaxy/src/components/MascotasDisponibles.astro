@@ -1,6 +1,9 @@
+
 ---
 import { db } from "../lib/db";
+import { agregarFotosMascotas } from "../lib/fotos";
 
+// Datos de las mascotas en KodApp.
 const resultado = await db.query(`
   SELECT
     id,
@@ -9,14 +12,14 @@ const resultado = await db.query(`
     personalidad,
     historial_medico,
     tipo_mascota,
-    foto,
     estado_adopcion
   FROM mascotas
   WHERE estado_adopcion = 'disponible'
   ORDER BY id DESC
 `);
 
-const mascotas = resultado.rows;
+// Fotografías desde KodApp_Fotos.
+const mascotas = await agregarFotosMascotas(resultado.rows);
 ---
 
 <section class="mascotas-disponibles">
@@ -33,7 +36,9 @@ const mascotas = resultado.rows;
       <div class="mascotas-vacias">
         <i class="fa-solid fa-paw"></i>
         <h3>No hay mascotas disponibles</h3>
-        <p>Por ahora no hay mascotas publicadas para adopción.</p>
+        <p>
+          Por ahora no hay mascotas publicadas para adopción.
+        </p>
       </div>
     ) : (
       <div class="mascotas-grid">
@@ -44,6 +49,7 @@ const mascotas = resultado.rows;
                 <img
                   src={mascota.foto}
                   alt={`Foto de ${mascota.nombre}`}
+                  loading="lazy"
                 />
               ) : (
                 <div class="mascota-no-image">

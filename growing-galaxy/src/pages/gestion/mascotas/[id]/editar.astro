@@ -1,0 +1,545 @@
+
+---
+import Layout from "../../../../layouts/Layout.astro";
+import Header from "../../../../components/Header.astro";
+import { db } from "../../../../lib/db";
+import { getUsuarioDesdeSesion } from "../../../../lib/auth";
+import { agregarFotosMascotas } from "../../../../lib/fotos";
+
+// Comprobar que exista una sesión.
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+// Solo las organizaciones pueden editar publicaciones.
+if (usuario.tipo_usuario !== "organizacion") {
+  return Astro.redirect("/usuario");
+}
+
+// Obtener ID de la mascota desde la URL.
+const id = Number(Astro.params.id);
+
+if (!Number.isSafeInteger(id) || id <= 0) {
+  return Astro.redirect("/gestion/mascotas");
+}
+
+// Consultar únicamente las publicaciones de esta organización.
+const resultado = await db.query(
+  `SELECT
+     id,
+     nombre,
+     descripcion,
+     personalidad,
+     historial_medico,
+     tipo_mascota,
+     estado_adopcion
+   FROM mascotas
+   WHERE id = $1
+     AND usuario_id = $2`,
+  [id, usuario.id]
+);
+
+if (resultado.rows.length === 0) {
+  return Astro.redirect("/gestion/mascotas");
+}
+
+// Cargar la fotografía desde KodApp_Fotos.
+const mascotas = await agregarFotosMascotas(resultado.rows);
+const mascota = mascotas[0];
+---
+
+<Layout
+  title={`Editar ${mascota.nombre} | KodApp`}
+  description="Editar una publicación de mascota."
+>
+  <Header />
+
+  <main class="form-page">
+    <div class="form-page-container">
+
+      <div class="page-header">
+        <a href="/gestion/mascotas" class="back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a mis mascotas
+        </a>
+
+        <span class="section-kicker">
+          Administración de publicaciones
+        </span>
+
+        <h1>Editar publicación</h1>
+
+        <p>
+          Modifica los datos de {mascota.nombre} y guarda los cambios.
+        </p>
+      </div>
+
+      <form
+        id="editar-mascota-form"
+        class="publication-form"
+      >
+        <input
+          type="hidden"
+          name="id"
+          value={mascota.id}
+        />
+
+        <!-- FOTOGRAFÍA -->
+        <section class="form-section">
+          <div class="form-section-header">
+            <span class="form-step">01</span>
+
+            <div>
+              <h2>Fotografía</h2>
+              <p>Puedes mantener la imagen o reemplazarla.</p>
+            </div>
+          </div>
+
+          <div class="upload-area">
+            <label for="foto" class="upload-label">
+              <div
+                id="preview-container"
+                class="photo-preview"
+              >
+                {
+                  mascota.foto ? (
+                    <img
+                      src={mascota.foto}
+                      alt={`Foto de ${mascota.nombre}`}
+                    />
+                  ) : (
+                    <>
+                      <i class="fa-solid fa-camera"></i>
+                      <span>Seleccionar fotografía</span>
+                    </>
+                  )
+                }
+              </div>
+            </label>
+
+            <input
+              id="foto"
+              name="foto"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              hidden
+            />
+
+            <small>
+              Si no seleccionas otra imagen, se conserva la actual.
+              Máximo 5 MB.
+            </small>
+          </div>
+        </section>
+
+        <!-- DATOS DE LA MASCOTA -->
+        <section class="form-section">
+          <div class="form-section-header">
+            <span class="form-step">02</span>
+
+            <div>
+              <h2>Datos de la mascota</h2>
+              <p>Actualiza su información básica.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+
+            <div class="form-field">
+              <label for="nombre">
+                Nombre
+              </label>
+
+              <input
+                id="nombre"
+                name="nombre"
+                type="text"
+                maxlength="100"
+                required
+                value={mascota.nombre}
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="tipoMascota">
+                Tipo de mascota
+              </label>
+
+              <select
+                id="tipoMascota"
+                name="tipoMascota"
+                required
+              >
+                <option
+                  value="perro"
+                  selected={mascota.tipo_mascota === "perro"}
+                >
+                  Perro
+                </option>
+
+                <option
+                  value="gato"
+                  selected={mascota.tipo_mascota === "gato"}
+                >
+                  Gato
+                </option>
+
+                <option
+                  value="otro"
+                  selected={mascota.tipo_mascota === "otro"}
+                >
+                  Otro
+                </option>
+              </select>
+            </div>
+
+            <div class="form-field form-field-full">
+              <label for="descripcion">
+                Descripción
+              </label>
+
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                rows="5"
+              >{mascota.descripcion ?? ""}</textarea>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- PERSONALIDAD -->
+        <section class="form-section">
+          <div class="form-section-header">
+            <span class="form-step">03</span>
+
+            <div>
+              <h2>Personalidad</h2>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="personalidad">
+              Personalidad
+            </label>
+
+            <textarea
+              id="personalidad"
+              name="personalidad"
+              rows="5"
+            >{mascota.personalidad ?? ""}</textarea>
+          </div>
+        </section>
+
+        <!-- HISTORIAL MÉDICO -->
+        <section class="form-section">
+          <div class="form-section-header">
+            <span class="form-step">04</span>
+
+            <div>
+              <h2>Historial médico</h2>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="historialMedico">
+              Historial médico
+            </label>
+
+            <textarea
+              id="historialMedico"
+              name="historialMedico"
+              rows="5"
+            >{mascota.historial_medico ?? ""}</textarea>
+          </div>
+        </section>
+
+        <!-- ESTADO DE ADOPCIÓN -->
+        <section class="form-section">
+          <div class="form-section-header">
+            <span class="form-step">05</span>
+
+            <div>
+              <h2>Estado de adopción</h2>
+              <p>Indica si la mascota continúa disponible.</p>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="estadoAdopcion">
+              Estado
+            </label>
+
+            <select
+              id="estadoAdopcion"
+              name="estadoAdopcion"
+              required
+            >
+              <option
+                value="disponible"
+                selected={mascota.estado_adopcion === "disponible"}
+              >
+                Disponible
+              </option>
+
+              <option
+                value="reservada"
+                selected={mascota.estado_adopcion === "reservada"}
+              >
+                Reservada
+              </option>
+
+              <option
+                value="adoptada"
+                selected={mascota.estado_adopcion === "adoptada"}
+              >
+                Adoptada
+              </option>
+            </select>
+          </div>
+        </section>
+
+        <!-- GUARDAR CAMBIOS -->
+        <p
+          id="editar-mensaje"
+          class="form-message"
+          aria-live="polite"
+        ></p>
+
+        <div class="form-actions">
+          <button
+          id="eliminar-publicacion"
+          type="button"
+          class="btn-eliminar-publicacion"
+        >
+          <i class="fa-solid fa-trash"></i>
+          Eliminar publicación
+        </button>
+          <a
+            href="/gestion/mascotas"
+            class="btn-outline"
+          >
+            Cancelar
+          </a>
+
+          <button
+            id="guardar-cambios"
+            type="submit"
+            class="btn-primary"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar cambios
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>(
+    "#editar-mascota-form"
+  );
+
+  const fotoInput = document.querySelector<HTMLInputElement>(
+    "#foto"
+  );
+
+  const preview = document.querySelector<HTMLElement>(
+    "#preview-container"
+  );
+
+  const mensaje = document.querySelector<HTMLElement>(
+    "#editar-mensaje"
+  );
+
+  const boton = document.querySelector<HTMLButtonElement>(
+    "#guardar-cambios"
+  );
+
+  // ==========================================
+  // VISTA PREVIA DE LA FOTOGRAFÍA
+  // ==========================================
+
+  fotoInput?.addEventListener("change", () => {
+    const archivo = fotoInput.files?.[0];
+
+    if (!archivo || !preview) return;
+
+    const tiposPermitidos = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (
+      !tiposPermitidos.includes(archivo.type) ||
+      archivo.size > 5 * 1024 * 1024
+    ) {
+      alert(
+        "Selecciona una imagen JPG, PNG o WebP de hasta 5 MB."
+      );
+
+      fotoInput.value = "";
+      return;
+    }
+
+    const url = URL.createObjectURL(archivo);
+
+    const imagen = document.createElement("img");
+    imagen.src = url;
+    imagen.alt = "Nueva foto de la mascota";
+
+    imagen.onload = () => {
+      URL.revokeObjectURL(url);
+    };
+
+    preview.replaceChildren(imagen);
+  });
+
+  // ==========================================
+  // GUARDAR LA PUBLICACIÓN EDITADA
+  // ==========================================
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    // Comprobar los elementos antes de utilizarlos.
+    if (!form || !boton || !mensaje) return;
+
+    boton.disabled = true;
+    mensaje.textContent = "Guardando cambios...";
+
+    try {
+      const datosFormulario = new FormData(form);
+
+      const respuesta = await fetch(
+        "/api/mascotas/editar",
+        {
+          method: "POST",
+          body: datosFormulario
+        }
+      );
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || !resultado.ok) {
+        mensaje.textContent =
+          resultado.mensaje ||
+          "No se pudieron guardar los cambios.";
+
+        return;
+      }
+
+      // Volver al listado de publicaciones.
+      window.location.href = "/gestion/mascotas";
+
+    } catch (error) {
+      console.error("Error al editar mascota:", error);
+
+      mensaje.textContent =
+        "No se pudo conectar con el servidor.";
+
+    } finally {
+      boton.disabled = false;
+    }
+  });
+
+  
+// ==========================================
+// ELIMINAR PUBLICACIÓN
+// ==========================================
+
+const botonEliminar = document.querySelector<HTMLButtonElement>(
+  "#eliminar-publicacion"
+);
+
+botonEliminar?.addEventListener("click", async () => {
+  const formularioEliminar = document.querySelector<HTMLFormElement>(
+    "#editar-mascota-form"
+  );
+
+  const mensajeEliminar = document.querySelector<HTMLElement>(
+    "#editar-mensaje"
+  );
+
+  const botonGuardar = document.querySelector<HTMLButtonElement>(
+    "#guardar-cambios"
+  );
+
+  if (!formularioEliminar || !mensajeEliminar) return;
+
+  const inputId = formularioEliminar.querySelector<HTMLInputElement>(
+    'input[name="id"]'
+  );
+
+  const id = Number(inputId?.value);
+
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    mensajeEliminar.textContent = "ID de publicación inválido.";
+    return;
+  }
+
+  // Solicitar confirmación antes de eliminar.
+  const confirmado = window.confirm(
+    "¿Estás seguro de eliminar esta publicación?\n\n" +
+    "También se eliminará su fotografía.\n" +
+    "Esta acción no se puede deshacer."
+  );
+
+  if (!confirmado) return;
+
+  botonEliminar.disabled = true;
+
+  if (botonGuardar) {
+    botonGuardar.disabled = true;
+  }
+
+  mensajeEliminar.textContent = "Eliminando publicación...";
+
+  try {
+    const respuesta = await fetch("/api/mascotas/eliminar", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.ok) {
+      mensajeEliminar.textContent =
+        datos.mensaje || "No se pudo eliminar la publicación.";
+      return;
+    }
+
+    // Informar si la foto no pudo eliminarse.
+    if (datos.advertencia) {
+      window.alert(datos.mensaje);
+    }
+
+    // Volver al listado de publicaciones.
+    window.location.href = "/gestion/mascotas";
+
+  } catch (error) {
+    console.error("Error al eliminar publicación:", error);
+
+    mensajeEliminar.textContent =
+      "Error de conexión al eliminar la publicación.";
+
+  } finally {
+    botonEliminar.disabled = false;
+
+    if (botonGuardar) {
+      botonGuardar.disabled = false;
+    }
+  }
+});
+
+</script>

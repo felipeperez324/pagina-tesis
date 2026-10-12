@@ -1,69 +1,53 @@
 
 import type { APIRoute } from "astro";
 import bcrypt from "bcrypt";
+import { timingSafeEqual } from "node:crypto";
+
 import { db } from "../../lib/db";
 import { hashComprobante } from "../../lib/verificacioncorreo";
 
 export const prerender = false;
 
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
+function responder(datos: object, estado = 200) {
+  return new Response(JSON.stringify(datos), {
+    status: estado,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store"
     }
   });
-
-// =========================================
-// CREAR CUENTA SOLO CON CORREO VERIFICADO
-// =========================================
+}
 
 export const POST: APIRoute = async ({ request }) => {
+  let conexion;
+
   try {
-    const data = await request.json().catch(() => ({}));
+    const datos = await request.json();
 
-    const nombre =
-      typeof data.nombre === "string"
-        ? data.nombre.trim()
-        : "";
-
-    const rut =
-      typeof data.rut === "string"
-        ? data.rut.trim()
-        : "";
-
-    const correo =
-      typeof data.correo === "string"
-        ? data.correo.trim().toLowerCase()
-        : "";
-
-    const tipoUsuario = data.tipoUsuario;
-    const contrasena = data.contrasena;
-    const comprobante = data.comprobante;
-
-    // =========================================
-    // VALIDAR DATOS
-    // =========================================
+    const nombre = String(datos.nombre ?? "").trim();
+    const rut = String(datos.rut ?? "").trim();
+    const correo = String(datos.correo ?? "").trim().toLowerCase();
+    const tipoUsuario = String(datos.tipoUsuario ?? "");
+    const contrasena = datos.contrasena;
+    const comprobante = datos.comprobante;
 
     if (
       !nombre ||
       !rut ||
       !correo ||
-      !tipoUsuario ||
       typeof contrasena !== "string" ||
       !contrasena
     ) {
-      return json({
+      return responder({
         ok: false,
-        mensaje: "Todos los campos son obligatorios."
+        mensaje: "Completa todos los campos."
       }, 400);
     }
 
     if (nombre.length > 100 || rut.length > 12) {
-      return json({
+      return responder({
         ok: false,
-        mensaje: "Nombre o RUT demasiado largo."
+        mensaje: "El nombre o RUT es demasiado largo."
       }, 400);
     }
 
@@ -71,155 +55,152 @@ export const POST: APIRoute = async ({ request }) => {
       correo.length > 150 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
     ) {
-      return json({
+      return responder({
         ok: false,
         mensaje: "Correo electrónico inválido."
       }, 400);
     }
 
-    if (contrasena.length < 6) {
-      return json({
+    if (contrasena.length < 6 || contrasena.length > 72) {
+      return responder({
         ok: false,
-        mensaje: "La contraseña debe tener al menos 6 caracteres."
+        mensaje: "La contraseña debe tener entre 6 y 72 caracteres."
       }, 400);
     }
 
-    if (
-      !["adoptante", "rescatista", "veterinario"]
-        .includes(tipoUsuario)
-    ) {
-      return json({
+    // SOLO DOS TIPOS DE CUENTA.
+    if (!["adoptante", "organizacion"].includes(tipoUsuario)) {
+      return responder({
         ok: false,
-        mensaje: "Tipo de usuario inválido."
+        mensaje: "Selecciona un tipo de cuenta válido."
       }, 400);
     }
 
-    // No basta con que el navegador diga
-    // que el correo está verificado.
     if (
       typeof comprobante !== "string" ||
       !/^[a-f0-9]{64}$/.test(comprobante)
     ) {
-      return json({
+      return responder({
         ok: false,
-        mensaje: "Debes verificar tu correo antes de registrarte."
+        mensaje: "Primero debes verificar tu correo."
       }, 403);
     }
 
-    const comprobanteHash = hashComprobante(comprobante);
+    const contrasenaHash = await bcrypt.hash(contrasena, 12);
 
-    // La contraseña se guarda cifrada mediante hash.
-    const hashPassword = await bcrypt.hash(contrasena, 12);
+    conexion = await db.connect();
+    await conexion.query("BEGIN");
 
-    const client = await db.connect();
+    // Comprobar la verificación ANTES de crear usuario.
+    const verificacion = await conexion.query(
+      `SELECT
+         verificado,
+         comprobante_hash,
+         comprobante_expira_en
+       FROM verificaciones_registro
+       WHERE correo = $1
+       FOR UPDATE`,
+      [correo]
+    );
 
-    try {
-      await client.query("BEGIN");
+    const registro = verificacion.rows[0];
 
-      // Bloqueamos la verificación mientras
-      // se intenta crear la cuenta.
-      const resultado = await client.query(
-        `SELECT
-          verificado,
-          comprobante_hash,
-          comprobante_expira_en
-         FROM verificaciones_registro
-         WHERE correo = $1
-         FOR UPDATE`,
-        [correo]
-      );
+    if (
+      !registro ||
+      !registro.verificado ||
+      !registro.comprobante_hash ||
+      !registro.comprobante_expira_en ||
+      new Date(registro.comprobante_expira_en).getTime() <= Date.now()
+    ) {
+      await conexion.query("ROLLBACK");
 
-      if (resultado.rows.length === 0) {
-        await client.query("ROLLBACK");
-
-        return json({
-          ok: false,
-          mensaje: "No existe una verificación válida para este correo."
-        }, 403);
-      }
-
-      const verificacion = resultado.rows[0];
-
-      const valido =
-        verificacion.verificado === true &&
-        verificacion.comprobante_hash === comprobanteHash &&
-        verificacion.comprobante_expira_en &&
-        new Date(
-          verificacion.comprobante_expira_en
-        ).getTime() > Date.now();
-
-      if (!valido) {
-        await client.query("ROLLBACK");
-
-        return json({
-          ok: false,
-          mensaje:
-            "La verificación no es válida o expiró. " +
-            "Solicita otro código."
-        }, 403);
-      }
-
-      // =========================================
-      // AHORA SÍ CREAMOS EL USUARIO
-      // =========================================
-
-      await client.query(
-        `INSERT INTO usuarios (
-          nombre,
-          rut,
-          correo,
-          tipo_usuario,
-          contrasena,
-          estado_cuenta,
-          correo_verificado
-        )
-        VALUES ($1, $2, $3, $4, $5, 'activo', TRUE)`,
-        [
-          nombre,
-          rut,
-          correo,
-          tipoUsuario,
-          hashPassword
-        ]
-      );
-
-      // Consumimos el comprobante.
-      // No podrá utilizarse para crear otra cuenta.
-      await client.query(
-        `DELETE FROM verificaciones_registro
-         WHERE correo = $1`,
-        [correo]
-      );
-
-      await client.query("COMMIT");
-
-      return json({
-        ok: true,
-        mensaje: "¡Cuenta creada correctamente!"
-      }, 201);
-
-    } catch (error: any) {
-      await client.query("ROLLBACK");
-
-      if (error?.code === "23505") {
-        return json({
-          ok: false,
-          mensaje: "El correo o RUT ya están registrados."
-        }, 409);
-      }
-
-      throw error;
-
-    } finally {
-      client.release();
+      return responder({
+        ok: false,
+        mensaje: "La verificación expiró. Verifica tu correo nuevamente."
+      }, 403);
     }
 
-  } catch (error) {
-    console.error("Error al crear cuenta:", error);
+    const hashEsperado = Buffer.from(
+      registro.comprobante_hash,
+      "hex"
+    );
 
-    return json({
+    const hashRecibido = Buffer.from(
+      hashComprobante(comprobante),
+      "hex"
+    );
+
+    if (
+      hashEsperado.length !== 32 ||
+      hashRecibido.length !== 32 ||
+      !timingSafeEqual(hashEsperado, hashRecibido)
+    ) {
+      await conexion.query("ROLLBACK");
+
+      return responder({
+        ok: false,
+        mensaje: "El comprobante de verificación no es válido."
+      }, 403);
+    }
+
+    // El usuario se crea SOLO después de validar.
+    const resultado = await conexion.query(
+      `INSERT INTO usuarios (
+         nombre,
+         rut,
+         correo,
+         tipo_usuario,
+         contrasena,
+         estado_cuenta,
+         correo_verificado,
+         descripcion_perfil
+       )
+       VALUES ($1, $2, $3, $4, $5, 'activo', TRUE, '')
+       RETURNING id`,
+      [
+        nombre,
+        rut,
+        correo,
+        tipoUsuario,
+        contrasenaHash
+      ]
+    );
+
+    // Impedir reutilizar la misma verificación.
+    await conexion.query(
+      `DELETE FROM verificaciones_registro
+       WHERE correo = $1`,
+      [correo]
+    );
+
+    await conexion.query("COMMIT");
+
+    return responder({
+      ok: true,
+      mensaje: "Cuenta creada correctamente.",
+      usuarioId: resultado.rows[0].id
+    }, 201);
+
+  } catch (error: any) {
+    if (conexion) {
+      await conexion.query("ROLLBACK").catch(() => {});
+    }
+
+    if (error?.code === "23505") {
+      return responder({
+        ok: false,
+        mensaje: "El correo o RUT ya están registrados."
+      }, 409);
+    }
+
+    console.error("Error de registro:", error);
+
+    return responder({
       ok: false,
       mensaje: "No se pudo crear la cuenta."
     }, 500);
+
+  } finally {
+    conexion?.release();
   }
 };

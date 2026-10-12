@@ -1,207 +1,320 @@
+
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId =
-  Astro.cookies.get("session_id")?.value;
-
-const usuario =
-  await getUsuarioDesdeSesion(sessionId);
-
+const sessionId = Astro.cookies.get("session_id")?.value;
+const usuario = await getUsuarioDesdeSesion(sessionId);
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
+
+const esOrganizacion = usuario.tipo_usuario === "organizacion";
+const tipoCuenta = esOrganizacion ? "Organización" : "Usuario";
+const volver = esOrganizacion ? "/gestion" : "/usuario";
 ---
 
 <Layout
-  title="Mi perfil | Kodapp"
-  description="Configuración del perfil de usuario."
+  title="Mi perfil | KodApp"
+  description="Configuración de mi perfil."
 >
-
   <Header />
 
-
   <main class="profile-page">
-
     <div class="profile-container">
 
-
-      <!-- ========================================= -->
-      <!-- CABECERA -->
-      <!-- ========================================= -->
-
       <div class="page-header">
-
-        <a
-          href={
-            usuario.tipo_usuario === "adoptante"
-              ? "/usuario"
-              : "/gestion"
-          }
-          class="back-link"
-        >
+        <a href={volver} class="back-link">
           <i class="fa-solid fa-arrow-left"></i>
           Volver
         </a>
 
-        <span class="section-kicker">
-          Cuenta
-        </span>
+        <span class="section-kicker">Cuenta</span>
 
-        <h1>
-          Mi perfil
-        </h1>
+        <h1>Mi perfil</h1>
 
         <p>
-          Consulta la información asociada a tu cuenta.
+          Personaliza tu información y tu fotografía.
         </p>
-
       </div>
-
-
-      <!-- ========================================= -->
-      <!-- PERFIL -->
-      <!-- ========================================= -->
 
       <section class="profile-layout">
 
-
+        <!-- COLUMNA IZQUIERDA: FOTO -->
         <article class="profile-summary">
 
-          <div class="profile-summary-avatar">
-
+          <div
+            class="profile-summary-avatar"
+            id="profile-avatar"
+          >
             {
               usuario.foto_perfil ? (
-
                 <img
                   src={usuario.foto_perfil}
                   alt="Foto de perfil"
                 />
-
               ) : (
-
                 <i class="fa-solid fa-user"></i>
-
               )
             }
-
           </div>
 
+          <h2>{usuario.nombre}</h2>
+          <p>{tipoCuenta}</p>
 
-          <h2>
-            {usuario.nombre}
-          </h2>
+          <label
+            for="profile-photo-input"
+            class="photo-change-button"
+          >
+            <i class="fa-solid fa-camera"></i>
+            Cambiar foto
+          </label>
 
-          <p>
-            {
-              usuario.tipo_usuario === "adoptante"
-                ? "Adoptante"
-                : usuario.tipo_usuario === "rescatista"
-                  ? "Rescatista"
-                  : "Veterinario"
-            }
-          </p>
+          <input
+            id="profile-photo-input"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            hidden
+          />
+
+          <p
+            id="profile-photo-message"
+            class="profile-action-message"
+            aria-live="polite"
+          ></p>
 
         </article>
 
-
+        <!-- COLUMNA DERECHA: INFORMACIÓN -->
         <article class="profile-details">
 
           <div class="profile-details-header">
-
             <span class="section-kicker">
               Información personal
             </span>
-
-            <h2>
-              Datos de tu cuenta
-            </h2>
-
+            <h2>Datos de tu cuenta</h2>
           </div>
-
 
           <div class="profile-data-grid">
 
             <div class="profile-data-item">
-
-              <span>
-                Nombre completo
-              </span>
-
-              <strong>
-                {usuario.nombre}
-              </strong>
-
+              <span>Nombre</span>
+              <strong>{usuario.nombre}</strong>
             </div>
 
-
             <div class="profile-data-item">
-
-              <span>
-                Correo electrónico
-              </span>
-
-              <strong>
-                {usuario.correo}
-              </strong>
-
+              <span>Correo electrónico</span>
+              <strong>{usuario.correo}</strong>
             </div>
 
-
             <div class="profile-data-item">
-
-              <span>
-                RUT
-              </span>
-
-              <strong>
-                {usuario.rut}
-              </strong>
-
+              <span>RUT</span>
+              <strong>{usuario.rut}</strong>
             </div>
 
-
             <div class="profile-data-item">
-
-              <span>
-                Tipo de usuario
-              </span>
-
-              <strong>
-                {
-                  usuario.tipo_usuario === "adoptante"
-                    ? "Adoptante"
-                    : usuario.tipo_usuario === "rescatista"
-                      ? "Rescatista"
-                      : "Veterinario"
-                }
-              </strong>
-
+              <span>Tipo de cuenta</span>
+              <strong>{tipoCuenta}</strong>
             </div>
 
-
             <div class="profile-data-item">
-
-              <span>
-                Estado de cuenta
-              </span>
-
-              <strong>
-                {usuario.estado_cuenta}
-              </strong>
-
+              <span>Estado</span>
+              <strong>{usuario.estado_cuenta}</strong>
             </div>
 
           </div>
 
+          <!-- DESCRIPCIÓN DEL PERFIL -->
+          <section class="profile-description">
+
+            <h2>
+              {
+                esOrganizacion
+                  ? "Acerca de nuestra organización"
+                  : "Acerca de mí"
+              }
+            </h2>
+
+            <p>
+              {
+                esOrganizacion
+                  ? "Cuenta quiénes son, qué hacen y cómo ayudan a las mascotas."
+                  : "Escribe una pequeña presentación sobre ti."
+              }
+            </p>
+
+            <form id="description-form">
+
+              <label for="profile-description">
+                Descripción
+              </label>
+
+              <textarea
+                id="profile-description"
+                name="descripcion"
+                maxlength="500"
+                rows="5"
+                placeholder="Escribe aquí tu descripción..."
+              >{usuario.descripcion_perfil ?? ""}</textarea>
+
+              <div class="profile-description-footer">
+                <span id="description-counter">
+                  {(usuario.descripcion_perfil ?? "").length}/500
+                </span>
+
+                <button
+                  type="submit"
+                  class="btn-primary"
+                  id="save-description"
+                >
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Guardar descripción
+                </button>
+              </div>
+
+              <p
+                id="description-message"
+                class="profile-action-message"
+                aria-live="polite"
+              ></p>
+
+            </form>
+
+          </section>
+
         </article>
 
       </section>
-
     </div>
-
   </main>
-
 </Layout>
+
+<script>
+  // ========================================
+  // ACTUALIZAR FOTO DE PERFIL
+  // ========================================
+
+  const fotoInput = document.querySelector<HTMLInputElement>(
+    "#profile-photo-input"
+  );
+
+  const fotoMensaje = document.querySelector<HTMLElement>(
+    "#profile-photo-message"
+  );
+
+  fotoInput?.addEventListener("change", async () => {
+    const archivo = fotoInput.files?.[0];
+
+    if (!archivo || !fotoMensaje) return;
+
+    const permitidos = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (
+      !permitidos.includes(archivo.type) ||
+      archivo.size > 5 * 1024 * 1024
+    ) {
+      fotoMensaje.textContent =
+        "Selecciona una imagen JPG, PNG o WebP de hasta 5 MB.";
+      fotoInput.value = "";
+      return;
+    }
+
+    const datos = new FormData();
+    datos.append("foto", archivo);
+
+    fotoMensaje.textContent = "Guardando fotografía...";
+
+    try {
+      const respuesta = await fetch("/api/perfil/foto", {
+        method: "POST",
+        body: datos
+      });
+
+      const resultado = await respuesta.json();
+
+      if (!respuesta.ok || !resultado.ok) {
+        throw new Error(
+          resultado.mensaje || "No se pudo guardar la foto."
+        );
+      }
+
+      // Actualiza avatar y encabezado.
+      window.location.reload();
+
+    } catch (error) {
+      fotoMensaje.textContent =
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la fotografía.";
+    }
+  });
+
+  // ========================================
+  // ACTUALIZAR DESCRIPCIÓN
+  // ========================================
+
+  const form = document.querySelector<HTMLFormElement>(
+    "#description-form"
+  );
+
+  const descripcion = document.querySelector<HTMLTextAreaElement>(
+    "#profile-description"
+  );
+
+  const contador = document.querySelector<HTMLElement>(
+    "#description-counter"
+  );
+
+  const mensaje = document.querySelector<HTMLElement>(
+    "#description-message"
+  );
+
+  const boton = document.querySelector<HTMLButtonElement>(
+    "#save-description"
+  );
+
+  descripcion?.addEventListener("input", () => {
+    if (contador) {
+      contador.textContent = `${descripcion.value.length}/500`;
+    }
+  });
+
+  form?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
+
+    if (!descripcion || !mensaje || !boton) return;
+
+    boton.disabled = true;
+    mensaje.textContent = "Guardando...";
+
+    try {
+      const respuesta = await fetch("/api/perfil/descripcion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          descripcion: descripcion.value
+        })
+      });
+
+      const resultado = await respuesta.json();
+
+      mensaje.textContent =
+        resultado.mensaje || "No se pudo guardar.";
+
+    } catch (error) {
+      console.error(error);
+      mensaje.textContent = "Error de conexión.";
+
+    } finally {
+      boton.disabled = false;
+    }
+  });
+</script>

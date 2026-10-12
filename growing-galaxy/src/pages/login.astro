@@ -12,12 +12,10 @@ import "../styles/login.css";
   <main class="ka-auth">
     <div class="ka-auth__layout">
 
-      <!-- IZQUIERDA: MASCOTAS ANIMADAS -->
       <div class="ka-auth__visual">
         <MascotasAuth />
       </div>
 
-      <!-- DERECHA: LOGIN -->
       <section class="ka-auth__card">
 
         <a href="/" class="ka-auth__brand">
@@ -33,7 +31,6 @@ import "../styles/login.css";
 
         <form id="login-form" class="ka-form">
 
-          <!-- CORREO -->
           <div class="ka-field">
             <input
               id="email"
@@ -46,7 +43,6 @@ import "../styles/login.css";
             <label for="email">Correo electrónico</label>
           </div>
 
-          <!-- CONTRASEÑA -->
           <div class="ka-field">
             <input
               id="password"
@@ -58,7 +54,6 @@ import "../styles/login.css";
             />
             <label for="password">Contraseña</label>
 
-            <!-- El componente MascotasAuth controla este botón -->
             <button
               type="button"
               class="ka-password-toggle"
@@ -70,8 +65,11 @@ import "../styles/login.css";
             </button>
           </div>
 
-          <!-- BOTÓN ANIMADO -->
-          <button type="submit" class="ka-submit" id="login-submit">
+          <button
+            type="submit"
+            class="ka-submit"
+            id="login-submit"
+          >
             <span></span>
             <span></span>
             <span></span>
@@ -87,6 +85,7 @@ import "../styles/login.css";
             role="status"
             aria-live="polite"
           ></p>
+
         </form>
 
         <p class="ka-auth__footer">
@@ -105,74 +104,77 @@ import "../styles/login.css";
 </Layout>
 
 <script>
-  // =========================================
-  // CONEXIÓN CON LA API DE LOGIN
-  // =========================================
+  const form = document.querySelector<HTMLFormElement>(
+    "#login-form"
+  );
 
-  const form = document.querySelector<HTMLFormElement>("#login-form");
-  const message = document.querySelector<HTMLElement>("#login-message");
-  const submit = document.querySelector<HTMLButtonElement>("#login-submit");
+  const mensaje = document.querySelector<HTMLElement>(
+    "#login-message"
+  );
 
-  form?.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  const boton = document.querySelector<HTMLButtonElement>(
+    "#login-submit"
+  );
 
-    if (!message || !submit) return;
+  form?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
 
-    const email = form.querySelector<HTMLInputElement>("#email");
-    const password = form.querySelector<HTMLInputElement>("#password");
+    if (!mensaje || !boton) return;
 
-    if (!email || !password) return;
+    const correo = form.querySelector<HTMLInputElement>(
+      "#email"
+    );
 
-    submit.disabled = true;
-    message.textContent = "Comprobando tus datos...";
-    message.dataset.status = "";
+    const contrasena = form.querySelector<HTMLInputElement>(
+      "#password"
+    );
+
+    if (!correo || !contrasena) return;
+
+    boton.disabled = true;
+    mensaje.textContent = "Comprobando tus datos...";
+    mensaje.dataset.status = "";
 
     try {
-      // Se conserva el endpoint original de KodApp.
-      const response = await fetch("/api/login", {
+      const respuesta = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          correo: email.value.trim(),
-          contrasena: password.value
+          correo: correo.value.trim(),
+          contrasena: contrasena.value
         })
       });
 
-      const data = await response.json();
+      const datos = await respuesta.json();
 
-      if (!response.ok || !data.ok) {
-        message.textContent =
-          data.mensaje || "No se pudo iniciar sesión.";
+      if (!respuesta.ok || !datos.ok) {
+        mensaje.textContent =
+          datos.mensaje || "No se pudo iniciar sesión.";
         return;
       }
 
-      message.dataset.status = "success";
-      message.textContent = "¡Bienvenido a KodApp!";
+      const tipo = datos.usuario?.tipoUsuario;
 
-      // Redirección según rol existente.
-      const role = data.usuario?.tipoUsuario;
-
-      if (role === "adoptante") {
+      if (tipo === "adoptante") {
         window.location.href = "/usuario";
         return;
       }
 
-      if (role === "rescatista" || role === "veterinario") {
+      if (tipo === "organizacion") {
         window.location.href = "/gestion";
         return;
       }
 
-      message.dataset.status = "";
-      message.textContent = "Tipo de usuario no válido.";
+      mensaje.textContent = "Tipo de cuenta no válido.";
 
     } catch (error) {
-      console.error("Error de login:", error);
-      message.textContent = "No se pudo conectar con el servidor.";
+      console.error("Error de inicio de sesión:", error);
+      mensaje.textContent = "No se pudo conectar con el servidor.";
 
     } finally {
-      submit.disabled = false;
+      boton.disabled = false;
     }
   });
 </script>

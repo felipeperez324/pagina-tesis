@@ -1,245 +1,182 @@
-// Importamos el tipo APIRoute de Astro.
+
 import type { APIRoute } from "astro";
 
-// Importamos la conexión con PostgreSQL.
 import { db } from "../../../lib/db";
-
-// Importamos la función que obtiene
-// el usuario desde su sesión.
+import { dbFotos } from "../../../lib/dbfotos";
 import { getUsuarioDesdeSesion } from "../../../lib/auth";
 
-// Este endpoint se ejecuta en el servidor.
 export const prerender = false;
 
+// Respuesta JSON para el navegador.
+function responder(
+  datos: Record<string, unknown>,
+  estado = 200
+) {
+  return new Response(JSON.stringify(datos), {
+    status: estado,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+    },
+  });
+}
 
-// =========================================
-// CREAR MASCOTA
-// =========================================
-//
-// Este endpoint recibe los datos del formulario
-// de publicación de mascotas y los guarda
-// en la tabla mascotas.
+// ==========================================
+// CREAR PUBLICACIÓN DE MASCOTA
+// ==========================================
 export const POST: APIRoute = async ({ request, cookies }) => {
-
   try {
+    // 1. COMPROBAR SESIÓN
 
-    // =========================================
-    // COMPROBAR SESIÓN
-    // =========================================
-
-    // Obtenemos el ID de sesión desde la cookie.
     const sessionId = cookies.get("session_id")?.value;
 
-    // Buscamos al usuario que corresponde
-    // a esa sesión.
     const usuario = await getUsuarioDesdeSesion(sessionId);
 
-
-    // Si no existe una sesión válida,
-    // no permitimos publicar mascotas.
     if (!usuario) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "No estás autenticado.",
-        }),
+      return responder(
         {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+          ok: false,
+          mensaje: "Debes iniciar sesión.",
+        },
+        401
       );
     }
 
+    // 2. COMPROBAR PERMISOS
 
-    // =========================================
-    // COMPROBAR PERMISOS
-    // =========================================
-
-    // Solamente los rescatistas y veterinarios
-    // pueden publicar mascotas.
-    if (
-      usuario.tipo_usuario !== "rescatista" &&
-      usuario.tipo_usuario !== "veterinario"
-    ) {
-
+    if (usuario.tipo_usuario !== "organizacion") {
       return new Response(
         JSON.stringify({
           ok: false,
-          mensaje: "No tienes permisos para publicar mascotas.",
+          mensaje: "Solo las organizaciones pueden publicar mascotas."
         }),
         {
           status: 403,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" }
         }
       );
     }
+    // 3. OBTENER DATOS DEL FORMULARIO
 
-
-    // =========================================
-    // OBTENER DATOS DEL FORMULARIO
-    // =========================================
-
-    // El formulario se envía utilizando FormData
-    // porque también permite enviar imágenes.
     const formData = await request.formData();
 
+    const nombre = formData
+      .get("nombre")
+      ?.toString()
+      .trim();
 
-    // Obtenemos el nombre de la mascota.
-    const nombre =
-      formData.get("nombre")?.toString().trim();
+    const tipoMascota = formData
+      .get("tipoMascota")
+      ?.toString()
+      .trim();
 
-    // Obtenemos el tipo de mascota.
-    const tipoMascota =
-      formData.get("tipoMascota")?.toString();
+    const descripcion = formData
+      .get("descripcion")
+      ?.toString()
+      .trim();
 
-    // Obtenemos la descripción.
-    const descripcion =
-      formData.get("descripcion")?.toString().trim();
+    const personalidad = formData
+      .get("personalidad")
+      ?.toString()
+      .trim();
 
-    // Obtenemos la personalidad.
-    const personalidad =
-      formData.get("personalidad")?.toString().trim();
+    const historialMedico = formData
+      .get("historialMedico")
+      ?.toString()
+      .trim();
 
-    // Obtenemos el historial médico.
-    const historialMedico =
-      formData
-        .get("historialMedico")
-        ?.toString()
-        .trim();
-
-    // Obtenemos la imagen.
     const archivo = formData.get("foto");
 
+    // 4. VALIDAR LOS DATOS
 
-    // =========================================
-    // VALIDAR CAMPOS OBLIGATORIOS
-    // =========================================
-
-    // El nombre y el tipo son obligatorios.
     if (!nombre || !tipoMascota) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje:
-            "El nombre y el tipo de mascota son obligatorios.",
-        }),
+      return responder(
         {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+          ok: false,
+          mensaje: "El nombre y el tipo son obligatorios.",
+        },
+        400
       );
     }
 
+    if (nombre.length > 100) {
+      return responder(
+        {
+          ok: false,
+          mensaje: "El nombre es demasiado largo.",
+        },
+        400
+      );
+    }
 
-    // =========================================
-    // VALIDAR TIPO DE MASCOTA
-    // =========================================
-
-    // Solo permitimos los tipos definidos
-    // por el sistema.
-    if (
-      !["perro", "gato", "otro"].includes(tipoMascota)
-    ) {
-
-      return new Response(
-        JSON.stringify({
+    if (!["perro", "gato", "otro"].includes(tipoMascota)) {
+      return responder(
+        {
           ok: false,
           mensaje: "El tipo de mascota no es válido.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
+        },
+        400
+      );
+    }
+
+    // 5. PROCESAR LA FOTO
+
+    let imagenBuffer: Buffer | null = null;
+    let imagenMime: string | null = null;
+
+    if (archivo !== null) {
+      if (!(archivo instanceof File)) {
+        return responder(
+          {
+            ok: false,
+            mensaje: "El archivo recibido no es válido.",
           },
+          400
+        );
+      }
+
+      if (archivo.size > 0) {
+        const tiposPermitidos = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ];
+
+        if (!tiposPermitidos.includes(archivo.type)) {
+          return responder(
+            {
+              ok: false,
+              mensaje: "Solo se permiten imágenes JPG, PNG o WebP.",
+            },
+            400
+          );
         }
-      );
+
+        if (archivo.size > 5 * 1024 * 1024) {
+          return responder(
+            {
+              ok: false,
+              mensaje: "La imagen no puede superar los 5 MB.",
+            },
+            400
+          );
+        }
+
+        imagenBuffer = Buffer.from(
+          await archivo.arrayBuffer()
+        );
+
+        imagenMime = archivo.type;
+      }
     }
 
-
-    // =========================================
-    // PROCESAR IMAGEN
-    // =========================================
-
-    // Inicialmente no tenemos ninguna imagen.
-    let imagenBase64: string | null = null;
-
-
-    // Si se recibió un archivo y tiene contenido,
-    // comenzamos a validarlo.
-    if (
-      archivo instanceof File &&
-      archivo.size > 0
-    ) {
-
-      // Comprobamos que sea una imagen.
-      if (!archivo.type.startsWith("image/")) {
-
-        return new Response(
-          JSON.stringify({
-            ok: false,
-            mensaje: "El archivo debe ser una imagen.",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-
-
-      // Comprobamos que no supere los 5 MB.
-      if (
-        archivo.size > 5 * 1024 * 1024
-      ) {
-
-        return new Response(
-          JSON.stringify({
-            ok: false,
-            mensaje:
-              "La imagen no puede superar los 5 MB.",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-
-
-      // Convertimos el archivo a Buffer.
-      const buffer = Buffer.from(
-        await archivo.arrayBuffer()
-      );
-
-
-      // Convertimos la imagen a Base64.
-      imagenBase64 =
-        `data:${archivo.type};base64,${buffer.toString("base64")}`;
-    }
-
-
-    // =========================================
-    // GUARDAR MASCOTA EN POSTGRESQL
-    // =========================================
-
-    // Insertamos la nueva mascota.
+    // ==========================================
+    // 6. GUARDAR MASCOTA EN LA BASE PRINCIPAL
+    // ==========================================
     //
-    // usuario_id permite saber quién publicó
-    // la mascota.
-    //
-    // estado_adopcion comienza como "disponible".
+    // KodApp guarda solamente los datos de
+    // la mascota. Ya NO guarda su fotografía.
+
     const resultado = await db.query(
       `INSERT INTO mascotas (
         usuario_id,
@@ -248,12 +185,12 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         personalidad,
         historial_medico,
         estado_adopcion,
-        tipo_mascota,
-        foto
+        tipo_mascota
       )
-      VALUES ($1, $2, $3, $4, $5, 'disponible', $6, $7)
+      VALUES (
+        $1, $2, $3, $4, $5, 'disponible', $6
+      )
       RETURNING id`,
-
       [
         usuario.id,
         nombre,
@@ -261,56 +198,87 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         personalidad || null,
         historialMedico || null,
         tipoMascota,
-        imagenBase64,
       ]
     );
 
+    const mascotaId = Number(resultado.rows[0].id);
 
-    // =========================================
-    // RESPUESTA EXITOSA
-    // =========================================
+    // ==========================================
+    // 7. GUARDAR FOTO EN KODAPP_FOTOS
+    // ==========================================
 
-    // Devolvemos el ID de la mascota creada.
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        mensaje:
-          "Mascota publicada correctamente.",
-        mascotaId:
-          resultado.rows[0].id,
-      }),
-      {
-        status: 201,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    if (imagenBuffer && imagenMime) {
+      try {
+        await dbFotos.query(
+          `INSERT INTO fotos_mascotas (
+            mascota_id,
+            imagen,
+            tipo_mime
+          )
+          VALUES ($1, $2, $3)`,
+          [
+            mascotaId,
+            imagenBuffer,
+            imagenMime,
+          ]
+        );
+
+      } catch (error) {
+        console.error(
+          "Error al guardar imagen de mascota:",
+          error
+        );
+
+        // Como son dos bases de datos distintas,
+        // si falla la fotografía intentamos borrar
+        // la publicación recién creada.
+        try {
+          await db.query(
+            `DELETE FROM mascotas
+             WHERE id = $1
+               AND usuario_id = $2`,
+            [mascotaId, usuario.id]
+          );
+        } catch (errorBorrado) {
+          console.error(
+            "No se pudo deshacer la publicación:",
+            errorBorrado
+          );
+        }
+
+        return responder(
+          {
+            ok: false,
+            mensaje:
+              "No se pudo guardar la fotografía de la mascota.",
+          },
+          500
+        );
       }
-    );
+    }
 
+    // ==========================================
+    // 8. PUBLICACIÓN CREADA
+    // ==========================================
+
+    return responder(
+      {
+        ok: true,
+        mensaje: "Mascota publicada correctamente.",
+        mascotaId,
+      },
+      201
+    );
 
   } catch (error) {
+    console.error("Error al publicar mascota:", error);
 
-    // Mostramos el error real en la consola
-    // para poder identificar problemas.
-    console.error(
-      "Error al publicar mascota:",
-      error
-    );
-
-
-    // Mensaje que recibe el navegador.
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        mensaje:
-          "No se pudo publicar la mascota.",
-      }),
+    return responder(
       {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+        ok: false,
+        mensaje: "No se pudo publicar la mascota.",
+      },
+      500
     );
   }
 };

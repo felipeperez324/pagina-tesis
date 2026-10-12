@@ -1,47 +1,59 @@
-// Importamos la conexión con PostgreSQL.
-import { db } from "./db";
 
-// Esta función recibe el ID de sesión guardado en la cookie
-// y busca qué usuario corresponde a esa sesión.
+import { db } from "./db";
+import { obtenerFotoPerfil } from "./fotos";
+
+export interface UsuarioSesion {
+  id: number;
+  nombre: string;
+  rut: string;
+  correo: string;
+  tipo_usuario: "adoptante" | "organizacion";
+  estado_cuenta: string;
+  descripcion_perfil: string;
+  foto_perfil: string | null;
+}
+
 export async function getUsuarioDesdeSesion(
   sessionId: string | undefined
-) {
-
-  // Si no existe un ID de sesión,
-// significa que el usuario no está autenticado.
+): Promise<UsuarioSesion | null> {
   if (!sessionId) {
     return null;
   }
 
-  // Buscamos el usuario relacionado con la sesión.
-  //
-  // La tabla sesiones contiene el usuario_id.
-  // Luego hacemos INNER JOIN con usuarios para obtener
-  // todos los datos del usuario.
   const resultado = await db.query(
     `SELECT
-      u.id,
-      u.nombre,
-      u.rut,
-      u.correo,
-      u.tipo_usuario,
-      u.estado_cuenta,
-      u.foto_perfil
-    FROM sesiones s
-    INNER JOIN usuarios u ON u.id = s.usuario_id
-    WHERE s.id = $1
-      AND u.estado_cuenta = 'activo'`,
-
-    // $1 representa el ID de sesión.
+       u.id,
+       u.nombre,
+       u.rut,
+       u.correo,
+       u.tipo_usuario,
+       u.estado_cuenta,
+       u.descripcion_perfil
+     FROM sesiones AS s
+     INNER JOIN usuarios AS u
+       ON u.id = s.usuario_id
+     WHERE s.id = $1
+       AND u.estado_cuenta = 'activo'
+     LIMIT 1`,
     [sessionId]
   );
 
-  // Si no encontramos ninguna sesión válida,
-// devolvemos null.
   if (resultado.rows.length === 0) {
     return null;
   }
 
-  // Devolvemos los datos del usuario encontrado.
-  return resultado.rows[0];
+  const usuario = resultado.rows[0];
+
+  const foto = await obtenerFotoPerfil(Number(usuario.id));
+
+  return {
+    id: Number(usuario.id),
+    nombre: usuario.nombre,
+    rut: usuario.rut,
+    correo: usuario.correo,
+    tipo_usuario: usuario.tipo_usuario,
+    estado_cuenta: usuario.estado_cuenta,
+    descripcion_perfil: usuario.descripcion_perfil ?? "",
+    foto_perfil: foto
+  };
 }
