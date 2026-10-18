@@ -2,6 +2,23 @@
 import "../styles/decoraciones.css";
 import "../styles/global.css";
 
+
+import ControlInactividad from "../components/controlinactividad.astro";
+
+// Solo incluir el detector cuando existe una cookie
+// de sesión y estamos fuera de login/registro.
+const tieneSesion =
+  Boolean(Astro.cookies.get("session_id")?.value);
+
+const paginaPublicaAuth =
+  Astro.url.pathname === "/login" ||
+  Astro.url.pathname === "/registro";
+
+const usarControl =
+  tieneSesion && !paginaPublicaAuth;
+
+
+
 interface Props {
   title?: string;
   description?: string;
@@ -54,6 +71,9 @@ const {
   </head>
 
   <body>
+    <!-- Control de inactividad para usuarios conectados -->
+    {usarControl && <ControlInactividad />}
+
     <slot />
   </body>
 </html>

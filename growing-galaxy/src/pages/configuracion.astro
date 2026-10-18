@@ -1,0 +1,796 @@
+
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import "../styles/configuracion.css";
+
+/**
+ * KODAPP - CONFIGURACIÓN DE CUENTA
+ *
+ * Funcionalidades:
+ * - Consultar datos actuales.
+ * - Modificar nombre.
+ * - Cambiar correo mediante verificación.
+ * - Cambiar contraseña.
+ * - Cambiar entre Adoptante y Organización.
+ *
+ * El diseño está en configuracion.css.
+ */
+
+export const prerender = false;
+---
+
+<Layout
+  title="Configuración de cuenta | KodApp"
+  description="Administra los datos y seguridad de tu cuenta."
+>
+  <Header />
+
+  <main class="configuracion-page">
+    <div class="configuracion-container">
+
+      <!-- ENCABEZADO -->
+      <div class="page-header">
+        <a href="/perfil" class="back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a mi perfil
+        </a>
+
+        <span class="section-kicker">
+          MI CUENTA
+        </span>
+
+        <h1>Configuración de cuenta</h1>
+
+        <p>
+          Administra tus datos personales y la seguridad
+          de tu cuenta en KodApp.
+        </p>
+      </div>
+
+      <!-- MENSAJES -->
+      <p
+        id="mensaje-configuracion"
+        class="config-mensaje"
+        role="status"
+        aria-live="polite"
+      ></p>
+
+      <!-- DATOS ACTUALES -->
+      <section class="config-card">
+        <h2>
+          <i class="fa-solid fa-circle-user"></i>
+          Datos de mi cuenta
+        </h2>
+
+        <p>
+          Correo actual:
+          <strong id="correo-actual">Cargando...</strong>
+        </p>
+
+        <p>
+          Tipo de cuenta:
+          <strong id="tipo-actual">Cargando...</strong>
+        </p>
+      </section>
+
+      <!-- =====================================
+           CAMBIAR NOMBRE
+           ===================================== -->
+
+      <section class="config-card">
+        <h2>
+          <i class="fa-solid fa-signature"></i>
+          Cambiar nombre
+        </h2>
+
+        <form id="form-nombre">
+          <label for="nombre">
+            Nombre completo
+          </label>
+
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            minlength="2"
+            maxlength="100"
+            autocomplete="name"
+            required
+          />
+
+          <button type="submit" class="btn-primary">
+            Guardar nombre
+          </button>
+        </form>
+      </section>
+
+      <!-- =====================================
+           CAMBIAR CORREO
+           ===================================== -->
+
+      <section class="config-card">
+        <h2>
+          <i class="fa-solid fa-envelope"></i>
+          Cambiar correo electrónico
+        </h2>
+
+        <p>
+          Enviaremos un código de verificación al correo nuevo.
+          Tu dirección actual se conservará hasta confirmar
+          correctamente el cambio.
+        </p>
+
+        <form id="form-correo">
+          <label for="correoNuevo">
+            Nuevo correo electrónico
+          </label>
+
+          <input
+            id="correoNuevo"
+            name="correoNuevo"
+            type="email"
+            maxlength="150"
+            autocomplete="email"
+            required
+          />
+
+          <label for="claveCorreo">
+            Contraseña actual
+          </label>
+
+          <input
+            id="claveCorreo"
+            name="contrasenaActual"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+          <button type="submit" class="btn-primary">
+            Enviar código de verificación
+          </button>
+        </form>
+
+        <!-- Verificar código recibido -->
+        <form id="form-codigo" hidden>
+          <h3>Verificar nuevo correo</h3>
+
+          <label for="codigo">
+            Código de seis dígitos
+          </label>
+
+          <input
+            id="codigo"
+            name="codigo"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            required
+          />
+
+          <button type="submit" class="btn-secondary">
+            Confirmar correo
+          </button>
+        </form>
+      </section>
+
+      <!-- =====================================
+           CAMBIAR CONTRASEÑA
+           ===================================== -->
+
+      <section class="config-card">
+        <h2>
+          <i class="fa-solid fa-lock"></i>
+          Cambiar contraseña
+        </h2>
+
+        <form id="form-contrasena">
+          <label for="claveActual">
+            Contraseña actual
+          </label>
+
+          <input
+            id="claveActual"
+            name="contrasenaActual"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+          <label for="claveNueva">
+            Nueva contraseña
+          </label>
+
+          <input
+            id="claveNueva"
+            name="contrasenaNueva"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          />
+
+          <small>
+            Mínimo 8 caracteres, una mayúscula,
+            una minúscula, un número y un símbolo.
+          </small>
+
+          <button type="submit" class="btn-primary">
+            Actualizar contraseña
+          </button>
+        </form>
+      </section>
+
+      <!-- =====================================
+           CAMBIAR TIPO DE CUENTA
+           ===================================== -->
+
+      <section
+        id="seccion-organizacion"
+        class="config-card"
+        hidden
+      >
+        <h2>
+          <i class="fa-solid fa-right-left"></i>
+          <span id="titulo-cambio-tipo">
+            Cambiar tipo de cuenta
+          </span>
+        </h2>
+
+        <p id="descripcion-cambio-tipo">
+          Cargando información del tipo de cuenta...
+        </p>
+
+        <!-- Aviso especial para organizaciones -->
+        <div id="aviso-publicaciones" hidden>
+          <p>
+            <strong>Importante:</strong>
+            para cambiar de Organización a Adoptante
+            no debes tener publicaciones de mascotas
+            asociadas a tu organización.
+          </p>
+
+          <p>
+            Puedes revisar tus publicaciones en
+            <a href="/gestion/mascotas">
+              Mis mascotas
+            </a>.
+          </p>
+        </div>
+
+        <form id="form-organizacion">
+          <label for="claveOrganizacion">
+            Confirma tu contraseña
+          </label>
+
+          <input
+            id="claveOrganizacion"
+            name="contrasenaActual"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+
+          <button
+            type="submit"
+            class="btn-primary"
+            id="boton-cambio-tipo"
+          >
+            Cambiar tipo de cuenta
+          </button>
+        </form>
+      </section>
+
+    </div>
+  </main>
+</Layout>
+
+<script>
+  /**
+   * KODAPP - CONTROL DE CONFIGURACIÓN
+   *
+   * Conserva las operaciones existentes
+   * y añade el cambio de rol bidireccional.
+   */
+
+  type TipoUsuario = "adoptante" | "organizacion";
+
+  let tipoUsuarioActual: TipoUsuario | null = null;
+
+  // =====================================
+  // ELEMENTOS PRINCIPALES
+  // =====================================
+
+  const mensaje = document.querySelector<HTMLElement>(
+    "#mensaje-configuracion"
+  );
+
+  const formNombre =
+    document.querySelector<HTMLFormElement>(
+      "#form-nombre"
+    );
+
+  const formCorreo =
+    document.querySelector<HTMLFormElement>(
+      "#form-correo"
+    );
+
+  const formCodigo =
+    document.querySelector<HTMLFormElement>(
+      "#form-codigo"
+    );
+
+  const formContrasena =
+    document.querySelector<HTMLFormElement>(
+      "#form-contrasena"
+    );
+
+  const formOrganizacion =
+    document.querySelector<HTMLFormElement>(
+      "#form-organizacion"
+    );
+
+  // =====================================
+  // MOSTRAR MENSAJES
+  // =====================================
+
+  function mostrarMensaje(
+    texto: string,
+    correcto = false
+  ) {
+    if (!mensaje) return;
+
+    mensaje.textContent = texto;
+
+    mensaje.dataset.estado =
+      correcto ? "exito" : "error";
+
+    // Mostrar el mensaje al usuario.
+    mensaje.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
+  }
+
+  // =====================================
+  // OBTENER DATOS DEL FORMULARIO
+  // =====================================
+
+  function obtenerDatos(
+    formulario: HTMLFormElement
+  ): Record<string, string> {
+    const datos: Record<string, string> = {};
+
+    for (const [clave, valor] of new FormData(formulario)) {
+      datos[clave] = String(valor);
+    }
+
+    return datos;
+  }
+
+  // =====================================
+  // ENVIAR SOLICITUDES JSON
+  // =====================================
+
+  async function solicitar(
+    url: string,
+    datos: Record<string, unknown>
+  ) {
+    const respuesta = await fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(datos)
+    });
+
+    const resultado = await respuesta.json();
+
+    if (respuesta.status === 401) {
+      window.location.href = "/login?expirada=1";
+
+      throw new Error(
+        "La sesión ha expirado."
+      );
+    }
+
+    if (
+      !respuesta.ok ||
+      resultado.success === false ||
+      resultado.ok === false
+    ) {
+      throw new Error(
+        resultado.error ||
+        resultado.mensaje ||
+        "No se pudo realizar la operación."
+      );
+    }
+
+    return resultado;
+  }
+
+  // =====================================
+  // ACTUALIZAR LA SECCIÓN DEL TIPO DE CUENTA
+  // =====================================
+
+  function actualizarCambioTipo(
+    tipo: TipoUsuario
+  ) {
+    tipoUsuarioActual = tipo;
+
+    const seccion =
+      document.querySelector<HTMLElement>(
+        "#seccion-organizacion"
+      );
+
+    const titulo =
+      document.querySelector<HTMLElement>(
+        "#titulo-cambio-tipo"
+      );
+
+    const descripcion =
+      document.querySelector<HTMLElement>(
+        "#descripcion-cambio-tipo"
+      );
+
+    const boton =
+      document.querySelector<HTMLButtonElement>(
+        "#boton-cambio-tipo"
+      );
+
+    const aviso =
+      document.querySelector<HTMLElement>(
+        "#aviso-publicaciones"
+      );
+
+    // La opción aparece para ambos tipos.
+    if (seccion) {
+      seccion.hidden = false;
+    }
+
+    // ===================================
+    // SI LA CUENTA ES ADOPTANTE
+    // ===================================
+
+    if (tipo === "adoptante") {
+      if (titulo) {
+        titulo.textContent = "Convertirme en organización";
+      }
+
+      if (descripcion) {
+        descripcion.textContent =
+          "Puedes convertir tu cuenta de Adoptante " +
+          "a Organización, conservando tus datos personales.";
+      }
+
+      if (boton) {
+        boton.textContent = "Cambiar a Organización";
+      }
+
+      if (aviso) {
+        aviso.hidden = true;
+      }
+
+      return;
+    }
+
+    // ===================================
+    // SI LA CUENTA ES ORGANIZACIÓN
+    // ===================================
+
+    if (titulo) {
+      titulo.textContent = "Convertirme en adoptante";
+    }
+
+    if (descripcion) {
+      descripcion.textContent =
+        "Puedes convertir tu cuenta de Organización " +
+        "a Adoptante, siempre que no tengas publicaciones " +
+        "de mascotas a tu cargo.";
+    }
+
+    if (boton) {
+      boton.textContent = "Cambiar a Adoptante";
+    }
+
+    if (aviso) {
+      aviso.hidden = false;
+    }
+  }
+
+  // =====================================
+  // CARGAR INFORMACIÓN DE LA CUENTA
+  // =====================================
+
+  async function cargarPerfil() {
+    try {
+      const respuesta = await fetch(
+        "/api/perfil/datos",
+        {
+          credentials: "same-origin"
+        }
+      );
+
+      if (respuesta.status === 401) {
+        window.location.href = "/login?expirada=1";
+        return;
+      }
+
+      if (!respuesta.ok) {
+        throw new Error(
+          "No se pudieron cargar los datos de la cuenta."
+        );
+      }
+
+      const usuario = await respuesta.json();
+
+      // Nombre
+      const nombre =
+        document.querySelector<HTMLInputElement>(
+          "#nombre"
+        );
+
+      if (nombre) {
+        nombre.value = usuario.nombre || "";
+      }
+
+      // Correo
+      const correo =
+        document.querySelector<HTMLElement>(
+          "#correo-actual"
+        );
+
+      if (correo) {
+        correo.textContent = usuario.correo || "";
+      }
+
+      // Tipo de cuenta
+      const tipo =
+        document.querySelector<HTMLElement>(
+          "#tipo-actual"
+        );
+
+      if (tipo) {
+        tipo.textContent =
+          usuario.tipo_usuario === "organizacion"
+            ? "Organización"
+            : "Adoptante";
+      }
+
+      // Actualizar el formulario de conversión.
+      if (
+        usuario.tipo_usuario === "adoptante" ||
+        usuario.tipo_usuario === "organizacion"
+      ) {
+        actualizarCambioTipo(usuario.tipo_usuario);
+      }
+
+    } catch (error) {
+      mostrarMensaje(
+        error instanceof Error
+          ? error.message
+          : "Error al cargar la cuenta."
+      );
+    }
+  }
+
+  // =====================================
+  // CAMBIAR NOMBRE
+  // =====================================
+
+  formNombre?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      try {
+        const datos = obtenerDatos(formNombre);
+
+        const resultado = await solicitar(
+          "/api/perfil/actualizar",
+          {
+            accion: "nombre",
+            nombre: datos.nombre
+          }
+        );
+
+        mostrarMensaje(resultado.mensaje, true);
+
+        await cargarPerfil();
+
+      } catch (error) {
+        mostrarMensaje(
+          error instanceof Error
+            ? error.message
+            : "No se pudo cambiar el nombre."
+        );
+      }
+    }
+  );
+
+  // =====================================
+  // SOLICITAR CAMBIO DE CORREO
+  // =====================================
+
+  formCorreo?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      try {
+        const datos = obtenerDatos(formCorreo);
+
+        const resultado = await solicitar(
+          "/api/perfil/correo-solicitar",
+          {
+            correoNuevo: datos.correoNuevo,
+            contrasenaActual: datos.contrasenaActual
+          }
+        );
+
+        mostrarMensaje(resultado.mensaje, true);
+
+        // Mostrar campo para ingresar el código.
+        if (formCodigo) {
+          formCodigo.hidden = false;
+        }
+
+      } catch (error) {
+        mostrarMensaje(
+          error instanceof Error
+            ? error.message
+            : "No se pudo solicitar el cambio de correo."
+        );
+      }
+    }
+  );
+
+  // =====================================
+  // CONFIRMAR NUEVO CORREO
+  // =====================================
+
+  formCodigo?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      try {
+        const datos = obtenerDatos(formCodigo);
+
+        await solicitar(
+          "/api/perfil/correo-confirmar",
+          {
+            codigo: datos.codigo
+          }
+        );
+
+        // El servidor cierra las sesiones
+        // después de cambiar el correo.
+        window.location.href = "/login";
+
+      } catch (error) {
+        mostrarMensaje(
+          error instanceof Error
+            ? error.message
+            : "No se pudo confirmar el nuevo correo."
+        );
+      }
+    }
+  );
+
+  // =====================================
+  // CAMBIAR CONTRASEÑA
+  // =====================================
+
+  formContrasena?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      try {
+        const datos = obtenerDatos(formContrasena);
+
+        await solicitar(
+          "/api/perfil/actualizar",
+          {
+            accion: "contrasena",
+            contrasenaActual: datos.contrasenaActual,
+            contrasenaNueva: datos.contrasenaNueva
+          }
+        );
+
+        // El cambio de contraseña requiere
+        // iniciar sesión nuevamente.
+        window.location.href = "/login";
+
+      } catch (error) {
+        mostrarMensaje(
+          error instanceof Error
+            ? error.message
+            : "No se pudo cambiar la contraseña."
+        );
+      }
+    }
+  );
+
+  // =====================================
+  // CAMBIAR TIPO DE CUENTA
+  // =====================================
+
+  formOrganizacion?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      // Comprobar que se cargó la cuenta.
+      if (!tipoUsuarioActual) {
+        mostrarMensaje(
+          "Primero debes cargar los datos de tu cuenta."
+        );
+        return;
+      }
+
+      // Determinar a qué tipo desea cambiar.
+      const nuevoTipo =
+        tipoUsuarioActual === "adoptante"
+          ? "organizacion"
+          : "adoptante";
+
+      const nombreDestino =
+        nuevoTipo === "organizacion"
+          ? "Organización"
+          : "Adoptante";
+
+      // Confirmar voluntariamente el cambio.
+      const confirmado = window.confirm(
+        `¿Seguro que deseas cambiar tu cuenta a ${nombreDestino}?`
+      );
+
+      if (!confirmado) {
+        return;
+      }
+
+      try {
+        const datos = obtenerDatos(formOrganizacion);
+
+        // Enviar la acción correspondiente
+        // al nuevo tipo de cuenta.
+        const resultado = await solicitar(
+          "/api/perfil/actualizar",
+          {
+            accion: nuevoTipo,
+            contrasenaActual: datos.contrasenaActual
+          }
+        );
+
+        mostrarMensaje(resultado.mensaje, true);
+
+        // Redirigir al panel correspondiente.
+        if (nuevoTipo === "organizacion") {
+          window.location.href = "/gestion";
+        } else {
+          window.location.href = "/usuario";
+        }
+
+      } catch (error) {
+        // Incluye mensajes de publicaciones
+        // pendientes e intentos incorrectos.
+        mostrarMensaje(
+          error instanceof Error
+            ? error.message
+            : "No se pudo cambiar el tipo de cuenta."
+        );
+      }
+    }
+  );
+
+  // =====================================
+  // CARGA INICIAL
+  // =====================================
+
+  void cargarPerfil();
+</script>

@@ -1,0 +1,232 @@
+
+/* =====================================================
+   KODAPP - CONFIGURACIÓN DE CUENTA
+
+   Estilos exclusivos de la página de configuración.
+   Utiliza las variables de color del CSS global.
+   ===================================================== */
+
+.configuracion-page {
+  width: 100%;
+  min-height: calc(100vh - 90px);
+  padding: 55px 24px 100px;
+  color: var(--text, #f2f6fa);
+}
+
+.configuracion-container {
+  width: min(880px, 100%);
+  margin: 0 auto;
+}
+
+/* ENCABEZADO */
+
+.configuracion-page .page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 32px;
+  padding: 0;
+  text-align: left;
+}
+
+.configuracion-page .page-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 900;
+  line-height: 1.2;
+  color: var(--text, #f2f6fa);
+}
+
+.configuracion-page .page-header p {
+  margin: 0;
+  color: var(--muted, #8995a1);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.configuracion-page .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 0;
+  color: var(--cyan, #20cfff);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.configuracion-page .back-link:hover {
+  text-decoration: underline;
+}
+
+/* TARJETAS */
+
+.configuracion-page .config-card {
+  display: block;
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 30px;
+  background: var(--surface, #0b1219);
+  border: 1px solid var(--border-light, #263745);
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.configuracion-page .config-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  color: var(--text, #f2f6fa);
+  font-size: 21px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.configuracion-page .config-card h2 i {
+  flex-shrink: 0;
+  color: var(--cyan, #20cfff);
+}
+
+.configuracion-page .config-card h3 {
+  margin: 0 0 18px;
+  color: var(--text, #f2f6fa);
+  font-size: 17px;
+}
+
+.configuracion-page .config-card p {
+  margin: 0 0 12px;
+  color: var(--text-soft, #c8d0d8);
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.configuracion-page .config-card strong {
+  color: #fff;
+  font-weight: 800;
+}
+
+/* FORMULARIOS */
+
+.configuracion-page .config-card form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.configuracion-page .config-card form label {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--text, #f2f6fa);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.configuracion-page .config-card form input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 49px;
+  padding: 0 15px;
+  background: var(--bg-soft, #080e14);
+  color: var(--text, #f2f6fa);
+  border: 1px solid var(--border-light, #263745);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.configuracion-page .config-card form input:focus {
+  border-color: var(--cyan, #20cfff);
+  box-shadow: 0 0 0 3px rgba(32, 207, 255, 0.12);
+}
+
+.configuracion-page .config-card form input::placeholder {
+  color: var(--muted, #8995a1);
+}
+
+/* REQUISITOS DE CONTRASEÑA */
+
+.configuracion-page .config-card small {
+  display: block;
+  color: var(--muted, #8995a1);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* BOTONES: CONSERVAR LA ESTÉTICA GLOBAL DE KODAPP */
+
+.configuracion-page .config-card form button {
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 12px 22px;
+  white-space: normal;
+  text-align: center;
+}
+
+/* SEGUNDO FORMULARIO DE CÓDIGO */
+
+.configuracion-page #form-codigo {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light, #263745);
+}
+
+/* MENSAJES */
+
+.configuracion-page .config-mensaje:not(:empty) {
+  display: block;
+  margin: 0 0 24px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.configuracion-page .config-mensaje[data-estado="exito"] {
+  background: rgba(88, 217, 143, 0.11);
+  color: #6be5a2;
+  border: 1px solid rgba(88, 217, 143, 0.25);
+}
+
+.configuracion-page .config-mensaje[data-estado="error"] {
+  background: rgba(255, 90, 110, 0.11);
+  color: #ff8292;
+  border: 1px solid rgba(255, 90, 110, 0.25);
+}
+
+/* EVITAR QUE SE MUESTREN FORMULARIOS OCULTOS */
+
+.configuracion-page [hidden] {
+  display: none !important;
+}
+
+/* PANTALLAS PEQUEÑAS */
+
+@media (max-width: 600px) {
+  .configuracion-page {
+    padding: 30px 16px 70px;
+  }
+
+  .configuracion-page .config-card {
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
+
+  .configuracion-page .config-card h2 {
+    font-size: 18px;
+  }
+
+  .configuracion-page .config-card form button {
+    width: 100%;
+    align-self: stretch;
+  }
+}

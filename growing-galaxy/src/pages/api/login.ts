@@ -1,215 +1,154 @@
-// Importamos el tipo de endpoint de Astro.
+
 import type { APIRoute } from "astro";
-
-// bcrypt permite comparar la contraseña ingresada
-// con el hash almacenado en PostgreSQL.
 import bcrypt from "bcrypt";
+import { randomUUID } from "node:crypto";
 
-// randomUUID genera un identificador único
-// para cada sesión.
-import { randomUUID } from "crypto";
-
-// Importamos nuestra conexión con PostgreSQL.
 import { db } from "../../lib/db";
+import {
+  NOMBRE_COOKIE,
+  DURACION_SESION
+} from "../../lib/seguridad/sesiones";
 
-// Este endpoint se ejecuta en el servidor.
+/**
+ * KODAPP - INICIO DE SESIÓN
+ *
+ * 1. Comprueba correo y contraseña.
+ * 2. Comprueba estado de la cuenta.
+ * 3. Crea una sesión en PostgreSQL.
+ * 4. Guarda la cookie segura.
+ */
+
 export const prerender = false;
 
+function responder(datos: object, status = 200) {
+  return new Response(JSON.stringify(datos), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  });
+}
 
-// Endpoint POST utilizado para iniciar sesión.
 export const POST: APIRoute = async ({ request, cookies }) => {
-
   try {
+    const datos = await request.json().catch(() => null);
 
-    // Recibimos los datos enviados desde el formulario.
-    const data = await request.json();
-
-    // Obtenemos el correo y lo normalizamos.
-    const correo = data.correo?.trim().toLowerCase();
-
-    // Obtenemos la contraseña.
-    const contrasena = data.contrasena;
-
-
-    // Comprobamos que ambos campos estén completos.
-    if (!correo || !contrasena) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "Correo y contraseña son obligatorios.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    if (!datos || typeof datos !== "object") {
+      return responder({
+        ok: false,
+        mensaje: "Solicitud inválida."
+      }, 400);
     }
 
+    const correo =
+      typeof datos.correo === "string"
+        ? datos.correo.trim().toLowerCase()
+        : "";
 
-    // Buscamos al usuario utilizando su correo.
+    const contrasena = datos.contrasena;
+
+    if (!correo || typeof contrasena !== "string" || !contrasena) {
+      return responder({
+        ok: false,
+        mensaje: "Correo y contraseña obligatorios."
+      }, 400);
+    }
+
+    // Buscar la cuenta utilizando el correo.
     const resultado = await db.query(
-      `SELECT
-        id,
-        nombre,
-        correo,
-        tipo_usuario,
-        contrasena,
-        estado_cuenta
-      FROM usuarios
-      WHERE correo = $1`,
-
+      `SELECT id,
+              nombre,
+              correo,
+              tipo_usuario,
+              contrasena,
+              estado_cuenta
+       FROM usuarios
+       WHERE LOWER(correo) = $1`,
       [correo]
     );
 
-
-    // Si no existe un usuario con ese correo,
-    // rechazamos el inicio de sesión.
     if (resultado.rows.length === 0) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "Correo o contraseña incorrectos.",
-        }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return responder({
+        ok: false,
+        mensaje: "Correo o contraseña incorrectos."
+      }, 401);
     }
 
-
-    // Guardamos los datos del usuario encontrado.
     const usuario = resultado.rows[0];
 
-
-    // Comprobamos que la cuenta esté activa.
+    // Impedir login en cuentas suspendidas.
     if (usuario.estado_cuenta !== "activo") {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "La cuenta está suspendida.",
-        }),
-        {
-          status: 403,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return responder({
+        ok: false,
+        mensaje: "La cuenta no está activa."
+      }, 403);
     }
 
-
-    // Comparamos la contraseña ingresada
-    // con el hash guardado en PostgreSQL.
-    const contraseñaCorrecta = await bcrypt.compare(
+    // Comparar la clave con su hash bcrypt.
+    const correcta = await bcrypt.compare(
       contrasena,
       usuario.contrasena
     );
 
+    if (!correcta) {
+      return responder({
+        ok: false,
+        mensaje: "Correo o contraseña incorrectos."
+      }, 401);
+    }
 
-    // Si la contraseña no coincide,
-    // rechazamos el inicio de sesión.
-    if (!contraseñaCorrecta) {
+    // Crear un identificador aleatorio seguro.
+    const sessionId = randomUUID();
 
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "Correo o contraseña incorrectos.",
-        }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+    // Revocar la sesión anterior de este navegador,
+    // si todavía existe una cookie antigua.
+    const sesionAnterior = cookies.get(NOMBRE_COOKIE)?.value;
+
+    if (sesionAnterior) {
+      await db.query(
+        "DELETE FROM sesiones WHERE id = $1",
+        [sesionAnterior]
       );
     }
 
-
-    // Generamos un ID único para la nueva sesión.
-    const sessionId = randomUUID();
-
-
-    // Guardamos la sesión en la tabla sesiones.
-    //
-    // Importante:
-    // la tabla actual solamente utiliza id y usuario_id.
+    // Registrar la nueva sesión.
     await db.query(
-      `INSERT INTO sesiones (id, usuario_id)
-       VALUES ($1, $2)`,
-
-      [
-        sessionId,
-        usuario.id
-      ]
+      `INSERT INTO sesiones (
+         id,
+         usuario_id,
+         ultima_actividad
+       )
+       VALUES ($1, $2, NOW())`,
+      [sessionId, usuario.id]
     );
 
-
-    // Guardamos el ID de sesión en una cookie.
-    //
-    // httpOnly evita que JavaScript del navegador
-    // pueda leer directamente la cookie.
-    cookies.set("session_id", sessionId, {
+    // Configurar cookie de una hora renovable.
+    cookies.set(NOMBRE_COOKIE, sessionId, {
       httpOnly: true,
-
-      // En producción se utiliza HTTPS.
       secure: import.meta.env.PROD,
-
-      // Protege la cookie frente a ciertos tipos
-      // de solicitudes externas.
       sameSite: "lax",
-
-      // La cookie estará disponible en todo el sitio.
       path: "/",
+      maxAge: DURACION_SESION
     });
 
-
-    // Informamos al frontend que el login fue exitoso.
-    return new Response(
-      JSON.stringify({
-        ok: true,
-
-        usuario: {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          correo: usuario.correo,
-          tipoUsuario: usuario.tipo_usuario,
-        },
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    // Mantener formato compatible con login.astro.
+    return responder({
+      ok: true,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        tipoUsuario: usuario.tipo_usuario
       }
-    );
-
+    });
 
   } catch (error) {
-
-    // Mostramos el error real en la consola del servidor.
     console.error("Error en login:", error);
 
-
-    // Enviamos un mensaje genérico al usuario.
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        mensaje: "Error interno del servidor.",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return responder({
+      ok: false,
+      mensaje: "Error interno del servidor."
+    }, 500);
   }
 };

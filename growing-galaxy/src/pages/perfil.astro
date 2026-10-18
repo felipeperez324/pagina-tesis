@@ -4,27 +4,48 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 
-const sessionId = Astro.cookies.get("session_id")?.value;
-const usuario = await getUsuarioDesdeSesion(sessionId);
+/**
+ * KODAPP - MI PERFIL
+ *
+ * Mantiene:
+ * - Datos del usuario.
+ * - Fotografía editable.
+ * - Descripción editable.
+ *
+ * Añade:
+ * - Enlace a la configuración de cuenta.
+ */
+
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
+
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
 
 if (!usuario) {
   return Astro.redirect("/login");
 }
 
-const esOrganizacion = usuario.tipo_usuario === "organizacion";
-const tipoCuenta = esOrganizacion ? "Organización" : "Usuario";
-const volver = esOrganizacion ? "/gestion" : "/usuario";
+const esOrganizacion =
+  usuario.tipo_usuario === "organizacion";
+
+const tipoCuenta =
+  esOrganizacion ? "Organización" : "Adoptante";
+
+const volver =
+  esOrganizacion ? "/gestion" : "/usuario";
 ---
 
 <Layout
   title="Mi perfil | KodApp"
-  description="Configuración de mi perfil."
+  description="Consulta y edita tu perfil."
 >
   <Header />
 
   <main class="profile-page">
     <div class="profile-container">
 
+      <!-- Encabezado -->
       <div class="page-header">
         <a href={volver} class="back-link">
           <i class="fa-solid fa-arrow-left"></i>
@@ -36,15 +57,19 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
         <h1>Mi perfil</h1>
 
         <p>
-          Personaliza tu información y tu fotografía.
+          Personaliza tu información y fotografía.
         </p>
       </div>
 
       <section class="profile-layout">
 
-        <!-- COLUMNA IZQUIERDA: FOTO -->
+        <!-- =====================================
+             COLUMNA IZQUIERDA: FOTOGRAFÍA
+             ===================================== -->
+
         <article class="profile-summary">
 
+          <!-- Avatar -->
           <div
             class="profile-summary-avatar"
             id="profile-avatar"
@@ -53,7 +78,7 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
               usuario.foto_perfil ? (
                 <img
                   src={usuario.foto_perfil}
-                  alt="Foto de perfil"
+                  alt="Fotografía de perfil"
                 />
               ) : (
                 <i class="fa-solid fa-user"></i>
@@ -62,8 +87,10 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
           </div>
 
           <h2>{usuario.nombre}</h2>
+
           <p>{tipoCuenta}</p>
 
+          <!-- Selección de fotografía -->
           <label
             for="profile-photo-input"
             class="photo-change-button"
@@ -87,16 +114,21 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
 
         </article>
 
-        <!-- COLUMNA DERECHA: INFORMACIÓN -->
+        <!-- =====================================
+             COLUMNA DERECHA: DATOS
+             ===================================== -->
+
         <article class="profile-details">
 
           <div class="profile-details-header">
             <span class="section-kicker">
               Información personal
             </span>
+
             <h2>Datos de tu cuenta</h2>
           </div>
 
+          <!-- Datos visibles -->
           <div class="profile-data-grid">
 
             <div class="profile-data-item">
@@ -126,7 +158,10 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
 
           </div>
 
-          <!-- DESCRIPCIÓN DEL PERFIL -->
+          <!-- =====================================
+               DESCRIPCIÓN DEL PERFIL
+               ===================================== -->
+
           <section class="profile-description">
 
             <h2>
@@ -181,46 +216,76 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
               ></p>
 
             </form>
+          </section>
 
+          <!-- =====================================
+               CONFIGURACIÓN DE LA CUENTA
+               ===================================== -->
+
+          <section class="profile-description">
+            <h2>Seguridad y datos personales</h2>
+
+            <p>
+              Cambia tu nombre, correo, contraseña
+              y tipo de cuenta desde la configuración.
+            </p>
+
+            <div class="profile-description-footer">
+              <a href="/configuracion" class="btn-primary">
+                <i class="fa-solid fa-user-gear"></i>
+                Configurar mi cuenta
+              </a>
+            </div>
           </section>
 
         </article>
-
       </section>
+
     </div>
   </main>
 </Layout>
 
 <script>
-  // ========================================
-  // ACTUALIZAR FOTO DE PERFIL
-  // ========================================
+  /**
+   * KODAPP - PERFIL
+   *
+   * Conservamos la edición de foto y descripción
+   * mediante los endpoints existentes.
+   */
 
-  const fotoInput = document.querySelector<HTMLInputElement>(
-    "#profile-photo-input"
-  );
+  // =====================================
+  // CAMBIAR FOTOGRAFÍA
+  // =====================================
 
-  const fotoMensaje = document.querySelector<HTMLElement>(
-    "#profile-photo-message"
-  );
+  const fotoInput =
+    document.querySelector<HTMLInputElement>(
+      "#profile-photo-input"
+    );
+
+  const fotoMensaje =
+    document.querySelector<HTMLElement>(
+      "#profile-photo-message"
+    );
 
   fotoInput?.addEventListener("change", async () => {
     const archivo = fotoInput.files?.[0];
 
     if (!archivo || !fotoMensaje) return;
 
-    const permitidos = [
+    const tiposPermitidos = [
       "image/jpeg",
       "image/png",
       "image/webp"
     ];
 
+    // Validación rápida del navegador.
     if (
-      !permitidos.includes(archivo.type) ||
+      !tiposPermitidos.includes(archivo.type) ||
       archivo.size > 5 * 1024 * 1024
     ) {
       fotoMensaje.textContent =
         "Selecciona una imagen JPG, PNG o WebP de hasta 5 MB.";
+
       fotoInput.value = "";
       return;
     }
@@ -231,8 +296,10 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
     fotoMensaje.textContent = "Guardando fotografía...";
 
     try {
+      // Endpoint original de KodApp.
       const respuesta = await fetch("/api/perfil/foto", {
         method: "POST",
+        credentials: "same-origin",
         body: datos
       });
 
@@ -244,7 +311,7 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
         );
       }
 
-      // Actualiza avatar y encabezado.
+      // Actualizar foto del perfil y Header.
       window.location.reload();
 
     } catch (error) {
@@ -255,33 +322,40 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
     }
   });
 
-  // ========================================
-  // ACTUALIZAR DESCRIPCIÓN
-  // ========================================
+  // =====================================
+  // CAMBIAR DESCRIPCIÓN
+  // =====================================
 
-  const form = document.querySelector<HTMLFormElement>(
-    "#description-form"
-  );
+  const form =
+    document.querySelector<HTMLFormElement>(
+      "#description-form"
+    );
 
-  const descripcion = document.querySelector<HTMLTextAreaElement>(
-    "#profile-description"
-  );
+  const descripcion =
+    document.querySelector<HTMLTextAreaElement>(
+      "#profile-description"
+    );
 
-  const contador = document.querySelector<HTMLElement>(
-    "#description-counter"
-  );
+  const contador =
+    document.querySelector<HTMLElement>(
+      "#description-counter"
+    );
 
-  const mensaje = document.querySelector<HTMLElement>(
-    "#description-message"
-  );
+  const mensaje =
+    document.querySelector<HTMLElement>(
+      "#description-message"
+    );
 
-  const boton = document.querySelector<HTMLButtonElement>(
-    "#save-description"
-  );
+  const boton =
+    document.querySelector<HTMLButtonElement>(
+      "#save-description"
+    );
 
+  // Mostrar contador de caracteres.
   descripcion?.addEventListener("input", () => {
     if (contador) {
-      contador.textContent = `${descripcion.value.length}/500`;
+      contador.textContent =
+        `${descripcion.value.length}/500`;
     }
   });
 
@@ -294,15 +368,20 @@ const volver = esOrganizacion ? "/gestion" : "/usuario";
     mensaje.textContent = "Guardando...";
 
     try {
-      const respuesta = await fetch("/api/perfil/descripcion", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          descripcion: descripcion.value
-        })
-      });
+      // Endpoint original de KodApp.
+      const respuesta = await fetch(
+        "/api/perfil/descripcion",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            descripcion: descripcion.value
+          })
+        }
+      );
 
       const resultado = await respuesta.json();
 

@@ -1,6 +1,18 @@
+
 ---
 import "../styles/decoraciones.css";
 import "../styles/global.css";
+
+import ControlInactividad
+  from "../components/controlinactividad.astro";
+
+/**
+ * KODAPP - LAYOUT PRINCIPAL
+ *
+ * Todas las páginas pueden utilizarlo.
+ * El control de inactividad se incorpora
+ * automáticamente en sesiones conectadas.
+ */
 
 interface Props {
   title?: string;
@@ -8,44 +20,70 @@ interface Props {
 }
 
 const {
-  title = "Kodapp",
-  description = "Encuentra contenido para personalizar tu celular y PC."
+  title = "KodApp",
+  description = "Plataforma de adopción responsable de mascotas."
 } = Astro.props;
+
+// Solo mostrar el control cuando hay sesión.
+const tieneSesion = Boolean(
+  Astro.cookies.get("session_id")?.value
+);
+
+// No activarlo en login y registro.
+const esPaginaAuth = [
+  "/login",
+  "/registro"
+].includes(Astro.url.pathname);
+
+const usarControl = tieneSesion && !esPaginaAuth;
 ---
 
 <!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#ffdbed" />
-    <meta name="description" content={description} />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <meta
+      name="theme-color"
+      content="#1E2229"
+    />
+
+    <meta
+      name="description"
+      content={description}
+    />
+
     <title>{title}</title>
 
-    <link rel="icon" href="/logo.png" type="image/png" />
+    <link
+      rel="icon"
+      href="/logo.png"
+      type="image/png"
+    />
+
+    <!-- Iconos utilizados en KodApp -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
     />
-    <!-- Tipografías de KodApp -->
-    <link
-      rel="preconnect"
-      href="https://fonts.googleapis.com"
-    />
 
+    <!-- Tipografías del diseño original -->
     <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
-
-    <link
-      href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap"
     />
+  </head>
 
-</head>
   <body>
+    <!-- Contenido de cada página -->
     <slot />
+
+    <!-- Detector global de inactividad -->
+    {usarControl && <ControlInactividad />}
   </body>
 </html>

@@ -1,0 +1,150 @@
+
+<!--
+  KODAPP - CONTROL DE INACTIVIDAD
+
+  Detecta interacción humana y renueva la sesión
+  comunicándose con PostgreSQL mediante la API.
+
+  El navegador no decide si una sesión es válida:
+  esa decisión siempre pertenece al servidor.
+-->
+
+<script is:inline>
+  (() => {
+    const LIMITE = 60 * 60 * 1000;
+    const INTERVALO_AVISO = 5 * 60 * 1000;
+    const CLAVE = "kodapp_ultima_actividad";
+
+    let ultimaActividad = Date.now();
+    let ultimoAviso = 0;
+    let cerrando = false;
+
+    // Compartir la última actividad entre pestañas.
+    function guardarActividad(fecha) {
+      ultimaActividad = fecha;
+
+      try {
+        localStorage.setItem(CLAVE, String(fecha));
+      } catch {
+        // Si localStorage no funciona,
+        // continúa el control local y del servidor.
+      }
+    }
+
+    // Leer la última actividad de todas las pestañas.
+    function leerActividad() {
+      let compartida = 0;
+
+      try {
+        compartida = Number(localStorage.getItem(CLAVE)) || 0;
+      } catch {
+        // Ignorar errores de almacenamiento.
+      }
+
+      return Math.max(ultimaActividad, compartida);
+    }
+
+    // Cerrar la sesión usando la API original.
+    async function cerrarSesion() {
+      if (cerrando) return;
+      cerrando = true;
+
+      try {
+        await fetch("/api/logout", {
+          method: "POST",
+          credentials: "same-origin"
+        });
+      } catch {
+        // El servidor también aplica la expiración.
+      } finally {
+        window.location.replace("/login?expirada=1");
+      }
+    }
+
+    // Determinar si ya pasó una hora sin interacción.
+    function comprobarInactividad() {
+      if (cerrando) return true;
+
+      if (Date.now() - leerActividad() >= LIMITE) {
+        cerrarSesion();
+        return true;
+      }
+
+      return false;
+    }
+
+    // Renovar la sesión en PostgreSQL.
+    async function avisarServidor() {
+      if (comprobarInactividad()) return;
+
+      const ahora = Date.now();
+
+      // Limitar llamadas para no sobrecargar el servidor.
+      if (ahora - ultimoAviso < INTERVALO_AVISO) {
+        return;
+      }
+
+      ultimoAviso = ahora;
+
+      try {
+        const respuesta = await fetch(
+          "/api/auth/actividad",
+          {
+            method: "POST",
+            credentials: "same-origin"
+          }
+        );
+
+        if (respuesta.status === 401) {
+          cerrarSesion();
+        }
+      } catch {
+        // Si hay errores de conexión,
+        // una solicitud futura volverá a comprobar.
+      }
+    }
+
+    // Ejecutar cuando existe una interacción real.
+    function registrarActividad() {
+      if (comprobarInactividad()) return;
+
+      guardarActividad(Date.now());
+      avisarServidor();
+    }
+
+    // Sincronización entre pestañas.
+    window.addEventListener("storage", (evento) => {
+      if (evento.key === CLAVE) {
+        comprobarInactividad();
+      }
+    });
+
+    // Eventos que consideramos actividad.
+    for (const evento of [
+      "pointerdown",
+      "keydown",
+      "scroll",
+      "touchstart"
+    ]) {
+      window.addEventListener(evento, registrarActividad, {
+        passive: true
+      });
+    }
+
+    // La apertura de una página es actividad.
+    guardarActividad(Date.now());
+
+    // Registrar la actividad al entrar.
+    avisarServidor();
+
+    // Comprobar cada 30 segundos.
+    setInterval(comprobarInactividad, 30000);
+
+    // Verificar al regresar a la pestaña.
+    window.addEventListener("focus", comprobarInactividad);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) comprobarInactividad();
+    });
+  })();
+</script>

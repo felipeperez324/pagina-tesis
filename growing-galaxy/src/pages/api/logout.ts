@@ -1,73 +1,65 @@
-// Importamos el tipo de endpoint de Astro.
+
 import type { APIRoute } from "astro";
 
-// Importamos la conexión con PostgreSQL.
-import { db } from "../../lib/db";
+import {
+  eliminarSesion,
+  NOMBRE_COOKIE
+} from "../../lib/seguridad/sesiones";
 
-// Indicamos que este endpoint funciona en el servidor.
+/**
+ * KODAPP - LOGOUT PRINCIPAL
+ *
+ * Esta es la ruta que utiliza Header.astro.
+ */
+
 export const prerender = false;
 
+export const POST: APIRoute = async ({ request, cookies }) => {
+  if (
+    request.headers.get("origin") !==
+    new URL(request.url).origin
+  ) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        mensaje: "Origen no permitido."
+      }),
+      { status: 403 }
+    );
+  }
 
-// Endpoint POST encargado de cerrar la sesión.
-export const POST: APIRoute = async ({ cookies }) => {
+  const sessionId = cookies.get(NOMBRE_COOKIE)?.value;
 
   try {
+    // Eliminar la sesión en PostgreSQL.
+    await eliminarSesion(sessionId);
 
-    // Obtenemos el ID de sesión desde la cookie.
-    const sessionId = cookies.get("session_id")?.value;
+    // Eliminar la cookie.
+    cookies.delete(NOMBRE_COOKIE, { path: "/" });
 
-
-    // Si existe una sesión, la eliminamos de PostgreSQL.
-    if (sessionId) {
-
-      await db.query(
-        `DELETE FROM sesiones
-         WHERE id = $1`,
-
-        [sessionId]
-      );
-    }
-
-
-    // Eliminamos también la cookie del navegador.
-    cookies.delete("session_id", {
-      path: "/",
-    });
-
-
-    // Respondemos indicando que el cierre fue exitoso.
     return new Response(
       JSON.stringify({
         ok: true,
-        mensaje: "Sesión cerrada correctamente.",
+        mensaje: "Sesión cerrada."
       }),
       {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-        },
+          "Cache-Control": "no-store"
+        }
       }
     );
 
-
   } catch (error) {
-
-    // Mostramos el error en la consola.
     console.error("Error al cerrar sesión:", error);
 
-
-    // Informamos al navegador que ocurrió un problema.
     return new Response(
       JSON.stringify({
         ok: false,
-        mensaje: "No se pudo cerrar la sesión.",
+        mensaje: "No se pudo cerrar la sesión."
       }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      { status: 500 }
     );
   }
 };
