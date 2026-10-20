@@ -1,0 +1,456 @@
+
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import { db } from "../../lib/db";
+import { agregarFotosMascotas } from "../../lib/fotos";
+import { getUsuarioDesdeSesion } from "../../lib/auth";
+import "../../styles/postulaciones.css";
+
+/**
+ * KODAPP - POSTULAR PARA ADOPTAR
+ *
+ * /postular/1
+ * /postular/2
+ *
+ * Cada formulario corresponde a una mascota.
+ */
+
+export const prerender = false;
+
+// Comprobar sesión y rol.
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
+
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+if (usuario.tipo_usuario !== "adoptante") {
+  return Astro.redirect("/gestion");
+}
+
+// Obtener el ID desde la URL.
+const mascotaId = Number(Astro.params.id);
+
+if (
+  !Number.isSafeInteger(mascotaId) ||
+  mascotaId <= 0
+) {
+  return Astro.redirect("/usuario");
+}
+
+// Obtener mascota y organización responsable.
+const consulta = await db.query(
+  `SELECT
+     m.id,
+     m.nombre,
+     m.descripcion,
+     m.personalidad,
+     m.historial_medico,
+     m.tipo_mascota,
+     m.estado_adopcion,
+     u.nombre AS organizacion_nombre,
+     EXISTS (
+       SELECT 1
+       FROM postulaciones p
+       WHERE p.mascota_id = m.id
+         AND p.estado = 'aprobada'
+     ) AS tiene_aprobada
+   FROM mascotas m
+   JOIN usuarios u
+     ON u.id = m.usuario_id
+   WHERE m.id = $1`,
+  [mascotaId]
+);
+
+if (consulta.rows.length === 0) {
+  return Astro.redirect("/usuario");
+}
+
+// Agregar fotografía desde KodApp_Fotos.
+const mascotasConFoto = await agregarFotosMascotas(
+  consulta.rows
+);
+
+const mascota = mascotasConFoto[0];
+
+// Consultar si el usuario ya postuló.
+const consultaAnterior = await db.query(
+  `SELECT estado
+   FROM postulaciones
+   WHERE mascota_id = $1
+     AND adoptante_id = $2
+   LIMIT 1`,
+  [mascotaId, usuario.id]
+);
+
+const postulacionAnterior =
+  consultaAnterior.rows[0] ?? null;
+
+const admitePostulaciones =
+  mascota.estado_adopcion === "disponible" &&
+  !mascota.tiene_aprobada &&
+  !postulacionAnterior;
+---
+
+<Layout
+  title={`Postular por ${mascota.nombre} | KodApp`}
+  description="Completa tu postulación para adoptar una mascota."
+>
+  <Header />
+
+  <main class="post-page">
+    <div class="post-container">
+
+      <div class="post-heading">
+        <a href="/usuario" class="back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a mascotas
+        </a>
+
+        <span class="section-kicker">
+          Postulaciones de adopción
+        </span>
+
+        <h1>Postular para adoptar</h1>
+
+        <p>
+          Completa tu información para que la
+          organización pueda evaluar tu solicitud.
+        </p>
+      </div>
+
+      <div class="post-layout">
+
+        <!-- INFORMACIÓN DE LA MASCOTA -->
+        <aside class="post-card post-pet">
+
+          <div class="post-pet-image">
+            {
+              mascota.foto ? (
+                <img
+                  src={mascota.foto}
+                  alt={`Foto de ${mascota.nombre}`}
+                />
+              ) : (
+                <div class="post-pet-placeholder">
+                  <i class="fa-solid fa-paw"></i>
+                </div>
+              )
+            }
+          </div>
+
+          <div class="post-pet-details">
+            <span class="section-kicker">
+              Mascota seleccionada
+            </span>
+
+            <h2>{mascota.nombre}</h2>
+
+            <p>
+              <strong>Tipo:</strong>
+              {" "}
+              {mascota.tipo_mascota}
+            </p>
+
+            <p>
+              <strong>Organización:</strong>
+              {" "}
+              {mascota.organizacion_nombre}
+            </p>
+
+            {mascota.descripcion && (
+              <p>{mascota.descripcion}</p>
+            )}
+
+            {mascota.personalidad && (
+              <p>
+                <strong>Personalidad:</strong>
+                {" "}
+                {mascota.personalidad}
+              </p>
+            )}
+
+            {mascota.historial_medico && (
+              <p>
+                <strong>Historial médico:</strong>
+                {" "}
+                {mascota.historial_medico}
+              </p>
+            )}
+          </div>
+        </aside>
+
+        <!-- FORMULARIO -->
+        <section class="post-card">
+
+          {
+            postulacionAnterior ? (
+              <div class="post-existing">
+                <i class="fa-solid fa-circle-check"></i>
+
+                <h2>Ya enviaste tu postulación</h2>
+
+                <p>
+                  Tu solicitud para {mascota.nombre}
+                  {" "}está registrada con estado:
+                  {" "}
+                  <strong>
+                    {postulacionAnterior.estado}
+                  </strong>.
+                </p>
+
+                <a
+                  href="/mis-postulaciones"
+                  class="btn-primary"
+                >
+                  Ver mis postulaciones
+                </a>
+              </div>
+            ) : !admitePostulaciones ? (
+              <div class="post-existing">
+                <i class="fa-solid fa-circle-info"></i>
+
+                <h2>Postulaciones no disponibles</h2>
+
+                <p>
+                  Esta mascota no está recibiendo
+                  nuevas postulaciones.
+                </p>
+
+                <a href="/usuario" class="btn-secondary">
+                  Buscar otra mascota
+                </a>
+              </div>
+            ) : (
+              <>
+                <h2>
+                  <i class="fa-solid fa-clipboard-list"></i>
+                  Formulario de postulación
+                </h2>
+
+                <p>
+                  Hola, <strong>{usuario.nombre}</strong>.
+                  Responde los siguientes campos con
+                  información real y completa.
+                </p>
+
+                <form
+                  id="postulacion-form"
+                  data-mascota-id={mascota.id}
+                >
+
+                  <div class="post-field">
+                    <label for="telefono">
+                      Número de contacto
+                    </label>
+
+                    <input
+                      id="telefono"
+                      name="telefono"
+                      type="tel"
+                      placeholder="+56 9 1234 5678"
+                      maxlength="25"
+                      autocomplete="tel"
+                      required
+                    />
+
+                    <small>
+                      La organización utilizará este número
+                      para contactarte sobre tu postulación.
+                    </small>
+                  </div>
+
+                  <div class="post-field">
+                    <label for="vivienda">
+                      Tipo de vivienda
+                    </label>
+
+                    <select
+                      id="vivienda"
+                      name="vivienda"
+                      required
+                    >
+                      <option value="">
+                        Selecciona una opción
+                      </option>
+                      <option value="casa">
+                        Casa
+                      </option>
+                      <option value="departamento">
+                        Departamento
+                      </option>
+                      <option value="otro">
+                        Otro
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="post-field">
+                    <label for="motivo">
+                      ¿Por qué deseas adoptar a
+                      {" "}{mascota.nombre}?
+                    </label>
+
+                    <textarea
+                      id="motivo"
+                      name="motivo"
+                      rows="7"
+                      minlength="30"
+                      maxlength="1500"
+                      placeholder="Cuéntanos sobre tu experiencia, tu hogar y cómo cuidarías a esta mascota."
+                      required
+                    ></textarea>
+
+                    <small>
+                      Entre 30 y 1500 caracteres.
+                    </small>
+                  </div>
+
+                  <label class="post-confirmation">
+                    <input
+                      type="checkbox"
+                      name="confirmacion"
+                      value="si"
+                      required
+                    />
+
+                    <span>
+                      Confirmo que los datos son correctos
+                      y autorizo compartir esta postulación
+                      y mis datos de contacto con la
+                      organización responsable.
+                    </span>
+                  </label>
+
+                  <p class="post-notice">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Enviar esta solicitud no significa que
+                    la adopción esté aprobada. La
+                    organización evaluará tus antecedentes.
+                  </p>
+
+                  <p
+                    id="postulacion-mensaje"
+                    class="post-message"
+                    role="status"
+                    aria-live="polite"
+                  ></p>
+
+                  <button
+                    id="postulacion-enviar"
+                    type="submit"
+                    class="btn-primary"
+                  >
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Enviar postulación
+                  </button>
+                </form>
+              </>
+            )
+          }
+        </section>
+
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  /**
+   * Enviar el formulario sin recargar la página.
+   */
+
+  const formulario =
+    document.querySelector<HTMLFormElement>(
+      "#postulacion-form"
+    );
+
+  const mensaje =
+    document.querySelector<HTMLElement>(
+      "#postulacion-mensaje"
+    );
+
+  const boton =
+    document.querySelector<HTMLButtonElement>(
+      "#postulacion-enviar"
+    );
+
+  formulario?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      if (!formulario.reportValidity()) {
+        return;
+      }
+
+      if (boton) boton.disabled = true;
+
+      if (mensaje) {
+        mensaje.textContent = "Enviando postulación...";
+        mensaje.dataset.estado = "";
+      }
+
+      const datos = Object.fromEntries(
+        new FormData(formulario)
+      );
+
+      try {
+        const respuesta = await fetch(
+          "/api/postulaciones/crear",
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              ...datos,
+              mascotaId: Number(
+                formulario.dataset.mascotaId
+              )
+            })
+          }
+        );
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!respuesta.ok || !resultado.ok) {
+          throw new Error(
+            resultado.mensaje ||
+            "No se pudo enviar la postulación."
+          );
+        }
+
+        if (mensaje) {
+          mensaje.textContent = resultado.mensaje;
+          mensaje.dataset.estado = "exito";
+        }
+
+        window.location.href = "/mis-postulaciones";
+
+      } catch (error) {
+        if (mensaje) {
+          mensaje.textContent =
+            error instanceof Error
+              ? error.message
+              : "Error al enviar la postulación.";
+
+          mensaje.dataset.estado = "error";
+        }
+
+        if (boton) boton.disabled = false;
+      }
+    }
+  );
+</script>

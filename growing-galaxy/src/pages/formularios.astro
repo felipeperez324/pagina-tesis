@@ -1,0 +1,20 @@
+
+---
+import { getUsuarioDesdeSesion } from "../lib/auth";
+
+export const prerender = false;
+
+const usuario = await getUsuarioDesdeSesion(
+  Astro.cookies.get("session_id")?.value
+);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+if (usuario.tipo_usuario === "organizacion") {
+  return Astro.redirect("/gestion/postulaciones");
+}
+
+return Astro.redirect("/mis-postulaciones");
+---

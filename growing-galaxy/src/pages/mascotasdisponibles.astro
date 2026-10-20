@@ -3,31 +3,51 @@
 import { db } from "../lib/db";
 import { agregarFotosMascotas } from "../lib/fotos";
 
+/**
+ * KODAPP - MASCOTAS DISPONIBLES
+ *
+ * Muestra mascotas disponibles para postular.
+ * No muestra mascotas con una postulación aprobada,
+ * aunque todavía no se haya registrado una adopción.
+ */
+
 const resultado = await db.query(`
   SELECT
-    id,
-    nombre,
-    descripcion,
-    personalidad,
-    historial_medico,
-    tipo_mascota,
-    estado_adopcion
-  FROM mascotas
-  WHERE estado_adopcion = 'disponible'
-  ORDER BY id DESC
+    m.id,
+    m.nombre,
+    m.descripcion,
+    m.personalidad,
+    m.historial_medico,
+    m.tipo_mascota,
+    m.estado_adopcion
+  FROM mascotas m
+  WHERE m.estado_adopcion = 'disponible'
+    AND NOT EXISTS (
+      SELECT 1
+      FROM postulaciones p
+      WHERE p.mascota_id = m.id
+        AND p.estado = 'aprobada'
+    )
+  ORDER BY m.id DESC
 `);
 
-const mascotas = await agregarFotosMascotas(resultado.rows);
+const mascotas = await agregarFotosMascotas(
+  resultado.rows
+);
 ---
 
 <section class="mascotas-disponibles">
+
   <div class="mascotas-disponibles-header">
-    <p class="small-title">Encuentra a tu compañero</p>
+    <p class="small-title">
+      Encuentra a tu compañero
+    </p>
 
     <h2>Mascotas disponibles</h2>
 
     <p>
-      Conoce a las mascotas que están esperando encontrar un nuevo hogar.
+      Conoce a las mascotas que están esperando
+      encontrar un nuevo hogar.
     </p>
   </div>
 
@@ -39,13 +59,17 @@ const mascotas = await agregarFotosMascotas(resultado.rows);
         <h3>No hay mascotas disponibles</h3>
 
         <p>
-          Por ahora no hay mascotas publicadas para adopción.
+          Por ahora no hay mascotas disponibles
+          para recibir nuevas postulaciones.
         </p>
       </div>
     ) : (
       <div class="mascotas-grid">
+
         {mascotas.map((mascota) => (
           <article class="mascota-card">
+
+            <!-- FOTOGRAFÍA -->
             <div class="mascota-card-image">
               {mascota.foto ? (
                 <img
@@ -60,7 +84,9 @@ const mascotas = await agregarFotosMascotas(resultado.rows);
               )}
             </div>
 
+            <!-- INFORMACIÓN -->
             <div class="mascota-card-content">
+
               <span class="mascota-tipo">
                 {mascota.tipo_mascota}
               </span>
@@ -84,10 +110,25 @@ const mascotas = await agregarFotosMascotas(resultado.rows);
                   <span>{mascota.historial_medico}</span>
                 </div>
               )}
+
+              <!-- NUEVO BOTÓN -->
+              <div style="margin-top: 20px">
+                <a
+                  href={`/postular/${mascota.id}`}
+                  class="btn-primary"
+                >
+                  <i class="fa-solid fa-clipboard-check"></i>
+                  Postular para adoptar
+                </a>
+              </div>
+
             </div>
+
           </article>
         ))}
+
       </div>
     )
   }
+
 </section>
