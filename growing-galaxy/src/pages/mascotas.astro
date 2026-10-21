@@ -1,0 +1,60 @@
+
+---
+/**
+ * KODAPP - PÁGINA DE MASCOTAS DISPONIBLES
+ *
+ * Ruta: /mascotas
+ *
+ * Reutiliza el componente existente para conservar:
+ * - Fotografías guardadas en KodApp_Fotos.
+ * - Información de cada mascota.
+ * - Botón "Postular para adoptar".
+ */
+
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import MascotasDisponibles from "../components/MascotasDisponibles.astro";
+
+export const prerender = false;
+---
+
+<Layout
+  title="Mascotas disponibles | KodApp"
+  description="Explora las mascotas disponibles y envía tu postulación para adoptar."
+>
+  <Header />
+
+  <main class="management-page">
+
+    <div class="management-container">
+
+      <!-- NAVEGACIÓN -->
+      <div class="page-header">
+
+        <a href="/" class="back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver al inicio
+        </a>
+
+        <span class="section-kicker">
+          Encuentra a tu compañero
+        </span>
+
+        <h1>Explora nuestras mascotas</h1>
+
+        <p>
+          Conoce a los animales que buscan
+          una familia y encuentra a tu
+          próximo compañero.
+        </p>
+
+      </div>
+
+      <!-- CATÁLOGO DE MASCOTAS -->
+      <MascotasDisponibles />
+
+    </div>
+
+  </main>
+
+</Layout>

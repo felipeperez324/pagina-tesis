@@ -1,0 +1,353 @@
+
+/* ==========================================
+   KODAPP - MEJORAS DE LA PÁGINA PRINCIPAL
+
+   1. Carrusel de cinco fotografías
+   2. Sección "Cómo funciona KodApp"
+
+   No modifica global.css ni hero.css.
+   ========================================== */
+
+
+/* ==========================================
+   CARRUSEL AUTOMÁTICO
+   ========================================== */
+
+.hero-slideshow.ka-hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+}
+
+.hero-slideshow.ka-hero-carousel .ka-hero-slide {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.9s ease-in-out;
+}
+
+.hero-slideshow.ka-hero-carousel .ka-hero-slide.is-active {
+  opacity: 1;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .hero-slideshow.ka-hero-carousel .ka-hero-slide {
+    transition: none;
+  }
+}
+
+
+/* ==========================================
+   SECCIÓN: CÓMO FUNCIONA KODAPP
+   ========================================== */
+
+.ka-process {
+  position: relative;
+
+  width: 100%;
+  max-width: 1120px;
+
+  margin: 40px auto 0;
+  padding: 30px 10px 90px;
+}
+
+
+/* ENCABEZADO */
+
+.ka-process__heading {
+  max-width: 660px;
+  margin: 0 auto 38px;
+  text-align: center;
+}
+
+.ka-process__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  margin-bottom: 14px;
+
+  color: var(--cyan);
+
+  font-size: 11px;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+.ka-process__eyebrow i {
+  font-size: 13px;
+}
+
+.ka-process__heading h2 {
+  margin: 0;
+
+  color: var(--text);
+
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 900;
+
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.ka-process__heading h2 span {
+  color: var(--red);
+}
+
+.ka-process__heading p {
+  margin: 16px auto 0;
+
+  color: var(--muted);
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+
+/* DISTRIBUCIÓN DE LOS PASOS */
+
+.ka-process__grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 18px;
+}
+
+
+/* CADA PASO */
+
+.ka-process__step {
+  position: relative;
+
+  min-width: 0;
+  min-height: 245px;
+
+  padding: 26px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 23, 32, 0.96),
+      rgba(8, 15, 22, 0.96)
+    );
+
+  border:
+    1px solid var(--border-light);
+
+  border-radius: 18px;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.ka-process__step:hover {
+  transform: translateY(-5px);
+
+  border-color:
+    rgba(32, 207, 255, 0.3);
+
+  box-shadow:
+    0 15px 30px rgba(0, 0, 0, 0.18);
+}
+
+
+/* NÚMERO DECORATIVO */
+
+.ka-process__number {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+
+  color: rgba(255, 255, 255, 0.055);
+
+  font-size: 60px;
+  font-weight: 900;
+  line-height: 1;
+
+  pointer-events: none;
+}
+
+
+/* ICONO */
+
+.ka-process__icon {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  place-items: center;
+
+  width: 56px;
+  height: 56px;
+
+  margin-bottom: 24px;
+
+  background:
+    rgba(32, 207, 255, 0.10);
+
+  color: var(--cyan);
+
+  border:
+    1px solid rgba(32, 207, 255, 0.20);
+
+  border-radius: 15px;
+
+  font-size: 22px;
+}
+
+.ka-process__icon--pink {
+  background:
+    rgba(187, 89, 107, 0.12);
+
+  color: var(--red);
+
+  border-color:
+    rgba(187, 89, 107, 0.26);
+}
+
+
+/* TEXTO */
+
+.ka-process__step h3 {
+  position: relative;
+  z-index: 1;
+
+  margin: 0 0 12px;
+
+  color: var(--text);
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.ka-process__step p {
+  position: relative;
+  z-index: 1;
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+
+/* PARTE INFERIOR */
+
+.ka-process__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-wrap: wrap;
+
+  gap: 20px;
+
+  margin-top: 30px;
+  padding: 20px 2px 0;
+
+  border-top: 1px solid var(--border);
+}
+
+.ka-process__bottom p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 0;
+
+  color: var(--text-soft);
+
+  font-size: 13px;
+}
+
+.ka-process__bottom p i {
+  color: var(--red);
+}
+
+.ka-process__bottom .btn-primary {
+  flex-shrink: 0;
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 850px) {
+  .ka-process__grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .ka-process__step:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .ka-process {
+    margin-top: 10px;
+    padding: 28px 0 65px;
+  }
+
+  .ka-process__heading {
+    margin-bottom: 26px;
+  }
+
+  .ka-process__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ka-process__step {
+    min-height: auto;
+    padding: 24px;
+  }
+
+  .ka-process__step:last-child {
+    grid-column: auto;
+  }
+
+  .ka-process__bottom {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .ka-process__bottom p {
+    justify-content: center;
+  }
+
+  .ka-process__bottom .btn-primary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ka-process__step {
+    transition: none;
+  }
+
+  .ka-process__step:hover {
+    transform: none;
+  }
+}

@@ -42,12 +42,14 @@ if (usuario) {
       <i class="fa-solid fa-bars"></i>
     </button>
 
-    <!-- NAVEGACIÓN -->
+    <!-- NAVEGACIÓN PRINCIPAL -->
     <nav
       class="main-nav"
       id="main-nav"
       aria-label="Navegación principal"
     >
+
+      <!-- INICIO -->
       <a
         href={usuario ? homeUrl : "/"}
         class:list={{
@@ -60,16 +62,19 @@ if (usuario) {
         Inicio
       </a>
 
+      <!-- MASCOTAS - PÁGINA INDEPENDIENTE -->
       <a
-        href="/#mascotas"
+        href="/mascotas"
         class:list={{
           "is-active":
-            pathname === "/mascotas"
+            pathname === "/mascotas" ||
+            pathname.startsWith("/postular/")
         }}
       >
         Mascotas
       </a>
 
+      <!-- COMPATIBILIDAD -->
       <a
         href="/match"
         class:list={{
@@ -80,9 +85,11 @@ if (usuario) {
         Compatibilidad
       </a>
 
+      <!-- SOBRE NOSOTROS -->
       <a href="/#sobre-nosotros">
         Sobre nosotros
       </a>
+
     </nav>
 
     <!-- CUENTA -->
@@ -123,8 +130,8 @@ if (usuario) {
               class="account-dropdown"
               id="account-dropdown"
             >
-              <div class="account-dropdown-header">
 
+              <div class="account-dropdown-header">
                 <strong>{usuario.nombre}</strong>
 
                 <span>
@@ -134,7 +141,6 @@ if (usuario) {
                       : "Adoptante"
                   }
                 </span>
-
               </div>
 
               <a href={homeUrl}>
@@ -176,14 +182,19 @@ if (usuario) {
 </header>
 
 <script>
+  // =====================================
   // MENÚ MÓVIL
-  const mobileToggle = document.querySelector<HTMLButtonElement>(
-    "#mobile-toggle"
-  );
+  // =====================================
 
-  const mainNav = document.querySelector<HTMLElement>(
-    "#main-nav"
-  );
+  const mobileToggle =
+    document.querySelector<HTMLButtonElement>(
+      "#mobile-toggle"
+    );
+
+  const mainNav =
+    document.querySelector<HTMLElement>(
+      "#main-nav"
+    );
 
   mobileToggle?.addEventListener("click", () => {
     const abierto =
@@ -195,14 +206,19 @@ if (usuario) {
     );
   });
 
-  // MENÚ DE USUARIO
-  const accountTrigger = document.querySelector<HTMLButtonElement>(
-    "#account-trigger"
-  );
+  // =====================================
+  // MENÚ DE CUENTA
+  // =====================================
 
-  const accountDropdown = document.querySelector<HTMLElement>(
-    "#account-dropdown"
-  );
+  const accountTrigger =
+    document.querySelector<HTMLButtonElement>(
+      "#account-trigger"
+    );
+
+  const accountDropdown =
+    document.querySelector<HTMLElement>(
+      "#account-dropdown"
+    );
 
   accountTrigger?.addEventListener("click", () => {
     const abierto =
@@ -214,10 +230,14 @@ if (usuario) {
     );
   });
 
+  // =====================================
   // CERRAR SESIÓN
-  const logoutButton = document.querySelector<HTMLButtonElement>(
-    "#header-logout"
-  );
+  // =====================================
+
+  const logoutButton =
+    document.querySelector<HTMLButtonElement>(
+      "#header-logout"
+    );
 
   logoutButton?.addEventListener("click", async () => {
     try {
@@ -229,7 +249,8 @@ if (usuario) {
 
       if (!respuesta.ok || !datos.ok) {
         alert(
-          datos.mensaje || "No se pudo cerrar la sesión."
+          datos.mensaje ||
+          "No se pudo cerrar la sesión."
         );
         return;
       }

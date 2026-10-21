@@ -1,113 +1,153 @@
 ---
+
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-import MascotasDisponibles from "../components/MascotasDisponibles.astro";
+
+// Fotografías del carrusel.
 import caniche from "../assets/caniche.jpg";
+import chihuahua from "../assets/chihuahua.jpg";
+import hamster from "../assets/hamte.webp";
+import otraMascota from "../assets/images.jpg";
 import siames from "../assets/siames.jpg";
+
 import "../styles/hero.css";
+
+// CSS nuevo, exclusivo de las mejoras del inicio.
+import "../styles/inicio-proceso.css";
+
+const fotos = [
+  {
+    src: caniche.src,
+    alt: "Perro caniche"
+  },
+  {
+    src: chihuahua.src,
+    alt: "Perro chihuahua"
+  },
+  {
+    src: hamster.src,
+    alt: "Hámster"
+  },
+  {
+    src: otraMascota.src,
+    alt: "Mascota"
+  },
+  {
+    src: siames.src,
+    alt: "Gato siamés"
+  }
+];
 ---
 
 <Layout
-  title="Kodapp | Adopta con confianza"
-  description="Encuentra mascotas que buscan un hogar responsable en Kodapp."
+  title="KodApp | Adopta con confianza"
+  description="Encuentra mascotas que buscan un hogar responsable en KodApp."
 >
-
   <Header />
-
 
   <main class="home-page">
 
-    <!-- ========================================= -->
-    <!-- HERO -->
-    <!-- ========================================= -->
+    <!-- ======================================
+         PRESENTACIÓN PRINCIPAL
+         ====================================== -->
 
+    <section class="hero-section">
 
+      <div class="hero-content">
 
-<section class="hero-section">
+        <span class="hero-kicker">
+          Adopción responsable
+        </span>
 
-  <div class="hero-content">
+        <h1>
+          Encuentra a tu
+          <span>próximo compañero.</span>
+        </h1>
 
-    <span class="hero-kicker">
-      Adopción responsable
-    </span>
+        <p>
+          Conoce mascotas que buscan un hogar,
+          descubre cuáles pueden ser compatibles
+          contigo y comienza una nueva historia.
+        </p>
 
-    <h1>
-      Encuentra a tu
-      <span>próximo compañero.</span>
-    </h1>
+        <div class="hero-actions">
 
-    <p>
-      Conoce mascotas que buscan un hogar,
-      descubre cuáles pueden ser compatibles contigo
-      y comienza una nueva historia.
-    </p>
+          <a
+            href="/mascotas"
+            class="btn-primary"
+          >
+            Explorar mascotas
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
 
-    <div class="hero-actions">
+          <a
+            href="/match"
+            class="btn-secondary"
+          >
+            Descubrir mi compatibilidad
+          </a>
 
-      <a href="#mascotas" class="btn-primary">
-        Explorar mascotas
-        <i class="fa-solid fa-arrow-right"></i>
-      </a>
-
-      <a href="/match" class="btn-secondary">
-        Descubrir mi compatibilidad
-      </a>
-
-    </div>
-
-  </div>
-
-  <!-- ========================================= -->
-  <!-- CARRUSEL DE IMÁGENES -->
-  <!-- ========================================= -->
-
-  <div class="hero-visual">
-
-    <!-- Efectos decorativos -->
-    <div class="hero-glow hero-glow-one"></div>
-    <div class="hero-glow hero-glow-two"></div>
-
-    <div class="hero-paw hero-paw-one">
-      <i class="fa-solid fa-paw"></i>
-    </div>
-
-    <div class="hero-paw hero-paw-two">
-      <i class="fa-solid fa-paw"></i>
-    </div>
-
-    <!-- Contenedor principal -->
-    <div class="hero-visual-card">
-
-      <div class="hero-slideshow">
-
-        <!-- Gato -->
-        <img
-          src={siames.src}
-          alt="Gato siamés"
-          class="hero-slideshow-image hero-slideshow-cat"
-        />
-
-        <!-- Perro -->
-        <img
-          src={caniche.src}
-          alt="Perro caniche"
-          class="hero-slideshow-image hero-slideshow-dog"
-        />
+        </div>
 
       </div>
 
-    </div>
+      <!-- ======================================
+           CARRUSEL DE FOTOGRAFÍAS
+           ====================================== -->
 
-  </div>
+      <div class="hero-visual">
 
-</section>
+        <!-- Decoraciones existentes -->
+        <div class="hero-glow hero-glow-one"></div>
+        <div class="hero-glow hero-glow-two"></div>
 
-    <!-- ========================================= -->
-    <!-- BENEFICIOS -->
-    <!-- ========================================= -->
+        <div class="hero-paw hero-paw-one">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div class="hero-paw hero-paw-two">
+          <i class="fa-solid fa-paw"></i>
+        </div>
+
+        <div class="hero-visual-card">
+
+          <div
+            class="hero-slideshow ka-hero-carousel"
+            role="img"
+            aria-label="Galería rotativa de mascotas de KodApp"
+          >
+
+            {
+              fotos.map((foto, index) => (
+                <img
+                  src={foto.src}
+                  alt=""
+                  class:list={{
+                    "hero-slideshow-image": true,
+                    "ka-hero-slide": true,
+                    "is-active": index === 0
+                  }}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              ))
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ======================================
+         CARACTERÍSTICAS DE KODAPP
+         ====================================== -->
 
     <section class="features-section">
 
+      <!-- Característica 1 -->
       <article class="feature-item">
 
         <div class="feature-icon">
@@ -115,19 +155,17 @@ import "../styles/hero.css";
         </div>
 
         <div>
-          <h3>
-            Perfiles detallados
-          </h3>
+          <h3>Perfiles detallados</h3>
 
           <p>
-            Conoce la personalidad,
-            historia y necesidades de cada mascota.
+            Conoce la personalidad, historia
+            y necesidades de cada mascota.
           </p>
         </div>
 
       </article>
 
-
+      <!-- Característica 2 -->
       <article class="feature-item">
 
         <div class="feature-icon">
@@ -135,9 +173,7 @@ import "../styles/hero.css";
         </div>
 
         <div>
-          <h3>
-            Compatibilidad inteligente
-          </h3>
+          <h3>Compatibilidad inteligente</h3>
 
           <p>
             Descubre qué mascotas pueden
@@ -147,7 +183,7 @@ import "../styles/hero.css";
 
       </article>
 
-
+      <!-- Característica 3 -->
       <article class="feature-item">
 
         <div class="feature-icon">
@@ -155,9 +191,7 @@ import "../styles/hero.css";
         </div>
 
         <div>
-          <h3>
-            Proceso organizado
-          </h3>
+          <h3>Proceso organizado</h3>
 
           <p>
             Mantén tus postulaciones y formularios
@@ -167,7 +201,7 @@ import "../styles/hero.css";
 
       </article>
 
-
+      <!-- Característica 4 -->
       <article class="feature-item">
 
         <div class="feature-icon">
@@ -175,13 +209,11 @@ import "../styles/hero.css";
         </div>
 
         <div>
-          <h3>
-            Apoyo a rescatistas
-          </h3>
+          <h3>Apoyo a rescatistas</h3>
 
           <p>
             Herramientas pensadas para facilitar
-            la gestión de adopciones.
+            la gestión de postulaciones.
           </p>
         </div>
 
@@ -189,44 +221,111 @@ import "../styles/hero.css";
 
     </section>
 
-
-    <!-- ========================================= -->
-    <!-- MASCOTAS -->
-    <!-- ========================================= -->
-
-    <MascotasDisponibles />
-
-
-    <!-- ========================================= -->
-    <!-- SOBRE NOSOTROS -->
-    <!-- ========================================= -->
+    <!-- ======================================
+         CÓMO FUNCIONA KODAPP
+         ====================================== -->
 
     <section
-      class="about-section"
-      id="sobre-nosotros"
+      class="ka-process"
+      id="como-funciona"
+      aria-labelledby="ka-process-title"
     >
 
-      <div class="about-content">
+      <div class="ka-process__heading">
 
-        <span class="section-kicker">
-          Sobre Kodapp
+        <span class="ka-process__eyebrow">
+          <i class="fa-solid fa-paw"></i>
+          EMPIEZA TU HISTORIA
         </span>
 
-        <h2>
-          Una adopción empieza con una buena conexión.
+        <h2 id="ka-process-title">
+          ¿Cómo funciona
+          <span>KodApp?</span>
         </h2>
 
         <p>
-          Kodapp busca facilitar el encuentro entre
-          personas que quieren adoptar y mascotas
-          que necesitan un hogar responsable.
+          Encontrar a tu próximo compañero
+          comienza con tres sencillos pasos.
         </p>
 
-        <a
-          href="/match"
-          class="btn-primary"
-        >
-          Conocer compatibilidad
+      </div>
+
+      <div class="ka-process__grid">
+
+        <!-- PASO 1 -->
+        <article class="ka-process__step">
+
+          <span class="ka-process__number">
+            01
+          </span>
+
+          <div class="ka-process__icon">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+
+          <h3>Explora mascotas</h3>
+
+          <p>
+            Descubre mascotas disponibles y
+            conoce sus características,
+            personalidad e historia.
+          </p>
+
+        </article>
+
+        <!-- PASO 2 -->
+        <article class="ka-process__step">
+
+          <span class="ka-process__number">
+            02
+          </span>
+
+          <div class="ka-process__icon ka-process__icon--pink">
+            <i class="fa-solid fa-file-pen"></i>
+          </div>
+
+          <h3>Envía tu postulación</h3>
+
+          <p>
+            Elige una mascota y completa
+            el formulario con tus datos
+            para que puedan evaluarte.
+          </p>
+
+        </article>
+
+        <!-- PASO 3 -->
+        <article class="ka-process__step">
+
+          <span class="ka-process__number">
+            03
+          </span>
+
+          <div class="ka-process__icon">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+          </div>
+
+          <h3>Recibe una respuesta</h3>
+
+          <p>
+            La organización revisa tu
+            solicitud y comunica si fue
+            aprobada o rechazada.
+          </p>
+
+        </article>
+
+      </div>
+
+      <div class="ka-process__bottom">
+
+        <p>
+          <i class="fa-solid fa-heart"></i>
+          Cada nueva conexión puede cambiar una vida.
+        </p>
+
+        <a href="/mascotas" class="btn-primary">
+          Conocer mascotas
           <i class="fa-solid fa-arrow-right"></i>
         </a>
 
@@ -237,3 +336,47 @@ import "../styles/hero.css";
   </main>
 
 </Layout>
+
+<script>
+  /**
+   * CARRUSEL AUTOMÁTICO
+   *
+   * Muestra una fotografía a la vez.
+   * Cambia cada 4.5 segundos con
+   * transición de fundido.
+   */
+
+  const diapositivas =
+    Array.from(
+      document.querySelectorAll<HTMLImageElement>(
+        ".ka-hero-carousel .ka-hero-slide"
+      )
+    );
+
+  const movimientoReducido =
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+  if (
+    diapositivas.length > 1 &&
+    !movimientoReducido
+  ) {
+    let actual = 0;
+
+    window.setInterval(() => {
+
+      diapositivas[actual].classList.remove(
+        "is-active"
+      );
+
+      actual =
+        (actual + 1) % diapositivas.length;
+
+      diapositivas[actual].classList.add(
+        "is-active"
+      );
+
+    }, 4500);
+  }
+</script>
