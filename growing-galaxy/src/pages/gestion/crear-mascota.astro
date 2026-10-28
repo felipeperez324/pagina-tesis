@@ -1,7 +1,18 @@
+
 ---
+/**
+ * KODAPP - PUBLICAR MASCOTA
+ *
+ * Solo para organizaciones.
+ * Personalidad y salud mediante desplegables.
+ */
+
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
+import ClasificacionMascota from "../../components/ClasificacionMascota.astro";
 import { getUsuarioDesdeSesion } from "../../lib/auth";
+
+export const prerender = false;
 
 const sessionId =
   Astro.cookies.get("session_id")?.value;
@@ -9,11 +20,9 @@ const sessionId =
 const usuario =
   await getUsuarioDesdeSesion(sessionId);
 
-
 if (!usuario) {
   return Astro.redirect("/login");
 }
-
 
 if (usuario.tipo_usuario !== "organizacion") {
   return Astro.redirect("/usuario");
@@ -21,28 +30,19 @@ if (usuario.tipo_usuario !== "organizacion") {
 ---
 
 <Layout
-  title="Publicar mascota | Kodapp"
+  title="Publicar mascota | KodApp"
   description="Publica una mascota para adopción."
 >
-
   <Header />
 
-
   <main class="form-page">
-
     <div class="form-page-container">
 
-
-      <!-- ========================================= -->
       <!-- ENCABEZADO -->
-      <!-- ========================================= -->
 
       <div class="page-header">
 
-        <a
-          href="/gestion"
-          class="back-link"
-        >
+        <a href="/gestion" class="back-link">
           <i class="fa-solid fa-arrow-left"></i>
           Volver al panel
         </a>
@@ -51,27 +51,21 @@ if (usuario.tipo_usuario !== "organizacion") {
           Nueva publicación
         </span>
 
-        <h1>
-          Publicar una mascota
-        </h1>
+        <h1>Publicar una mascota</h1>
 
         <p>
           Completa la información para que
           los adoptantes puedan conocerla mejor.
         </p>
-
       </div>
 
 
-      <!-- ========================================= -->
       <!-- FORMULARIO -->
-      <!-- ========================================= -->
 
       <form
         id="mascota-form"
         class="publication-form"
       >
-
 
         <!-- FOTO -->
 
@@ -79,60 +73,39 @@ if (usuario.tipo_usuario !== "organizacion") {
 
           <div class="form-section-header">
 
-            <span class="form-step">
-              01
-            </span>
+            <span class="form-step">01</span>
 
             <div>
-
-              <h2>
-                Imagen de la mascota
-              </h2>
-
-              <p>
-                Una buena foto ayuda a mostrar su personalidad.
-              </p>
-
+              <h2>Imagen de la mascota</h2>
+              <p>Una buena foto ayuda a conocerla mejor.</p>
             </div>
 
           </div>
 
-
           <div class="upload-area">
 
-            <label
-              for="foto"
-              class="upload-label"
-            >
+            <label for="foto" class="upload-label">
 
               <div
                 id="preview-container"
                 class="photo-preview"
               >
-
                 <i class="fa-solid fa-camera"></i>
-
-                <span>
-                  Seleccionar imagen
-                </span>
-
+                <span>Seleccionar imagen</span>
               </div>
 
             </label>
-
 
             <input
               type="file"
               id="foto"
               name="foto"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               hidden
             />
 
-
             <small>
-              Formatos de imagen permitidos.
-              Máximo 5 MB.
+              JPG, PNG o WebP. Máximo 5 MB.
             </small>
 
           </div>
@@ -146,24 +119,14 @@ if (usuario.tipo_usuario !== "organizacion") {
 
           <div class="form-section-header">
 
-            <span class="form-step">
-              02
-            </span>
+            <span class="form-step">02</span>
 
             <div>
-
-              <h2>
-                Información básica
-              </h2>
-
-              <p>
-                Cuéntanos quién es esta mascota.
-              </p>
-
+              <h2>Información básica</h2>
+              <p>Cuéntanos quién es esta mascota.</p>
             </div>
 
           </div>
-
 
           <div class="form-grid">
 
@@ -174,9 +137,9 @@ if (usuario.tipo_usuario !== "organizacion") {
               </label>
 
               <input
-                type="text"
                 id="nombre"
                 name="nombre"
+                type="text"
                 maxlength="100"
                 placeholder="Ej: Firulais"
                 required
@@ -196,23 +159,13 @@ if (usuario.tipo_usuario !== "organizacion") {
                 name="tipoMascota"
                 required
               >
-
                 <option value="">
                   Selecciona una opción
                 </option>
 
-                <option value="perro">
-                  Perro
-                </option>
-
-                <option value="gato">
-                  Gato
-                </option>
-
-                <option value="otro">
-                  Otro
-                </option>
-
+                <option value="perro">Perro</option>
+                <option value="gato">Gato</option>
+                <option value="otro">Otro</option>
               </select>
 
             </div>
@@ -228,6 +181,7 @@ if (usuario.tipo_usuario !== "organizacion") {
                 id="descripcion"
                 name="descripcion"
                 rows="5"
+                maxlength="5000"
                 placeholder="Cuéntanos sobre la mascota..."
               ></textarea>
 
@@ -238,108 +192,28 @@ if (usuario.tipo_usuario !== "organizacion") {
         </section>
 
 
-        <!-- PERSONALIDAD -->
+        <!-- DESPLEGABLES -->
+        <!-- El componente incluye las secciones
+             03 Personalidad y 04 Salud. -->
 
-        <section class="form-section">
-
-          <div class="form-section-header">
-
-            <span class="form-step">
-              03
-            </span>
-
-            <div>
-
-              <h2>
-                Personalidad
-              </h2>
-
-              <p>
-                Describe cómo es y qué la caracteriza.
-              </p>
-
-            </div>
-
-          </div>
+        <ClasificacionMascota />
 
 
-          <div class="form-field">
-
-            <label for="personalidad">
-              Personalidad
-            </label>
-
-            <textarea
-              id="personalidad"
-              name="personalidad"
-              rows="5"
-              placeholder="Ej: Es tranquila, cariñosa y juguetona."
-            ></textarea>
-
-          </div>
-
-        </section>
-
-
-        <!-- SALUD -->
-
-        <section class="form-section">
-
-          <div class="form-section-header">
-
-            <span class="form-step">
-              04
-            </span>
-
-            <div>
-
-              <h2>
-                Historial médico
-              </h2>
-
-              <p>
-                Agrega cualquier información de salud relevante.
-              </p>
-
-            </div>
-
-          </div>
-
-
-          <div class="form-field">
-
-            <label for="historial-medico">
-              Historial médico
-            </label>
-
-            <textarea
-              id="historial-medico"
-              name="historialMedico"
-              rows="5"
-              placeholder="Vacunas, tratamientos, condiciones médicas, etc."
-            ></textarea>
-
-          </div>
-
-        </section>
-
-
-        <!-- MENSAJE -->
+        <!-- MENSAJES -->
 
         <p
           id="form-message"
           class="form-message"
+          role="status"
+          aria-live="polite"
         ></p>
 
 
-        <!-- BOTONES -->
+        <!-- ACCIONES -->
 
         <div class="form-actions">
 
-          <a
-            href="/gestion"
-            class="btn-outline"
-          >
+          <a href="/gestion" class="btn-outline">
             Cancelar
           </a>
 
@@ -355,231 +229,138 @@ if (usuario.tipo_usuario !== "organizacion") {
         </div>
 
       </form>
-
     </div>
-
   </main>
-
 </Layout>
 
 
 <script>
-  // =========================================
-  // ELEMENTOS
-  // =========================================
-
   const form =
-    document.querySelector(
+    document.querySelector<HTMLFormElement>(
       "#mascota-form"
-    ) as HTMLFormElement | null;
+    );
 
   const photoInput =
-    document.querySelector(
+    document.querySelector<HTMLInputElement>(
       "#foto"
-    ) as HTMLInputElement | null;
+    );
 
   const previewContainer =
-    document.querySelector(
+    document.querySelector<HTMLElement>(
       "#preview-container"
-    ) as HTMLElement | null;
+    );
 
   const message =
-    document.querySelector(
+    document.querySelector<HTMLElement>(
       "#form-message"
-    ) as HTMLElement | null;
+    );
 
   const publishButton =
-    document.querySelector(
+    document.querySelector<HTMLButtonElement>(
       "#publish-button"
-    ) as HTMLButtonElement | null;
+    );
 
 
-  // =========================================
-  // VISTA PREVIA
-  // =========================================
+  // ==========================================
+  // VISTA PREVIA DE LA FOTO
+  // ==========================================
 
-  photoInput?.addEventListener(
-    "change",
-    () => {
+  photoInput?.addEventListener("change", () => {
+    const archivo = photoInput.files?.[0];
 
-      const file =
-        photoInput.files?.[0];
+    if (!archivo || !previewContainer) {
+      return;
+    }
 
+    const tiposPermitidos = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
 
-      if (
-        !file ||
-        !previewContainer
-      ) {
-        return;
-      }
-
-
-      if (
-        !file.type.startsWith(
-          "image/"
-        )
-      ) {
-
-        alert(
-          "El archivo debe ser una imagen."
-        );
-
-        photoInput.value =
-          "";
-
-        return;
-      }
-
-
-      if (
-        file.size >
-        5 * 1024 * 1024
-      ) {
-
-        alert(
-          "La imagen no puede superar los 5 MB."
-        );
-
-        photoInput.value =
-          "";
-
-        return;
-      }
-
-
-      const imageUrl =
-        URL.createObjectURL(file);
-
-
-      previewContainer.innerHTML =
-        "";
-
-
-      const image =
-        document.createElement(
-          "img"
-        );
-
-
-      image.src =
-        imageUrl;
-
-      image.alt =
-        "Vista previa de la mascota";
-
-
-      previewContainer.appendChild(
-        image
+    if (
+      !tiposPermitidos.includes(archivo.type) ||
+      archivo.size > 5 * 1024 * 1024
+    ) {
+      alert(
+        "Selecciona una imagen JPG, PNG o WebP de hasta 5 MB."
       );
 
+      photoInput.value = "";
+      return;
     }
-  );
+
+    const url = URL.createObjectURL(archivo);
+    const imagen = document.createElement("img");
+
+    imagen.src = url;
+    imagen.alt = "Vista previa de la mascota";
+
+    imagen.onload = () => {
+      URL.revokeObjectURL(url);
+    };
+
+    previewContainer.replaceChildren(imagen);
+  });
 
 
-  // =========================================
-  // ENVIAR FORMULARIO
-  // =========================================
+  // ==========================================
+  // PUBLICAR MASCOTA
+  // ==========================================
 
-  form?.addEventListener(
-    "submit",
-    async (event) => {
+  form?.addEventListener("submit", async (evento) => {
+    evento.preventDefault();
 
-      event.preventDefault();
+    if (!form || !publishButton || !message) {
+      return;
+    }
 
+    if (!form.reportValidity()) {
+      return;
+    }
 
-      if (
-        !publishButton ||
-        !message
-      ) {
+    publishButton.disabled = true;
+    message.textContent = "Publicando mascota...";
+
+    const textoOriginal = publishButton.innerHTML;
+
+    try {
+      const datos = new FormData(form);
+
+      const respuesta = await fetch(
+        "/api/mascotas/crear",
+        {
+          method: "POST",
+          credentials: "same-origin",
+          body: datos
+        }
+      );
+
+      const resultado = await respuesta.json();
+
+      if (respuesta.status === 401) {
+        window.location.href = "/login";
         return;
       }
 
-
-      publishButton.disabled =
-        true;
-
-      publishButton.innerHTML =
-        "Publicando...";
-
-
-      message.textContent =
-        "";
-
-
-      const formData =
-        new FormData(form);
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/mascotas/crear",
-            {
-              method: "POST",
-              body: formData,
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (
-          !response.ok ||
-          !data.ok
-        ) {
-
-          message.textContent =
-            data.mensaje ||
-            "No se pudo publicar la mascota.";
-
-          publishButton.disabled =
-            false;
-
-          publishButton.innerHTML =
-            'Publicar mascota <i class="fa-solid fa-paw"></i>';
-
-          return;
-        }
-
-
+      if (!respuesta.ok || !resultado.ok) {
         message.textContent =
-          "¡Mascota publicada correctamente!";
-
-
-        setTimeout(
-          () => {
-
-            window.location.href =
-              "/gestion/mascotas";
-
-          },
-          800
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "Error al publicar:",
-          error
-        );
-
-
-        message.textContent =
-          "Ocurrió un error al publicar la mascota.";
-
-
-        publishButton.disabled =
-          false;
-
-        publishButton.innerHTML =
-          'Publicar mascota <i class="fa-solid fa-paw"></i>';
-
+          resultado.mensaje ||
+          "No se pudo publicar la mascota.";
+        return;
       }
 
+      window.location.href = "/gestion/mascotas";
+
+    } catch (error) {
+      console.error("Error al publicar mascota:", error);
+
+      message.textContent =
+        "No se pudo conectar con el servidor.";
+
+    } finally {
+      publishButton.disabled = false;
+      publishButton.innerHTML = textoOriginal;
     }
-  );
+  });
 </script>

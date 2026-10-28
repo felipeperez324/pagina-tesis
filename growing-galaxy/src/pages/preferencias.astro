@@ -1,0 +1,456 @@
+
+---
+/**
+ * KODAPP - PREFERENCIAS DE MATCH
+ *
+ * Disponible exclusivamente para adoptantes.
+ * Permite crear y editar las preferencias.
+ */
+
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+
+import { db } from "../lib/db";
+import { getUsuarioDesdeSesion } from "../lib/auth";
+import { PERSONALIDADES } from "../lib/CatalogoMatch";
+
+import "../styles/match-formularios.css";
+
+export const prerender = false;
+
+const usuario = await getUsuarioDesdeSesion(
+  Astro.cookies.get("session_id")?.value
+);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+if (usuario.tipo_usuario !== "adoptante") {
+  return Astro.redirect("/gestion");
+}
+
+const resultado = await db.query(
+  `SELECT
+     tipo_preferido,
+     personalidad_preferida,
+     nivel_cuidados
+   FROM preferencias_match
+   WHERE usuario_id = $1`,
+  [usuario.id]
+);
+
+const preferencias = resultado.rows[0] ?? null;
+
+const bienvenida =
+  Astro.url.searchParams.get("bienvenida") === "1";
+---
+
+<Layout
+  title="Mis preferencias | KodApp"
+  description="Configura tus preferencias para el futuro Match."
+>
+  <Header />
+
+  <main class="form-page">
+    <div class="form-page-container">
+
+      <!-- ENCABEZADO -->
+
+      <div class="page-header">
+
+        <a href="/usuario" class="back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a mi cuenta
+        </a>
+
+        <span class="section-kicker">
+          Compatibilidad KodApp
+        </span>
+
+        <h1>
+          {
+            bienvenida
+              ? "¡Bienvenido/a a KodApp!"
+              : "Mis preferencias"
+          }
+        </h1>
+
+        <p class="ka-preferences-intro">
+          Queremos conocer tus preferencias para
+          preparar el futuro sistema de Match.
+        </p>
+
+      </div>
+
+
+      <div class="ka-preferences-notice">
+        <i class="fa-solid fa-circle-info"></i>
+
+        Este formulario es opcional y podrás
+        modificar tus respuestas cuando quieras.
+        Todavía no calcula compatibilidades.
+      </div>
+
+
+      <!-- FORMULARIO -->
+
+      <form
+        id="preferencias-form"
+        class="publication-form"
+      >
+
+        <!-- TIPO DE MASCOTA -->
+
+        <section class="form-section">
+
+          <div class="form-section-header">
+
+            <span class="form-step">01</span>
+
+            <div>
+              <h2>Tipo de mascota</h2>
+
+              <p>
+                ¿Qué tipo de animal te gustaría adoptar?
+              </p>
+            </div>
+
+          </div>
+
+          <div class="form-field">
+
+            <label for="tipoPreferido">
+              Mascota preferida
+            </label>
+
+            <select
+              id="tipoPreferido"
+              name="tipoPreferido"
+              required
+            >
+              <option value="">
+                Selecciona una opción
+              </option>
+
+              <option
+                value="perro"
+                selected={
+                  preferencias?.tipo_preferido === "perro"
+                }
+              >
+                Perro
+              </option>
+
+              <option
+                value="gato"
+                selected={
+                  preferencias?.tipo_preferido === "gato"
+                }
+              >
+                Gato
+              </option>
+
+              <option
+                value="otro"
+                selected={
+                  preferencias?.tipo_preferido === "otro"
+                }
+              >
+                Otra mascota
+              </option>
+
+              <option
+                value="indiferente"
+                selected={
+                  preferencias?.tipo_preferido === "indiferente"
+                }
+              >
+                No tengo preferencia
+              </option>
+            </select>
+
+          </div>
+
+        </section>
+
+
+        <!-- PERSONALIDAD -->
+
+        <section class="form-section">
+
+          <div class="form-section-header">
+
+            <span class="form-step">02</span>
+
+            <div>
+              <h2>Personalidad ideal</h2>
+
+              <p>
+                ¿Qué personalidad encajaría mejor
+                contigo?
+              </p>
+            </div>
+
+          </div>
+
+          <div class="form-field">
+
+            <label for="personalidadPreferida">
+              Personalidad que buscas
+            </label>
+
+            <select
+              id="personalidadPreferida"
+              name="personalidadPreferida"
+              required
+            >
+              <option value="">
+                Selecciona una opción
+              </option>
+
+              {
+                PERSONALIDADES.map((opcion) => (
+                  <option
+                    value={opcion.valor}
+                    selected={
+                      preferencias?.personalidad_preferida ===
+                      opcion.valor
+                    }
+                  >
+                    {opcion.etiqueta}
+                  </option>
+                ))
+              }
+
+              <option
+                value="indiferente"
+                selected={
+                  preferencias?.personalidad_preferida ===
+                  "indiferente"
+                }
+              >
+                No tengo preferencia
+              </option>
+
+            </select>
+
+            <small class="ka-preferences-description">
+              Esta respuesta se comparará en el futuro
+              con la personalidad de las mascotas.
+            </small>
+
+          </div>
+
+        </section>
+
+
+        <!-- CUIDADOS -->
+
+        <section class="form-section">
+
+          <div class="form-section-header">
+
+            <span class="form-step">03</span>
+
+            <div>
+              <h2>Cuidados y necesidades</h2>
+
+              <p>
+                ¿Qué nivel de cuidados podrías asumir
+                de manera responsable?
+              </p>
+            </div>
+
+          </div>
+
+          <div class="form-field">
+
+            <label for="nivelCuidados">
+              Disponibilidad para cuidados
+            </label>
+
+            <select
+              id="nivelCuidados"
+              name="nivelCuidados"
+              required
+            >
+              <option value="">
+                Selecciona una opción
+              </option>
+
+              <option
+                value="basicos"
+                selected={
+                  preferencias?.nivel_cuidados === "basicos"
+                }
+              >
+                Prefiero cuidados básicos
+              </option>
+
+              <option
+                value="tratamientos"
+                selected={
+                  preferencias?.nivel_cuidados === "tratamientos"
+                }
+              >
+                Puedo asumir tratamientos médicos
+              </option>
+
+              <option
+                value="especiales"
+                selected={
+                  preferencias?.nivel_cuidados === "especiales"
+                }
+              >
+                Puedo asumir cuidados especiales
+              </option>
+
+              <option
+                value="indiferente"
+                selected={
+                  preferencias?.nivel_cuidados === "indiferente"
+                }
+              >
+                Estoy abierto/a a distintas necesidades
+              </option>
+            </select>
+
+            <small class="ka-preferences-description">
+              Considera tu tiempo, recursos y
+              posibilidades reales de cuidado.
+            </small>
+
+          </div>
+
+        </section>
+
+
+        <!-- MENSAJES -->
+
+        <p
+          id="preferencias-mensaje"
+          class="form-message"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+
+        <!-- BOTONES -->
+
+        <div class="form-actions">
+
+          <a href="/usuario" class="btn-outline">
+            {
+              preferencias
+                ? "Volver a mi cuenta"
+                : "Completar después"
+            }
+          </a>
+
+          <button
+            type="submit"
+            id="guardar-preferencias"
+            class="btn-primary"
+          >
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar preferencias
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+</Layout>
+
+
+<script>
+  const formulario =
+    document.querySelector<HTMLFormElement>(
+      "#preferencias-form"
+    );
+
+  const boton =
+    document.querySelector<HTMLButtonElement>(
+      "#guardar-preferencias"
+    );
+
+  const mensaje =
+    document.querySelector<HTMLElement>(
+      "#preferencias-mensaje"
+    );
+
+
+  formulario?.addEventListener(
+    "submit",
+    async (evento) => {
+      evento.preventDefault();
+
+      if (!formulario || !boton || !mensaje) {
+        return;
+      }
+
+      if (!formulario.reportValidity()) {
+        return;
+      }
+
+      boton.disabled = true;
+      mensaje.textContent = "Guardando preferencias...";
+
+      const datos = new FormData(formulario);
+
+      try {
+        const respuesta = await fetch(
+          "/api/match/preferencias",
+          {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              tipoPreferido:
+                datos.get("tipoPreferido"),
+
+              personalidadPreferida:
+                datos.get("personalidadPreferida"),
+
+              nivelCuidados:
+                datos.get("nivelCuidados")
+            })
+          }
+        );
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+
+        if (!respuesta.ok || !resultado.ok) {
+          mensaje.textContent =
+            resultado.mensaje ||
+            "No se pudieron guardar tus preferencias.";
+          return;
+        }
+
+        window.location.href = "/usuario";
+
+      } catch (error) {
+        console.error(
+          "Error al guardar preferencias:",
+          error
+        );
+
+        mensaje.textContent =
+          "No se pudo conectar con el servidor.";
+
+      } finally {
+        boton.disabled = false;
+      }
+    }
+  );
+</script>

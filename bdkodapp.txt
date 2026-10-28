@@ -1,33 +1,30 @@
 
 -- ============================================================
 -- KODAPP - BASE DE DATOS PRINCIPAL
+-- ============================================================
+--
 -- Archivo: sql/01_kodapp.sql
+-- Base de datos: KodApp
 --
--- Ejecutar en la base de datos: KodApp
--- Diseñado para instalaciones nuevas.
+-- Estructura:
+--   Usuarios
+--   Mascotas
+--   Sesiones
+--   Verificación de correo
+--   Postulaciones
+--   Preferencias de Match
 --
--- Contiene:
---   1. Usuarios
---   2. Mascotas
---   3. Sesiones
---   4. Verificaciones de registro
---   5. Códigos de verificación
---   6. Postulaciones para adoptar
---
--- No almacena fotografías.
--- Las fotos están en la base KodApp_Fotos.
---
--- IMPORTANTE:
--- No contiene DROP, TRUNCATE ni datos personales.
 -- ============================================================
 
 BEGIN;
 
+
 -- ============================================================
--- 1. USUARIOS
+-- USUARIOS
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS usuarios (
+CREATE TABLE IF NOT EXISTS public.usuarios (
+
     id SERIAL PRIMARY KEY,
 
     nombre VARCHAR(100) NOT NULL,
@@ -44,7 +41,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
             )
         ),
 
-    -- La aplicación guarda aquí el hash bcrypt.
     contrasena VARCHAR(255) NOT NULL,
 
     estado_cuenta VARCHAR(20) NOT NULL
@@ -56,36 +52,39 @@ CREATE TABLE IF NOT EXISTS usuarios (
             )
         ),
 
-    correo_verificado BOOLEAN NOT NULL DEFAULT FALSE,
+    correo_verificado BOOLEAN NOT NULL
+        DEFAULT FALSE,
 
-    descripcion_perfil TEXT NOT NULL DEFAULT '',
+    descripcion_perfil TEXT NOT NULL
+        DEFAULT '',
 
-    fecha_registro TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    fecha_registro TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
 
-    -- Campos utilizados para modificar el correo.
     correo_pendiente VARCHAR(150),
+
     correo_codigo_hash TEXT,
+
     correo_codigo_expira TIMESTAMPTZ,
+
     correo_codigo_enviado TIMESTAMPTZ,
-    correo_codigo_intentos INTEGER NOT NULL DEFAULT 0
+
+    correo_codigo_intentos INTEGER NOT NULL
+        DEFAULT 0
+
 );
 
--- No permitir dos correos iguales con distinta capitalización.
-CREATE UNIQUE INDEX IF NOT EXISTS
-    usuarios_correo_unico_ci
-ON usuarios (LOWER(correo));
-
 
 -- ============================================================
--- 2. MASCOTAS
+-- MASCOTAS
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS mascotas (
+CREATE TABLE IF NOT EXISTS public.mascotas (
+
     id SERIAL PRIMARY KEY,
 
-    -- Organización que publicó la mascota.
     usuario_id INTEGER NOT NULL
-        REFERENCES usuarios(id)
+        REFERENCES public.usuarios(id)
         ON DELETE CASCADE,
 
     nombre VARCHAR(100) NOT NULL,
@@ -94,7 +93,45 @@ CREATE TABLE IF NOT EXISTS mascotas (
 
     personalidad TEXT,
 
+    personalidad_codigo VARCHAR(40)
+        CHECK (
+            personalidad_codigo IS NULL
+            OR personalidad_codigo IN (
+                'tranquilo',
+                'carinoso',
+                'jugueton',
+                'activo',
+                'timido',
+                'sociable',
+                'independiente',
+                'protector',
+
+                'tranquilo_carinoso',
+                'activo_jugueton',
+                'jugueton_sociable',
+                'timido_carinoso',
+                'independiente_tranquilo',
+
+                'otro'
+            )
+        ),
+
     historial_medico TEXT,
+
+    salud_codigo VARCHAR(40)
+        CHECK (
+            salud_codigo IS NULL
+            OR salud_codigo IN (
+                'sin_antecedentes',
+                'vacunacion_al_dia',
+                'vacunacion_pendiente',
+                'tratamiento',
+                'condicion_cronica',
+                'cuidados_especiales',
+                'desconocido',
+                'otro'
+            )
+        ),
 
     estado_adopcion VARCHAR(20) NOT NULL
         DEFAULT 'disponible'
@@ -114,114 +151,106 @@ CREATE TABLE IF NOT EXISTS mascotas (
                 'otro'
             )
         )
+
 );
 
-CREATE INDEX IF NOT EXISTS
-    idx_mascotas_usuario
-ON mascotas (usuario_id);
-
 
 -- ============================================================
--- 3. SESIONES
+-- SESIONES
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS sesiones (
+CREATE TABLE IF NOT EXISTS public.sesiones (
+
     id UUID PRIMARY KEY,
 
     usuario_id INTEGER NOT NULL
-        REFERENCES usuarios(id)
+        REFERENCES public.usuarios(id)
         ON DELETE CASCADE,
 
-    fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    fecha_creacion TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
 
-    -- Control de inactividad de las sesiones.
-    ultima_actividad TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    ultima_actividad TIMESTAMPTZ NOT NULL
+        DEFAULT NOW()
+
 );
 
-CREATE INDEX IF NOT EXISTS
-    idx_sesiones_usuario
-ON sesiones (usuario_id);
-
-CREATE INDEX IF NOT EXISTS
-    idx_sesiones_ultima_actividad
-ON sesiones (ultima_actividad);
-
 
 -- ============================================================
--- 4. VERIFICACIONES DE REGISTRO
+-- CÓDIGOS DE VERIFICACIÓN DE USUARIOS
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS verificaciones_registro (
-    correo VARCHAR(150) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS public.codigos_verificacion (
 
-    -- Se guarda el hash, no el código original.
+    usuario_id INTEGER PRIMARY KEY
+        REFERENCES public.usuarios(id)
+        ON DELETE CASCADE,
+
     codigo_hash VARCHAR(64) NOT NULL,
 
     expira_en TIMESTAMPTZ NOT NULL,
 
     intentos INTEGER NOT NULL DEFAULT 0,
 
-    ultimo_envio TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ultimo_envio TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
 
-    ventana_iniciada TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ventana_iniciada TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
 
-    envios_ventana INTEGER NOT NULL DEFAULT 1,
+    envios_ventana INTEGER NOT NULL DEFAULT 1
 
-    verificado BOOLEAN NOT NULL DEFAULT FALSE,
+);
+
+
+-- ============================================================
+-- VERIFICACIONES DE REGISTRO
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.verificaciones_registro (
+
+    correo VARCHAR(150) PRIMARY KEY,
+
+    codigo_hash VARCHAR(64) NOT NULL,
+
+    expira_en TIMESTAMPTZ NOT NULL,
+
+    intentos INTEGER NOT NULL DEFAULT 0,
+
+    ultimo_envio TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
+
+    ventana_iniciada TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
+
+    envios_ventana INTEGER NOT NULL
+        DEFAULT 1,
+
+    verificado BOOLEAN NOT NULL
+        DEFAULT FALSE,
 
     comprobante_hash VARCHAR(64),
 
     comprobante_expira_en TIMESTAMPTZ
+
 );
 
 
 -- ============================================================
--- 5. CÓDIGOS DE VERIFICACIÓN DE USUARIOS
+-- POSTULACIONES DE ADOPCIÓN
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS codigos_verificacion (
-    usuario_id INTEGER PRIMARY KEY
-        REFERENCES usuarios(id)
-        ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS public.postulaciones (
 
-    codigo_hash VARCHAR(64) NOT NULL,
-
-    expira_en TIMESTAMPTZ NOT NULL,
-
-    intentos INTEGER NOT NULL DEFAULT 0,
-
-    ultimo_envio TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    ventana_iniciada TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    envios_ventana INTEGER NOT NULL DEFAULT 1
-);
-
-
--- ============================================================
--- 6. POSTULACIONES PARA ADOPTAR
--- ============================================================
---
--- Una postulación NO es una adopción completada.
---
--- Estados:
---   pendiente
---   aprobada
---   rechazada
---
--- La organización evalúa cada postulación.
--- ============================================================
-
-CREATE TABLE IF NOT EXISTS postulaciones (
     id BIGSERIAL PRIMARY KEY,
 
     mascota_id INTEGER NOT NULL
-        REFERENCES mascotas(id)
-        ON DELETE RESTRICT,
+        REFERENCES public.mascotas(id)
+        ON DELETE CASCADE,
 
     adoptante_id INTEGER NOT NULL
-        REFERENCES usuarios(id)
-        ON DELETE RESTRICT,
+        REFERENCES public.usuarios(id)
+        ON DELETE CASCADE,
 
     telefono VARCHAR(25) NOT NULL,
 
@@ -246,44 +275,147 @@ CREATE TABLE IF NOT EXISTS postulaciones (
             )
         ),
 
-    creada_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    creada_en TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
 
     resuelta_en TIMESTAMPTZ,
 
-    -- Un adoptante no puede postular dos veces
-    -- a la misma mascota.
-    CONSTRAINT postulacion_unica
-        UNIQUE (
-            mascota_id,
-            adoptante_id
-        )
+    CONSTRAINT postulaciones_mascota_adoptante_unique
+        UNIQUE (mascota_id, adoptante_id)
+
 );
 
-CREATE INDEX IF NOT EXISTS
-    idx_postulaciones_mascota
-ON postulaciones (mascota_id);
 
-CREATE INDEX IF NOT EXISTS
-    idx_postulaciones_adoptante
-ON postulaciones (adoptante_id);
+-- ============================================================
+-- PREFERENCIAS DE MATCH
+-- ============================================================
 
--- Una mascota puede tener varias solicitudes pendientes,
--- pero solamente una aprobada.
-CREATE UNIQUE INDEX IF NOT EXISTS
-    idx_postulacion_aprobada_unica
-ON postulaciones (mascota_id)
-WHERE estado = 'aprobada';
+CREATE TABLE IF NOT EXISTS public.preferencias_match (
+
+    usuario_id INTEGER PRIMARY KEY
+        REFERENCES public.usuarios(id)
+        ON DELETE CASCADE,
+
+    tipo_preferido VARCHAR(20) NOT NULL
+        CHECK (
+            tipo_preferido IN (
+                'perro',
+                'gato',
+                'otro',
+                'indiferente'
+            )
+        ),
+
+    personalidad_preferida VARCHAR(40) NOT NULL
+        CHECK (
+            personalidad_preferida IN (
+
+                'tranquilo',
+                'carinoso',
+                'jugueton',
+                'activo',
+                'timido',
+                'sociable',
+                'independiente',
+                'protector',
+
+                'tranquilo_carinoso',
+                'activo_jugueton',
+                'jugueton_sociable',
+                'timido_carinoso',
+                'independiente_tranquilo',
+
+                'indiferente'
+            )
+        ),
+
+    nivel_cuidados VARCHAR(25) NOT NULL
+        CHECK (
+            nivel_cuidados IN (
+                'basicos',
+                'tratamientos',
+                'especiales',
+                'indiferente'
+            )
+        ),
+
+    creada_en TIMESTAMPTZ NOT NULL
+        DEFAULT NOW(),
+
+    actualizada_en TIMESTAMPTZ NOT NULL
+        DEFAULT NOW()
+
+);
 
 
 -- ============================================================
--- FIN DE LA INSTALACIÓN
+-- ÍNDICES
 -- ============================================================
+
+CREATE INDEX IF NOT EXISTS
+idx_mascotas_usuario
+ON public.mascotas (usuario_id);
+
+CREATE INDEX IF NOT EXISTS
+idx_mascotas_estado
+ON public.mascotas (estado_adopcion);
+
+CREATE INDEX IF NOT EXISTS
+idx_mascotas_tipo
+ON public.mascotas (tipo_mascota);
+
+CREATE INDEX IF NOT EXISTS
+idx_mascotas_personalidad
+ON public.mascotas (personalidad_codigo);
+
+CREATE INDEX IF NOT EXISTS
+idx_mascotas_salud
+ON public.mascotas (salud_codigo);
+
+CREATE INDEX IF NOT EXISTS
+idx_sesiones_usuario
+ON public.sesiones (usuario_id);
+
+CREATE INDEX IF NOT EXISTS
+idx_sesiones_ultima_actividad
+ON public.sesiones (ultima_actividad);
+
+CREATE INDEX IF NOT EXISTS
+idx_postulaciones_mascota
+ON public.postulaciones (mascota_id);
+
+CREATE INDEX IF NOT EXISTS
+idx_postulaciones_adoptante
+ON public.postulaciones (adoptante_id);
+
+CREATE INDEX IF NOT EXISTS
+idx_postulaciones_estado
+ON public.postulaciones (estado);
+
+CREATE INDEX IF NOT EXISTS
+idx_preferencias_tipo
+ON public.preferencias_match (tipo_preferido);
+
+CREATE INDEX IF NOT EXISTS
+idx_preferencias_personalidad
+ON public.preferencias_match (personalidad_preferida);
+
 
 COMMIT;
 
--- Comprobar las tablas creadas.
-SELECT table_name
+
+-- ============================================================
+-- VERIFICACIÓN DE TABLAS
+-- ============================================================
+
+SELECT
+    table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
+
+
+-- ============================================================
+-- FIN - KODAPP
+-- ============================================================

@@ -1,59 +1,67 @@
 
 -- ============================================================
 -- KODAPP - BASE DE DATOS DE FOTOGRAFÍAS
+-- ============================================================
+--
 -- Archivo: sql/02_kodapp_fotos.sql
+-- Base de datos: KodApp_Fotos
 --
--- Ejecutar en la base de datos: KodApp_Fotos
---
--- Esta base guarda las imágenes mediante BYTEA.
 -- ============================================================
 
 BEGIN;
 
+
 -- ============================================================
--- 1. FOTOGRAFÍAS DE PERFIL
+-- FOTOGRAFÍAS DE PERFIL
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS fotos_perfil (
+CREATE TABLE IF NOT EXISTS public.fotos_perfil (
+
     usuario_id INTEGER PRIMARY KEY,
 
     imagen BYTEA NOT NULL,
 
     tipo_mime VARCHAR(50) NOT NULL,
 
-    fecha_actualizacion TIMESTAMPTZ DEFAULT NOW()
+    fecha_actualizacion TIMESTAMPTZ NOT NULL
+        DEFAULT NOW()
+
 );
 
 
 -- ============================================================
--- 2. FOTOGRAFÍAS DE MASCOTAS
+-- FOTOGRAFÍAS DE MASCOTAS
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS fotos_mascotas (
+CREATE TABLE IF NOT EXISTS public.fotos_mascotas (
+
     mascota_id INTEGER PRIMARY KEY,
 
     imagen BYTEA NOT NULL,
 
     tipo_mime VARCHAR(50) NOT NULL,
 
-    fecha_actualizacion TIMESTAMPTZ DEFAULT NOW()
+    fecha_actualizacion TIMESTAMPTZ NOT NULL
+        DEFAULT NOW()
+
 );
+
 
 COMMIT;
 
 
 -- ============================================================
--- COMPROBACIONES
+-- VERIFICACIÓN
 -- ============================================================
 
-SELECT table_name
+SELECT
+    table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_type = 'BASE TABLE'
 ORDER BY table_name;
 
-SELECT COUNT(*) AS total_fotos_perfil
-FROM fotos_perfil;
 
-SELECT COUNT(*) AS total_fotos_mascotas
-FROM fotos_mascotas;
+-- ============================================================
+-- FIN - KODAPP_FOTOS
+-- ============================================================

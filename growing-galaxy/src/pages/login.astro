@@ -158,7 +158,15 @@ import "../styles/login.css";
       const tipo = datos.usuario?.tipoUsuario;
 
       if (tipo === "adoptante") {
-        window.location.href = "/usuario";
+        const vieneDelRegistro =
+          new URLSearchParams(
+            window.location.search
+          ).get("match") === "1";
+
+        window.location.href = vieneDelRegistro
+          ? "/preferencias?bienvenida=1"
+          : "/usuario";
+
         return;
       }
 

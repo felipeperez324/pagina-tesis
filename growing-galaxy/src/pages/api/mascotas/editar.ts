@@ -1,17 +1,24 @@
 
 import type { APIRoute } from "astro";
+
 import { db } from "../../../lib/db";
 import { dbFotos } from "../../../lib/dbfotos";
 import { getUsuarioDesdeSesion } from "../../../lib/auth";
+
+import {
+  PERSONALIDADES,
+  ANTECEDENTES_MEDICOS,
+  procesarClasificacion
+} from "../../../lib/CatalogoMatch";
 
 export const prerender = false;
 
 function responder(
   datos: Record<string, unknown>,
-  status = 200
+  estado = 200
 ) {
   return new Response(JSON.stringify(datos), {
-    status,
+    status: estado,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store"
@@ -19,14 +26,34 @@ function responder(
   });
 }
 
-// ==========================================
-// EDITAR UNA PUBLICACIÓN EXISTENTE
-// ==========================================
-export const POST: APIRoute = async ({ request, cookies }) => {
-  const sessionId = cookies.get("session_id")?.value;
 
+// ==========================================
+// PUBLICAR MASCOTA
+// ==========================================
+
+export const POST: APIRoute = async ({
+  request,
+  cookies
+}) => {
   try {
-    const usuario = await getUsuarioDesdeSesion(sessionId);
+
+    // SEGURIDAD
+
+    const origin = request.headers.get("origin");
+
+    if (
+      origin &&
+      origin !== new URL(request.url).origin
+    ) {
+      return responder({
+        ok: false,
+        mensaje: "Origen no permitido."
+      }, 403);
+    }
+
+    const usuario = await getUsuarioDesdeSesion(
+      cookies.get("session_id")?.value
+    );
 
     if (!usuario) {
       return responder({
@@ -38,36 +65,43 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     if (usuario.tipo_usuario !== "organizacion") {
       return responder({
         ok: false,
-        mensaje: "Solo las organizaciones pueden editar publicaciones."
+        mensaje: "Solo las organizaciones pueden publicar mascotas."
       }, 403);
     }
 
+
+    // OBTENER FORMULARIO
+
     const datos = await request.formData();
 
-    const id = Number(datos.get("id"));
-    const nombre = String(datos.get("nombre") ?? "").trim();
-    const tipoMascota = String(datos.get("tipoMascota") ?? "").trim();
-    const descripcion = String(datos.get("descripcion") ?? "").trim();
-    const personalidad = String(datos.get("personalidad") ?? "").trim();
-    const historialMedico = String(
-      datos.get("historialMedico") ?? ""
-    ).trim();
-    const estadoAdopcion = String(
-      datos.get("estadoAdopcion") ?? ""
+    const nombre = String(
+      datos.get("nombre") ?? ""
     ).trim();
 
-    const archivo = datos.get("foto");
+    const tipoMascota = String(
+      datos.get("tipoMascota") ?? ""
+    ).trim();
 
-    // ======================================
+    const descripcion = String(
+      datos.get("descripcion") ?? ""
+    ).trim();
+
+    const personalidad = procesarClasificacion(
+      datos.get("personalidadCodigo"),
+      datos.get("personalidadDetalle"),
+      PERSONALIDADES,
+      "la personalidad"
+    );
+
+    const salud = procesarClasificacion(
+      datos.get("saludCodigo"),
+      datos.get("saludDetalle"),
+      ANTECEDENTES_MEDICOS,
+      "los antecedentes médicos"
+    );
+
+
     // VALIDACIONES
-    // ======================================
-
-    if (!Number.isSafeInteger(id) || id <= 0) {
-      return responder({
-        ok: false,
-        mensaje: "Publicación inválida."
-      }, 400);
-    }
 
     if (!nombre || nombre.length > 100) {
       return responder({
@@ -76,164 +110,179 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }, 400);
     }
 
-    if (!["perro", "gato", "otro"].includes(tipoMascota)) {
+    if (
+      !["perro", "gato", "otro"].includes(tipoMascota)
+    ) {
       return responder({
         ok: false,
         mensaje: "Tipo de mascota inválido."
       }, 400);
     }
 
-    if (
-      !["disponible", "reservada", "adoptada"]
-        .includes(estadoAdopcion)
-    ) {
+    if (descripcion.length > 5000) {
       return responder({
         ok: false,
-        mensaje: "Estado de adopción inválido."
+        mensaje: "La descripción es demasiado larga."
       }, 400);
     }
 
-    if (
-      descripcion.length > 5000 ||
-      personalidad.length > 5000 ||
-      historialMedico.length > 5000
-    ) {
+    if (!personalidad.ok) {
       return responder({
         ok: false,
-        mensaje: "Uno de los textos es demasiado largo."
+        mensaje: personalidad.mensaje
       }, 400);
     }
+
+    if (!salud.ok) {
+      return responder({
+        ok: false,
+        mensaje: salud.mensaje
+      }, 400);
+    }
+
+
+    // PROCESAR FOTO
+
+    const archivo = datos.get("foto");
 
     let imagenBuffer: Buffer | null = null;
     let imagenMime: string | null = null;
 
-    if (archivo instanceof File && archivo.size > 0) {
-      const tiposPermitidos = [
-        "image/jpeg",
-        "image/png",
-        "image/webp"
-      ];
-
-      if (!tiposPermitidos.includes(archivo.type)) {
+    if (archivo !== null) {
+      if (!(archivo instanceof File)) {
         return responder({
           ok: false,
-          mensaje: "Solo se permiten imágenes JPG, PNG o WebP."
+          mensaje: "El archivo recibido no es válido."
         }, 400);
       }
 
-      if (archivo.size > 5 * 1024 * 1024) {
-        return responder({
-          ok: false,
-          mensaje: "La imagen no puede superar los 5 MB."
-        }, 400);
+      if (archivo.size > 0) {
+        const tiposPermitidos = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+        if (!tiposPermitidos.includes(archivo.type)) {
+          return responder({
+            ok: false,
+            mensaje: "Solo se permiten imágenes JPG, PNG o WebP."
+          }, 400);
+        }
+
+        if (archivo.size > 5 * 1024 * 1024) {
+          return responder({
+            ok: false,
+            mensaje: "La imagen no puede superar los 5 MB."
+          }, 400);
+        }
+
+        imagenBuffer = Buffer.from(
+          await archivo.arrayBuffer()
+        );
+
+        imagenMime = archivo.type;
       }
-
-      imagenBuffer = Buffer.from(
-        await archivo.arrayBuffer()
-      );
-
-      imagenMime = archivo.type;
     }
 
-    // ======================================
-    // TRANSACCIÓN EN LA BASE PRINCIPAL
-    // ======================================
 
-    const conexion = await db.connect();
+    // GUARDAR DATOS PRINCIPALES
 
-    try {
-      await conexion.query("BEGIN");
+    const resultado = await db.query(
+      `INSERT INTO mascotas (
+        usuario_id,
+        nombre,
+        descripcion,
+        personalidad,
+        personalidad_codigo,
+        historial_medico,
+        salud_codigo,
+        estado_adopcion,
+        tipo_mascota
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, 'disponible', $8
+      )
+      RETURNING id`,
+      [
+        usuario.id,
+        nombre,
+        descripcion || null,
+        personalidad.texto,
+        personalidad.codigo,
+        salud.texto,
+        salud.codigo,
+        tipoMascota
+      ]
+    );
 
-      // Solo puede actualizar una publicación
-      // que pertenezca al usuario conectado.
-      const resultado = await conexion.query(
-        `UPDATE mascotas
-         SET
-           nombre = $1,
-           tipo_mascota = $2,
-           descripcion = $3,
-           personalidad = $4,
-           historial_medico = $5,
-           estado_adopcion = $6
-         WHERE id = $7
-           AND usuario_id = $8
-         RETURNING id`,
-        [
-          nombre,
-          tipoMascota,
-          descripcion || null,
-          personalidad || null,
-          historialMedico || null,
-          estadoAdopcion,
-          id,
-          usuario.id
-        ]
-      );
+    const mascotaId = Number(
+      resultado.rows[0].id
+    );
 
-      if (resultado.rows.length === 0) {
-        await conexion.query("ROLLBACK");
 
-        return responder({
-          ok: false,
-          mensaje: "La publicación no existe o no te pertenece."
-        }, 404);
-      }
+    // GUARDAR FOTO EN KODAPP_FOTOS
 
-      // ====================================
-      // FOTO EN LA SEGUNDA BASE DE DATOS
-      // ====================================
-      //
-      // Si no se seleccionó una imagen,
-      // se conserva la foto existente.
-
-      if (imagenBuffer && imagenMime) {
+    if (imagenBuffer && imagenMime) {
+      try {
         await dbFotos.query(
           `INSERT INTO fotos_mascotas (
             mascota_id,
             imagen,
             tipo_mime
           )
-          VALUES ($1, $2, $3)
-          ON CONFLICT (mascota_id)
-          DO UPDATE SET
-            imagen = EXCLUDED.imagen,
-            tipo_mime = EXCLUDED.tipo_mime,
-            fecha_actualizacion = NOW()`,
+          VALUES ($1, $2, $3)`,
           [
-            id,
+            mascotaId,
             imagenBuffer,
             imagenMime
           ]
         );
+
+      } catch (error) {
+        console.error(
+          "Error al guardar fotografía:",
+          error
+        );
+
+        // Revertir publicación si falla la foto.
+        try {
+          await db.query(
+            `DELETE FROM mascotas
+             WHERE id = $1 AND usuario_id = $2`,
+            [mascotaId, usuario.id]
+          );
+        } catch (errorBorrado) {
+          console.error(
+            "Error al revertir publicación:",
+            errorBorrado
+          );
+        }
+
+        return responder({
+          ok: false,
+          mensaje:
+            "No se pudo guardar la fotografía."
+        }, 500);
       }
-
-      await conexion.query("COMMIT");
-
-      return responder({
-        ok: true,
-        mensaje: "Publicación actualizada correctamente."
-      });
-
-    } catch (error) {
-      await conexion.query("ROLLBACK").catch(() => {});
-
-      console.error("Error al actualizar mascota:", error);
-
-      return responder({
-        ok: false,
-        mensaje: "No se pudo actualizar la publicación."
-      }, 500);
-
-    } finally {
-      conexion.release();
     }
 
+    return responder({
+      ok: true,
+      mensaje: "Mascota publicada correctamente.",
+      mascotaId
+    }, 201);
+
   } catch (error) {
-    console.error("Error en API de edición:", error);
+    console.error(
+      "Error al publicar mascota:",
+      error
+    );
 
     return responder({
       ok: false,
-      mensaje: "Ocurrió un error al procesar la publicación."
+      mensaje: "No se pudo publicar la mascota."
     }, 500);
   }
 };

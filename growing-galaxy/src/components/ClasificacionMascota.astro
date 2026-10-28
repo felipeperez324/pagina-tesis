@@ -1,0 +1,218 @@
+
+---
+import {
+  PERSONALIDADES,
+  ANTECEDENTES_MEDICOS,
+  seleccionarClasificacion
+} from "../lib/CatalogoMatch";
+
+import "../styles/match-formularios.css";
+
+interface Props {
+  personalidad?: string | null;
+  historialMedico?: string | null;
+  personalidadCodigo?: string | null;
+  saludCodigo?: string | null;
+}
+
+const {
+  personalidad = null,
+  historialMedico = null,
+  personalidadCodigo = null,
+  saludCodigo = null
+} = Astro.props;
+
+const personalidadSeleccionada =
+  seleccionarClasificacion(
+    personalidadCodigo,
+    personalidad,
+    PERSONALIDADES
+  );
+
+const saludSeleccionada =
+  seleccionarClasificacion(
+    saludCodigo,
+    historialMedico,
+    ANTECEDENTES_MEDICOS
+  );
+---
+
+<!-- =====================================
+     PERSONALIDAD
+     ===================================== -->
+
+<section class="form-section">
+
+  <div class="form-section-header">
+    <span class="form-step">03</span>
+
+    <div>
+      <h2>Personalidad</h2>
+
+      <p>
+        Selecciona la personalidad que mejor
+        describa a la mascota.
+      </p>
+    </div>
+  </div>
+
+  <div class="form-field form-field-full ka-match-field"
+       data-match-field>
+
+    <label for="personalidadCodigo">
+      Personalidad principal
+    </label>
+
+    <select
+      id="personalidadCodigo"
+      name="personalidadCodigo"
+      required
+      data-match-select
+    >
+      <option value="">
+        Selecciona una personalidad
+      </option>
+
+      {
+        PERSONALIDADES.map((opcion) => (
+          <option
+            value={opcion.valor}
+            selected={
+              personalidadSeleccionada === opcion.valor
+            }
+          >
+            {opcion.etiqueta}
+          </option>
+        ))
+      }
+
+      <option
+        value="otro"
+        selected={personalidadSeleccionada === "otro"}
+      >
+        No encuentro la personalidad de mi mascota
+      </option>
+    </select>
+
+    <div
+      class="ka-match-other"
+      data-match-other
+      hidden={personalidadSeleccionada !== "otro"}
+    >
+      <label for="personalidadDetalle">
+        Describe su personalidad
+      </label>
+
+      <textarea
+        id="personalidadDetalle"
+        name="personalidadDetalle"
+        rows="4"
+        minlength="3"
+        maxlength="1500"
+        placeholder="Ej: Es muy curiosa, pero tímida con desconocidos."
+        required={personalidadSeleccionada === "otro"}
+        disabled={personalidadSeleccionada !== "otro"}
+        data-match-detail
+      >{personalidadSeleccionada === "otro"
+        ? personalidad ?? ""
+        : ""}</textarea>
+    </div>
+
+    <small class="ka-match-help">
+      Esta información servirá para encontrar
+      compatibilidades con los adoptantes.
+    </small>
+  </div>
+
+</section>
+
+
+<!-- =====================================
+     ANTECEDENTES MÉDICOS
+     ===================================== -->
+
+<section class="form-section">
+
+  <div class="form-section-header">
+    <span class="form-step">04</span>
+
+    <div>
+      <h2>Antecedentes médicos</h2>
+
+      <p>
+        Indica la situación principal de salud.
+      </p>
+    </div>
+  </div>
+
+  <div class="form-field form-field-full ka-match-field"
+       data-match-field>
+
+    <label for="saludCodigo">
+      Situación médica
+    </label>
+
+    <select
+      id="saludCodigo"
+      name="saludCodigo"
+      required
+      data-match-select
+    >
+      <option value="">
+        Selecciona una opción
+      </option>
+
+      {
+        ANTECEDENTES_MEDICOS.map((opcion) => (
+          <option
+            value={opcion.valor}
+            selected={saludSeleccionada === opcion.valor}
+          >
+            {opcion.etiqueta}
+          </option>
+        ))
+      }
+
+      <option
+        value="otro"
+        selected={saludSeleccionada === "otro"}
+      >
+        Otro antecedente o varios antecedentes
+      </option>
+    </select>
+
+    <div
+      class="ka-match-other"
+      data-match-other
+      hidden={saludSeleccionada !== "otro"}
+    >
+      <label for="saludDetalle">
+        Describe los antecedentes médicos
+      </label>
+
+      <textarea
+        id="saludDetalle"
+        name="saludDetalle"
+        rows="4"
+        minlength="3"
+        maxlength="1500"
+        placeholder="Ej: Tiene vacunas al día y requiere controles periódicos."
+        required={saludSeleccionada === "otro"}
+        disabled={saludSeleccionada !== "otro"}
+        data-match-detail
+      >{saludSeleccionada === "otro"
+        ? historialMedico ?? ""
+        : ""}</textarea>
+    </div>
+
+    <small class="ka-match-help">
+      Si existen varias condiciones médicas,
+      utiliza la última opción para explicarlas.
+    </small>
+  </div>
+
+</section>
+
+<script>
+  import "../scripts/clasificacion-mascota";
+</script>

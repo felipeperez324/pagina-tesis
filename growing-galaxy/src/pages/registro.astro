@@ -557,7 +557,12 @@ import "../styles/login.css";
       registerMessage.textContent =
         "¡Cuenta creada correctamente!";
 
-      window.location.href = "/login";
+      // Si se registró como adoptante,
+      // ofrecer sus preferencias después del login.
+        window.location.href =
+          role.value === "adoptante"
+            ? "/login?match=1"
+            : "/login";
 
     } catch (error) {
       console.error(error);
