@@ -3238,3 +3238,31 @@ body > footer {
     margin-right: 0;
   }
 }
+
+
+
+/* ==========================================
+   KODAPP - CORRECCIÓN DEL MENÚ DE USUARIO
+   ========================================== */
+
+/* Mantener las capas del encabezado separadas */
+.site-header {
+  isolation: isolate;
+  overflow: visible;
+}
+
+/* Triángulos rojos detrás del menú */
+.site-header::after {
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Mantener el menú por delante */
+.site-header .account-menu {
+  position: relative;
+  z-index: 10;
+}
+
+.site-header .account-dropdown {
+  z-index: 100;
+}
