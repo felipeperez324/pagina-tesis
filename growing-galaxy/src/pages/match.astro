@@ -1,0 +1,600 @@
+
+---
+/**
+ * KODAPP - MI MATCH
+ *
+ * Muestra compatibilidades calculadas con
+ * las preferencias y mascotas de PostgreSQL.
+ *
+ * No modifica postulaciones ni aprobaciones.
+ * CSS completamente separado.
+ */
+
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+
+import { db } from "../lib/db";
+import { getUsuarioDesdeSesion } from "../lib/auth";
+import { agregarFotosMascotas } from "../lib/fotos";
+
+import {
+  calcularCompatibilidad,
+  type PreferenciasMatch,
+  type ResultadoMatch
+} from "../lib/match/compatibilidad";
+
+import "../styles/match.css";
+
+export const prerender = false;
+
+// ==========================================
+// AUTENTICACIÓN
+// ==========================================
+
+const sessionId =
+  Astro.cookies.get("session_id")?.value;
+
+const usuario =
+  await getUsuarioDesdeSesion(sessionId);
+
+if (!usuario) {
+  return Astro.redirect("/login");
+}
+
+if (usuario.tipo_usuario !== "adoptante") {
+  return Astro.redirect("/gestion");
+}
+
+// ==========================================
+// CONSULTAR PREFERENCIAS DEL ADOPTANTE
+// ==========================================
+
+const consultaPreferencias = await db.query(
+  `
+  SELECT
+    tipo_preferido,
+    personalidad_preferida,
+    nivel_cuidados
+  FROM preferencias_match
+  WHERE usuario_id = $1
+  `,
+  [usuario.id]
+);
+
+const preferencias = (
+  consultaPreferencias.rows[0] ?? null
+) as PreferenciasMatch | null;
+
+// ==========================================
+// TIPOS DE DATOS
+// ==========================================
+
+type TarjetaMatch = {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  foto?: string | null;
+  tipo_mascota: string;
+  personalidad: string | null;
+  historial_medico: string | null;
+  personalidad_codigo: string | null;
+  salud_codigo: string | null;
+  match: ResultadoMatch;
+};
+
+// ==========================================
+// OBTENER MASCOTAS Y CALCULAR MATCH
+// ==========================================
+
+let tarjetas: TarjetaMatch[] = [];
+
+if (preferencias) {
+
+  const consultaMascotas = await db.query(
+    `
+    SELECT
+      id,
+      nombre,
+      descripcion,
+      tipo_mascota,
+      personalidad,
+      personalidad_codigo,
+      historial_medico,
+      salud_codigo
+    FROM mascotas
+    WHERE estado_adopcion = 'disponible'
+    ORDER BY id DESC
+    `
+  );
+
+  const mascotasConFotos =
+    await agregarFotosMascotas(
+      consultaMascotas.rows
+    );
+
+  tarjetas = mascotasConFotos
+    .map((mascota) => ({
+      ...mascota,
+
+      match: calcularCompatibilidad(
+        preferencias,
+        mascota
+      )
+    }))
+    .sort((a, b) => {
+
+      const porcentajeA =
+        a.match.porcentaje ?? -1;
+
+      const porcentajeB =
+        b.match.porcentaje ?? -1;
+
+      return porcentajeB - porcentajeA;
+    });
+}
+
+// ==========================================
+// TEXTOS DE COMPATIBILIDAD
+// ==========================================
+
+function nombreNivel(
+  nivel: ResultadoMatch["nivel"]
+): string {
+
+  switch (nivel) {
+
+    case "baja":
+      return "Compatibilidad baja";
+
+    case "moderada":
+      return "Compatibilidad moderada";
+
+    case "buena":
+      return "Buena compatibilidad";
+
+    case "muy_alta":
+      return "Compatibilidad muy alta";
+
+    default:
+      return "Información insuficiente";
+  }
+}
+
+function mensajeNivel(
+  nivel: ResultadoMatch["nivel"]
+): string {
+
+  switch (nivel) {
+
+    case "baja":
+      return "Existen diferencias importantes entre tus preferencias y las características de esta mascota.";
+
+    case "moderada":
+      return "Hay coincidencias, pero también algunos aspectos que conviene revisar.";
+
+    case "buena":
+      return "Las características de esta mascota coinciden en buena medida con tus preferencias.";
+
+    case "muy_alta":
+      return "Esta mascota presenta un nivel elevado de coincidencia con tus preferencias.";
+
+    default:
+      return "Todavía no contamos con información suficiente para calcular una compatibilidad completa.";
+  }
+}
+---
+
+<Layout
+  title="Mi Match | KodApp"
+  description="Descubre mascotas compatibles con tus preferencias."
+>
+  <Header />
+
+  <main class="ka-match-page">
+
+    <div class="ka-match-container">
+
+      <!-- ==================================
+           ENCABEZADO
+      ================================== -->
+
+      <header class="ka-match-header">
+
+        <a
+          href="/usuario"
+          class="ka-match-back"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver a mi cuenta
+        </a>
+
+        <span class="ka-match-kicker">
+          Compatibilidad KodApp
+        </span>
+
+        <h1>
+          Encuentra tu Match
+        </h1>
+
+        <p>
+          Descubre mascotas disponibles según
+          sus características y las preferencias
+          que registraste en tu perfil.
+        </p>
+
+      </header>
+
+      <!-- ==================================
+           SIN PREFERENCIAS
+      ================================== -->
+
+      {
+        !preferencias ? (
+
+          <section class="ka-match-empty">
+
+            <i class="fa-solid fa-heart"></i>
+
+            <h2>
+              Primero necesitamos conocerte
+            </h2>
+
+            <p>
+              Completa tus preferencias para
+              comenzar a encontrar mascotas
+              que coincidan con lo que buscas.
+            </p>
+
+            <a
+              href="/preferencias"
+              class="ka-match-action"
+            >
+              <i class="fa-solid fa-clipboard-list"></i>
+              Completar mis preferencias
+            </a>
+
+          </section>
+
+        ) : (
+
+          <>
+
+            <!-- ==================================
+                 PERFIL GUARDADO
+            ================================== -->
+
+            <section class="ka-match-profile">
+
+              <div class="ka-match-profile-info">
+
+                <h2>
+                  Tu perfil de compatibilidad
+                </h2>
+
+                <p>
+                  Estamos utilizando tus preferencias
+                  registradas para calcular el Match.
+                </p>
+
+              </div>
+
+              <a
+                href="/preferencias"
+                class="ka-match-edit"
+              >
+                <i class="fa-solid fa-sliders"></i>
+                Editar preferencias
+              </a>
+
+            </section>
+
+            <!-- ==================================
+                 SIN MASCOTAS
+            ================================== -->
+
+            {
+              tarjetas.length === 0 ? (
+
+                <section class="ka-match-empty">
+
+                  <i class="fa-solid fa-paw"></i>
+
+                  <h2>
+                    No hay mascotas disponibles
+                  </h2>
+
+                  <p>
+                    Actualmente no encontramos
+                    mascotas disponibles para
+                    calcular compatibilidades.
+                  </p>
+
+                </section>
+
+              ) : (
+
+                <>
+
+                  <!-- ==================================
+                       RESULTADOS
+                  ================================== -->
+
+                  <div class="ka-match-results-heading">
+
+                    <div>
+
+                      <span class="ka-match-kicker">
+                        Tus resultados
+                      </span>
+
+                      <h2>
+                        Mascotas recomendadas
+                      </h2>
+
+                    </div>
+
+                    <span class="ka-match-results-count">
+                      {tarjetas.length}
+                      {" "}
+                      mascotas disponibles
+                    </span>
+
+                  </div>
+
+                  <!-- ==================================
+                       TARJETAS MATCH
+                  ================================== -->
+
+                  <section
+                    class="ka-match-grid"
+                    aria-label="Resultados de compatibilidad"
+                  >
+
+                    {
+                      tarjetas.map((mascota) => (
+
+                        <article class="ka-match-card">
+
+                          <!-- FOTO -->
+
+                          <div class="ka-match-photo">
+
+                            {
+                              mascota.foto ? (
+
+                                <img
+                                  src={mascota.foto}
+                                  alt={`Fotografía de ${mascota.nombre}`}
+                                  loading="lazy"
+                                />
+
+                              ) : (
+
+                                <i
+                                  class="fa-solid fa-paw"
+                                  aria-hidden="true"
+                                ></i>
+
+                              )
+                            }
+
+                          </div>
+
+                          <!-- CONTENIDO -->
+
+                          <div class="ka-match-content">
+
+                            <!-- NOMBRE Y RESULTADO -->
+
+                            <div class="ka-match-card-header">
+
+                              <div>
+
+                                <h3>
+                                  {mascota.nombre}
+                                </h3>
+
+                                <span class="ka-match-type">
+                                  {mascota.tipo_mascota}
+                                </span>
+
+                              </div>
+
+                              <div
+                                class:list={[
+                                  "ka-match-score",
+                                  `ka-match-score--${mascota.match.nivel}`
+                                ]}
+                              >
+                                {
+                                  mascota.match.porcentaje === null
+                                    ? "—"
+                                    : `${mascota.match.porcentaje}%`
+                                }
+                              </div>
+
+                            </div>
+
+                            <!-- ==================================
+                                 MEDIDOR NATIVO
+                                 SIN ESTILOS INLINE
+                            ================================== -->
+
+                            <progress
+                              class:list={[
+                                "ka-match-progress",
+                                `ka-match-progress--${mascota.match.nivel}`
+                              ]}
+                              value={mascota.match.porcentaje ?? 0}
+                              max="100"
+                              aria-label={`Compatibilidad de ${mascota.nombre}`}
+                            >
+                              {mascota.match.porcentaje ?? 0}%
+                            </progress>
+
+                            <!-- CLASIFICACIÓN -->
+
+                            <p
+                              class:list={[
+                                "ka-match-level",
+                                `ka-match-level--${mascota.match.nivel}`
+                              ]}
+                            >
+                              {nombreNivel(mascota.match.nivel)}
+                            </p>
+
+                            <p class="ka-match-description">
+                              {mensajeNivel(mascota.match.nivel)}
+                            </p>
+
+                            <!-- COBERTURA -->
+
+                            <div class="ka-match-coverage">
+
+                              <i class="fa-solid fa-circle-info"></i>
+
+                              <span>
+                                Criterios evaluados:
+                                {" "}
+                                {mascota.match.cobertura}%
+                              </span>
+
+                            </div>
+
+                            <!-- ==================================
+                                 COINCIDENCIAS
+                            ================================== -->
+
+                            {
+                              mascota.match.coincidencias.length > 0 && (
+
+                                <div class="ka-match-details">
+
+                                  <h4>
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    Coincidencias encontradas
+                                  </h4>
+
+                                  <ul>
+
+                                    {
+                                      mascota.match.coincidencias.map(
+                                        (texto) => (
+
+                                          <li class="ka-match-positive">
+
+                                            <i class="fa-solid fa-check"></i>
+
+                                            <span>
+                                              {texto}
+                                            </span>
+
+                                          </li>
+
+                                        )
+                                      )
+                                    }
+
+                                  </ul>
+
+                                </div>
+
+                              )
+                            }
+
+                            <!-- ==================================
+                                 ADVERTENCIAS
+                            ================================== -->
+
+                            {
+                              mascota.match.advertencias.length > 0 && (
+
+                                <div class="ka-match-details">
+
+                                  <h4>
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    Aspectos por revisar
+                                  </h4>
+
+                                  <ul>
+
+                                    {
+                                      mascota.match.advertencias.map(
+                                        (texto) => (
+
+                                          <li class="ka-match-warning">
+
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+
+                                            <span>
+                                              {texto}
+                                            </span>
+
+                                          </li>
+
+                                        )
+                                      )
+                                    }
+
+                                  </ul>
+
+                                </div>
+
+                              )
+                            }
+
+                            <!-- POSTULACIÓN -->
+
+                            <a
+                              href={`/postular/${mascota.id}`}
+                              class="ka-match-action ka-match-card-button"
+                            >
+                              Ver postulación
+
+                              <i class="fa-solid fa-arrow-right"></i>
+                            </a>
+
+                          </div>
+
+                        </article>
+
+                      ))
+                    }
+
+                  </section>
+
+                </>
+
+              )
+            }
+
+          </>
+
+        )
+      }
+
+      <!-- ==================================
+           AVISO IMPORTANTE
+      ================================== -->
+
+      <footer class="ka-match-footer">
+
+        <i class="fa-solid fa-shield-heart"></i>
+
+        <p>
+          Los porcentajes representan coincidencias
+          entre la información registrada de las
+          mascotas y las preferencias del adoptante.
+
+          No garantizan una adopción responsable
+          y no reemplazan la evaluación realizada
+          por la organización de rescate.
+        </p>
+
+      </footer>
+
+    </div>
+
+  </main>
+
+</Layout>

@@ -1,0 +1,620 @@
+
+/* ==========================================
+   KODAPP - MATCH
+   HOJA DE ESTILOS COMPLETA
+   ========================================== */
+
+/* ==========================================
+   CONTENEDOR GENERAL
+   ========================================== */
+
+.ka-match-page {
+  min-height: 100vh;
+  padding: 46px 20px 80px;
+}
+
+.ka-match-container {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+/* ==========================================
+   ENCABEZADO
+   ========================================== */
+
+.ka-match-header {
+  margin-bottom: 30px;
+}
+
+.ka-match-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 24px;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.ka-match-back:hover {
+  color: #a94b64;
+}
+
+.ka-match-kicker {
+  display: block;
+  margin-bottom: 10px;
+  color: #b85468;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ka-match-header h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+}
+
+.ka-match-header p {
+  max-width: 720px;
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+/* ==========================================
+   PERFIL DEL USUARIO
+   ========================================== */
+
+.ka-match-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 24px;
+  margin-bottom: 35px;
+
+  background: #fff;
+  border: 1px solid #f0dce1;
+  border-radius: 18px;
+
+  box-shadow: 0 8px 25px rgb(40 20 25 / 5%);
+}
+
+.ka-match-profile h2 {
+  margin: 0 0 8px;
+  color: #25242a;
+  font-size: 1.25rem;
+}
+
+.ka-match-profile p {
+  margin: 0;
+  color: #666;
+}
+
+.ka-match-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  padding: 12px 16px;
+
+  border: 1px solid #dba6b2;
+  border-radius: 12px;
+
+  color: #923e52;
+  background: transparent;
+
+  text-decoration: none;
+  font-weight: 700;
+  white-space: nowrap;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.ka-match-edit:hover {
+  background: #fff0f3;
+}
+
+/* ==========================================
+   CABECERA DE RESULTADOS
+   ========================================== */
+
+.ka-match-results-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+
+  margin-bottom: 24px;
+}
+
+.ka-match-results-heading h2 {
+  margin: 0;
+}
+
+.ka-match-results-count {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+/* ==========================================
+   CUADRÍCULA
+   ========================================== */
+
+.ka-match-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+/* ==========================================
+   TARJETAS
+   ========================================== */
+
+.ka-match-card {
+  overflow: hidden;
+
+  background: #fff;
+  border: 1px solid #ebdfe3;
+  border-radius: 20px;
+
+  box-shadow: 0 10px 28px rgb(32 18 27 / 6%);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ka-match-card:hover {
+  transform: translateY(-3px);
+
+  box-shadow: 0 15px 35px rgb(32 18 27 / 9%);
+}
+
+/* ==========================================
+   FOTOGRAFÍA
+   ========================================== */
+
+.ka-match-photo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 220px;
+
+  background: #f8ecf0;
+  color: #bf8e9d;
+
+  font-size: 3rem;
+}
+
+.ka-match-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==========================================
+   CONTENIDO
+   ========================================== */
+
+.ka-match-content {
+  padding: 24px;
+}
+
+.ka-match-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+
+  margin-bottom: 16px;
+}
+
+.ka-match-card-header h3 {
+  margin: 0 0 5px;
+  color: #26232a;
+  font-size: 1.5rem;
+}
+
+.ka-match-type {
+  color: #757079;
+  text-transform: capitalize;
+}
+
+/* ==========================================
+   PORCENTAJE
+   ========================================== */
+
+.ka-match-score {
+  font-size: 1.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ka-match-score--baja {
+  color: #c2455c;
+}
+
+.ka-match-score--moderada {
+  color: #b57a22;
+}
+
+.ka-match-score--buena {
+  color: #188fac;
+}
+
+.ka-match-score--muy_alta {
+  color: #158369;
+}
+
+.ka-match-score--sin_datos {
+  color: #777;
+}
+
+/* ==========================================
+   MEDIDOR NATIVO DE COMPATIBILIDAD
+   ========================================== */
+
+.ka-match-progress {
+  display: block;
+
+  width: 100%;
+  height: 9px;
+
+  margin-bottom: 12px;
+
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  background: #eee9eb;
+}
+
+/* Fondo del medidor - Chrome / Edge */
+
+.ka-match-progress::-webkit-progress-bar {
+  background: #eee9eb;
+  border-radius: 20px;
+}
+
+/* Valor predeterminado - Chrome / Edge */
+
+.ka-match-progress::-webkit-progress-value {
+  background: #777;
+  border-radius: 20px;
+}
+
+/* Valor predeterminado - Firefox */
+
+.ka-match-progress::-moz-progress-bar {
+  background: #777;
+  border-radius: 20px;
+}
+
+/* Match bajo */
+
+.ka-match-progress--baja::-webkit-progress-value {
+  background: #d95c73;
+}
+
+.ka-match-progress--baja::-moz-progress-bar {
+  background: #d95c73;
+}
+
+/* Match moderado */
+
+.ka-match-progress--moderada::-webkit-progress-value {
+  background: #e0a443;
+}
+
+.ka-match-progress--moderada::-moz-progress-bar {
+  background: #e0a443;
+}
+
+/* Match bueno */
+
+.ka-match-progress--buena::-webkit-progress-value {
+  background: #2aa7c0;
+}
+
+.ka-match-progress--buena::-moz-progress-bar {
+  background: #2aa7c0;
+}
+
+/* Match muy alto */
+
+.ka-match-progress--muy_alta::-webkit-progress-value {
+  background: #1ba485;
+}
+
+.ka-match-progress--muy_alta::-moz-progress-bar {
+  background: #1ba485;
+}
+
+/* Sin datos */
+
+.ka-match-progress--sin_datos::-webkit-progress-value {
+  background: #a1a1a1;
+}
+
+.ka-match-progress--sin_datos::-moz-progress-bar {
+  background: #a1a1a1;
+}
+
+/* ==========================================
+   CLASIFICACIÓN Y MENSAJE
+   ========================================== */
+
+.ka-match-level {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.ka-match-level--baja {
+  color: #c2455c;
+}
+
+.ka-match-level--moderada {
+  color: #b57a22;
+}
+
+.ka-match-level--buena {
+  color: #188fac;
+}
+
+.ka-match-level--muy_alta {
+  color: #158369;
+}
+
+.ka-match-level--sin_datos {
+  color: #777;
+}
+
+.ka-match-description {
+  margin: 0 0 15px;
+  color: #555;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* ==========================================
+   COBERTURA DE DATOS
+   ========================================== */
+
+.ka-match-coverage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0 0 20px;
+  padding: 10px 12px;
+
+  background: #f8f5f6;
+  border-radius: 9px;
+
+  color: #777;
+  font-size: 0.83rem;
+}
+
+.ka-match-coverage i {
+  color: #a76b7d;
+}
+
+/* ==========================================
+   COINCIDENCIAS Y ADVERTENCIAS
+   ========================================== */
+
+.ka-match-details {
+  margin: 18px 0;
+}
+
+.ka-match-details h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 0 0 12px;
+
+  color: #303039;
+  font-size: 0.95rem;
+}
+
+.ka-match-details ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ka-match-details li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  margin-bottom: 10px;
+
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.ka-match-details li i {
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.ka-match-positive i {
+  color: #19866b;
+}
+
+.ka-match-warning i {
+  color: #c27b29;
+}
+
+/* ==========================================
+   BOTONES
+   ========================================== */
+
+.ka-match-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 13px 20px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #a94b64;
+  color: #fff;
+
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ka-match-action:hover {
+  background: #87354e;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.ka-match-card-button {
+  width: 100%;
+  margin-top: 15px;
+}
+
+/* ==========================================
+   ESTADOS VACÍOS
+   ========================================== */
+
+.ka-match-empty {
+  padding: 55px 25px;
+
+  border-radius: 20px;
+  background: #fff;
+
+  text-align: center;
+  border: 1px solid #f0dce1;
+}
+
+.ka-match-empty > i {
+  margin-bottom: 15px;
+  color: #b85468;
+  font-size: 2.8rem;
+}
+
+.ka-match-empty h2 {
+  margin-bottom: 10px;
+  color: #25242a;
+}
+
+.ka-match-empty p {
+  margin: 0 auto 22px;
+  max-width: 480px;
+  line-height: 1.7;
+  color: #666;
+}
+
+/* ==========================================
+   AVISO FINAL
+   ========================================== */
+
+.ka-match-footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+
+  margin-top: 35px;
+  padding: 20px;
+
+  border: 1px solid #f0dce1;
+  border-radius: 14px;
+
+  background: #fff;
+  color: #777;
+}
+
+.ka-match-footer i {
+  margin-top: 4px;
+  color: #a94b64;
+  font-size: 1.2rem;
+}
+
+.ka-match-footer p {
+  max-width: 850px;
+  margin: 0;
+
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 760px) {
+
+  .ka-match-page {
+    padding: 30px 15px 60px;
+  }
+
+  .ka-match-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ka-match-profile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ka-match-results-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ka-match-content {
+    padding: 20px;
+  }
+
+  .ka-match-card-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .ka-match-footer {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .ka-match-score {
+    font-size: 1.4rem;
+  }
+
+  .ka-match-edit {
+    width: 100%;
+  }
+
+  .ka-match-card-header {
+    gap: 8px;
+  }
+
+  .ka-match-header h1 {
+    font-size: 2rem;
+  }
+}
