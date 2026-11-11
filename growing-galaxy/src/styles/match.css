@@ -1,21 +1,29 @@
 
 /* ==========================================
-   KODAPP - MATCH
-   HOJA DE ESTILOS COMPLETA
+   KODAPP - MATCH TIPO TINDER
+   Violeta, rosado y blanco
    ========================================== */
 
-/* ==========================================
-   CONTENEDOR GENERAL
-   ========================================== */
+/* PÁGINA PRINCIPAL */
 
 .ka-match-page {
   min-height: 100vh;
-  padding: 46px 20px 80px;
+  padding: 38px 18px 76px;
+  background:
+    radial-gradient(circle at 8% 12%, #f4e1ff 0, transparent 32%),
+    radial-gradient(circle at 90% 25%, #ffe5ef 0, transparent 35%),
+    #fff9fc;
+  color: #30243c;
+  font-family: Nunito, sans-serif;
+}
+
+.ka-match-page * {
+  box-sizing: border-box;
 }
 
 .ka-match-container {
-  width: min(1180px, 100%);
-  margin: 0 auto;
+  max-width: 1100px;
+  margin: auto;
 }
 
 /* ==========================================
@@ -23,73 +31,106 @@
    ========================================== */
 
 .ka-match-header {
-  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    118deg,
+    #642c8f,
+    #a645a1 65%,
+    #e273a6
+  );
+  border-radius: 30px;
+  padding: 35px 46px 40px;
+  color: white;
+  box-shadow: 0 18px 42px #642c8f25;
 }
 
 .ka-match-back {
   display: inline-flex;
-  align-items: center;
   gap: 9px;
-  margin-bottom: 24px;
-  color: inherit;
+  align-items: center;
+  color: white;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
+  margin-bottom: 23px;
+  font-size: 0.92rem;
 }
 
 .ka-match-back:hover {
-  color: #a94b64;
+  text-decoration: underline;
+  color: white;
 }
 
 .ka-match-kicker {
   display: block;
-  margin-bottom: 10px;
-  color: #b85468;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  font-weight: 900;
+  color: #a34b91;
+  margin-bottom: 7px;
+}
+
+.ka-match-header .ka-match-kicker {
+  color: #ffe1f0;
 }
 
 .ka-match-header h1 {
-  margin: 0 0 12px;
-  font-size: clamp(2rem, 4vw, 3.3rem);
+  position: relative;
+  z-index: 1;
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 1.13;
+  max-width: 670px;
+  margin: 8px 0 14px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.ka-match-header h1 span {
+  color: #ffe19c;
 }
 
 .ka-match-header p {
-  max-width: 720px;
-  line-height: 1.7;
-  opacity: 0.8;
+  position: relative;
+  z-index: 1;
+  max-width: 590px;
+  color: #fff2ff;
+  line-height: 1.65;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.ka-match-header-decoration {
+  position: absolute;
+  right: 5%;
+  top: 22%;
+  font-size: 9rem;
+  color: #ffffff1c;
+  transform: rotate(-20deg);
 }
 
 /* ==========================================
-   PERFIL DEL USUARIO
+   BARRA SUPERIOR
    ========================================== */
 
-.ka-match-profile {
+.ka-match-toolbar {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 20px;
-
-  padding: 24px;
-  margin-bottom: 35px;
-
-  background: #fff;
-  border: 1px solid #f0dce1;
-  border-radius: 18px;
-
-  box-shadow: 0 8px 25px rgb(40 20 25 / 5%);
+  align-items: center;
+  gap: 16px;
+  margin: 31px auto 22px;
+  max-width: 740px;
 }
 
-.ka-match-profile h2 {
-  margin: 0 0 8px;
-  color: #25242a;
-  font-size: 1.25rem;
-}
-
-.ka-match-profile p {
+.ka-match-toolbar h2 {
+  font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+  line-height: 1.2;
+  color: #442750;
   margin: 0;
-  color: #666;
+}
+
+.ka-match-toolbar h2 i {
+  color: #dd77ac;
+  font-size: 0.86em;
 }
 
 .ka-match-edit {
@@ -97,404 +138,619 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-
-  padding: 12px 16px;
-
-  border: 1px solid #dba6b2;
-  border-radius: 12px;
-
-  color: #923e52;
-  background: transparent;
-
+  flex-shrink: 0;
+  padding: 11px 17px;
+  border-radius: 30px;
+  border: 1px solid #ebcde6;
+  background: white;
+  color: #803e8d;
   text-decoration: none;
-  font-weight: 700;
-  white-space: nowrap;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease;
+  font-weight: 900;
+  font-size: 0.87rem;
+  box-shadow: 0 4px 13px #813e8b12;
 }
 
 .ka-match-edit:hover {
-  background: #fff0f3;
+  background: #fbe9f7;
+  color: #642c8f;
 }
 
 /* ==========================================
-   CABECERA DE RESULTADOS
+   EXPERIENCIA MATCH
    ========================================== */
 
-.ka-match-results-heading {
+.ka-match-experience {
+  max-width: 740px;
+  margin: auto;
+  text-align: center;
+}
+
+.ka-match-progress-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-
-  margin-bottom: 24px;
+  font-weight: 800;
+  color: #795a83;
+  font-size: 0.86rem;
+  margin-bottom: 10px;
 }
 
-.ka-match-results-heading h2 {
-  margin: 0;
+.ka-match-progress-head i {
+  color: #c3539a;
+  margin-right: 6px;
 }
 
-.ka-match-results-count {
-  color: #777;
-  font-size: 0.9rem;
+.ka-match-track {
+  height: 7px;
+  background: #eaddec;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 23px;
+}
+
+.ka-match-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #9052b5,
+    #f37ba9
+  );
+  border-radius: 10px;
+  transition: width 0.3s;
 }
 
 /* ==========================================
-   CUADRÍCULA
+   MAZO DE TARJETAS
    ========================================== */
 
-.ka-match-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+.ka-match-deck {
+  position: relative;
+  width: min(100%, 460px);
+  height: 710px;
+  margin: 0 auto 22px;
+  isolation: isolate;
 }
-
-/* ==========================================
-   TARJETAS
-   ========================================== */
 
 .ka-match-card {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-
+  border-radius: 28px;
   background: #fff;
-  border: 1px solid #ebdfe3;
-  border-radius: 20px;
-
-  box-shadow: 0 10px 28px rgb(32 18 27 / 6%);
+  border: 1px solid #f0dce9;
+  box-shadow: 0 18px 45px #47224e24;
+  text-align: left;
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.3s ease,
+    opacity 0.28s ease;
+
+  transform-origin: center bottom;
+
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
 }
 
-.ka-match-card:hover {
-  transform: translateY(-3px);
+.ka-match-card[hidden] {
+  display: none !important;
+}
 
-  box-shadow: 0 15px 35px rgb(32 18 27 / 9%);
+.ka-match-card.is-dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.ka-match-card.is-leaving {
+  pointer-events: none;
+
+  transition:
+    transform 0.27s ease,
+    opacity 0.27s ease;
 }
 
 /* ==========================================
-   FOTOGRAFÍA
+   FOTOGRAFÍA DE LA MASCOTA
    ========================================== */
 
 .ka-match-photo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  height: 220px;
-
-  background: #f8ecf0;
-  color: #bf8e9d;
-
-  font-size: 3rem;
+  height: 315px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    #f1d4fc,
+    #ffc6dc
+  );
 }
 
 .ka-match-photo img {
-  display: block;
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
+  pointer-events: none;
+}
+
+.ka-match-photo-fallback {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  color: #9c5da5;
+  font-weight: 800;
+}
+
+.ka-match-photo-fallback i {
+  font-size: 6rem;
+  color: #bf77ba;
+}
+
+.ka-match-photo-shade {
+  position: absolute;
+  inset: 30% 0 0;
+  background: linear-gradient(
+    transparent,
+    #2a143fbb
+  );
+  pointer-events: none;
 }
 
 /* ==========================================
-   CONTENIDO
+   ETIQUETAS SOBRE LA FOTO
    ========================================== */
 
-.ka-match-content {
-  padding: 24px;
+.ka-match-photo-tag,
+.ka-match-photo-score {
+  position: absolute;
+  top: 17px;
+  border-radius: 22px;
+  padding: 9px 12px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  backdrop-filter: blur(5px);
 }
 
-.ka-match-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 14px;
-
-  margin-bottom: 16px;
+.ka-match-photo-tag {
+  left: 17px;
+  background: #ffffffed;
+  color: #724584;
 }
 
-.ka-match-card-header h3 {
-  margin: 0 0 5px;
-  color: #26232a;
-  font-size: 1.5rem;
+.ka-match-photo-tag i {
+  color: #4ba678;
 }
 
-.ka-match-type {
-  color: #757079;
+.ka-match-photo-score {
+  right: 17px;
+  background: #fff0f5;
+  color: #a23571;
+}
+
+.ka-match-photo-score--sin_datos {
+  background: #fff;
+  color: #685e70;
+}
+
+/* ==========================================
+   NOMBRE DE LA MASCOTA
+   ========================================== */
+
+.ka-match-photo-heading {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+  color: white;
+  text-shadow: 0 2px 7px #211024a8;
+}
+
+.ka-match-photo-heading h3 {
+  color: white;
+  font-size: 2.35rem;
+  line-height: 1.05;
+  margin: 0 0 8px;
+  font-weight: 900;
+}
+
+.ka-match-photo-heading span {
+  font-size: 0.94rem;
+  font-weight: 800;
   text-transform: capitalize;
 }
 
 /* ==========================================
-   PORCENTAJE
+   SELLOS DE SWIPE
    ========================================== */
 
-.ka-match-score {
-  font-size: 1.75rem;
-  font-weight: 800;
-  white-space: nowrap;
+.ka-match-swipe-stamp {
+  position: absolute;
+  z-index: 2;
+  top: 85px;
+  padding: 8px 15px;
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 0.08em;
+  border: 4px solid;
+  border-radius: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: rotate(-14deg);
 }
 
-.ka-match-score--baja {
-  color: #c2455c;
+.ka-match-swipe-stamp--yes {
+  left: 20px;
+  color: #4ee6a5;
+  border-color: #4ee6a5;
 }
 
-.ka-match-score--moderada {
-  color: #b57a22;
-}
-
-.ka-match-score--buena {
-  color: #188fac;
-}
-
-.ka-match-score--muy_alta {
-  color: #158369;
-}
-
-.ka-match-score--sin_datos {
-  color: #777;
+.ka-match-swipe-stamp--no {
+  right: 20px;
+  color: #ff8c9f;
+  border-color: #ff8c9f;
+  transform: rotate(14deg);
 }
 
 /* ==========================================
-   MEDIDOR NATIVO DE COMPATIBILIDAD
+   INFORMACIÓN DE LA TARJETA
    ========================================== */
 
-.ka-match-progress {
-  display: block;
+.ka-match-content {
+  height: 395px;
+  overflow-y: auto;
+  padding: 21px 24px 24px;
 
-  width: 100%;
-  height: 9px;
-
-  margin-bottom: 12px;
-
-  border: 0;
-  border-radius: 20px;
-  overflow: hidden;
-
-  appearance: none;
-  -webkit-appearance: none;
-
-  background: #eee9eb;
+  scrollbar-width: thin;
+  scrollbar-color: #d6b4d7 transparent;
 }
 
-/* Fondo del medidor - Chrome / Edge */
-
-.ka-match-progress::-webkit-progress-bar {
-  background: #eee9eb;
-  border-radius: 20px;
-}
-
-/* Valor predeterminado - Chrome / Edge */
-
-.ka-match-progress::-webkit-progress-value {
-  background: #777;
-  border-radius: 20px;
-}
-
-/* Valor predeterminado - Firefox */
-
-.ka-match-progress::-moz-progress-bar {
-  background: #777;
-  border-radius: 20px;
-}
-
-/* Match bajo */
-
-.ka-match-progress--baja::-webkit-progress-value {
-  background: #d95c73;
-}
-
-.ka-match-progress--baja::-moz-progress-bar {
-  background: #d95c73;
-}
-
-/* Match moderado */
-
-.ka-match-progress--moderada::-webkit-progress-value {
-  background: #e0a443;
-}
-
-.ka-match-progress--moderada::-moz-progress-bar {
-  background: #e0a443;
-}
-
-/* Match bueno */
-
-.ka-match-progress--buena::-webkit-progress-value {
-  background: #2aa7c0;
-}
-
-.ka-match-progress--buena::-moz-progress-bar {
-  background: #2aa7c0;
-}
-
-/* Match muy alto */
-
-.ka-match-progress--muy_alta::-webkit-progress-value {
-  background: #1ba485;
-}
-
-.ka-match-progress--muy_alta::-moz-progress-bar {
-  background: #1ba485;
-}
-
-/* Sin datos */
-
-.ka-match-progress--sin_datos::-webkit-progress-value {
-  background: #a1a1a1;
-}
-
-.ka-match-progress--sin_datos::-moz-progress-bar {
-  background: #a1a1a1;
-}
-
-/* ==========================================
-   CLASIFICACIÓN Y MENSAJE
-   ========================================== */
-
-.ka-match-level {
-  margin: 0 0 8px;
-  font-weight: 700;
-}
-
-.ka-match-level--baja {
-  color: #c2455c;
-}
-
-.ka-match-level--moderada {
-  color: #b57a22;
-}
-
-.ka-match-level--buena {
-  color: #188fac;
-}
-
-.ka-match-level--muy_alta {
-  color: #158369;
-}
-
-.ka-match-level--sin_datos {
-  color: #777;
-}
-
-.ka-match-description {
-  margin: 0 0 15px;
-  color: #555;
-  font-size: 0.92rem;
-  line-height: 1.6;
-}
-
-/* ==========================================
-   COBERTURA DE DATOS
-   ========================================== */
-
-.ka-match-coverage {
+.ka-match-level-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-
-  margin: 0 0 20px;
-  padding: 10px 12px;
-
-  background: #f8f5f6;
-  border-radius: 9px;
-
-  color: #777;
-  font-size: 0.83rem;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.ka-match-coverage i {
-  color: #a76b7d;
+.ka-match-label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #a15a9c;
+}
+
+.ka-match-level-row p {
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: #52305d;
+  margin: 3px 0 9px;
+}
+
+.ka-match-coverage {
+  font-size: 0.73rem;
+  color: #967c9d;
+  text-align: right;
+  max-width: 120px;
+  line-height: 1.25;
 }
 
 /* ==========================================
-   COINCIDENCIAS Y ADVERTENCIAS
+   BARRA DE COMPATIBILIDAD
+   ========================================== */
+
+.ka-match-meter {
+  display: block;
+  width: 100%;
+  height: 10px;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #f3e4f2;
+}
+
+.ka-match-meter::-webkit-progress-bar {
+  background: #f3e4f2;
+  border-radius: 12px;
+}
+
+.ka-match-meter::-webkit-progress-value {
+  background: linear-gradient(
+    90deg,
+    #8851b9,
+    #ef83aa
+  );
+  border-radius: 12px;
+}
+
+.ka-match-meter::-moz-progress-bar {
+  background: #b46ac0;
+  border-radius: 12px;
+}
+
+/* ==========================================
+   DESCRIPCIÓN
+   ========================================== */
+
+.ka-match-description {
+  margin: 12px 0 8px;
+  color: #695b70;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.ka-match-bio {
+  margin: 9px 0 0;
+  color: #5c4b64;
+  font-size: 0.85rem;
+  line-height: 1.5;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ==========================================
+   DETALLES DE COMPATIBILIDAD
    ========================================== */
 
 .ka-match-details {
-  margin: 18px 0;
+  border: 1px solid #f0ddea;
+  border-radius: 14px;
+  margin: 15px 0;
+  padding: 0 13px;
+  background: #fffafd;
 }
 
-.ka-match-details h4 {
+.ka-match-details summary {
+  list-style: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-
-  margin: 0 0 12px;
-
-  color: #303039;
-  font-size: 0.95rem;
+  gap: 9px;
+  padding: 12px 0;
+  color: #763c85;
+  font-weight: 900;
+  font-size: 0.84rem;
 }
 
-.ka-match-details ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
+.ka-match-details summary::-webkit-details-marker {
+  display: none;
 }
 
-.ka-match-details li {
+.ka-match-details summary .fa-chevron-down {
+  margin-left: auto;
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.ka-match-details[open] summary .fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+.ka-match-details-body {
+  padding: 0 0 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #5c5262;
+}
+
+.ka-match-details-body h4 {
+  font-size: 0.8rem;
+  color: #694276;
+  margin: 12px 0 6px;
+}
+
+.ka-match-details-body p {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-
-  margin-bottom: 10px;
-
-  color: #555;
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.ka-match-details li i {
-  margin-top: 4px;
-  flex-shrink: 0;
+  gap: 8px;
+  margin: 6px 0;
 }
 
 .ka-match-positive i {
-  color: #19866b;
+  color: #43a97c;
+  margin-top: 3px;
 }
 
 .ka-match-warning i {
-  color: #c27b29;
+  color: #dc9051;
+  margin-top: 3px;
 }
 
 /* ==========================================
-   BOTONES
+   BOTÓN CONOCER Y POSTULAR
    ========================================== */
 
+.ka-match-postular {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-decoration: none;
+
+  background: linear-gradient(
+    100deg,
+    #793cb2,
+    #be4eaa
+  );
+
+  color: white !important;
+  border-radius: 14px;
+  padding: 13px 12px;
+  font-weight: 900;
+  font-size: 0.9rem;
+
+  transition:
+    filter 0.2s,
+    transform 0.2s;
+}
+
+.ka-match-postular:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   BOTONES TIPO TINDER
+   ========================================== */
+
+.ka-match-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  margin: 10px auto;
+}
+
+.ka-match-controls[hidden] {
+  display: none !important;
+}
+
+.ka-match-control {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  background: #fff;
+  box-shadow: 0 9px 22px #52315920;
+
+  transition:
+    transform 0.18s,
+    background 0.18s;
+
+  border: 2px solid #eee;
+  line-height: 1;
+}
+
+.ka-match-control:not(:disabled):hover {
+  transform: translateY(-4px) scale(1.06);
+}
+
+.ka-match-control:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* BOTÓN PASAR */
+
+.ka-match-control--pass {
+  width: 67px;
+  height: 67px;
+  color: #ee788f;
+  border-color: #ffced9;
+  font-size: 1.7rem;
+}
+
+/* BOTÓN RETROCEDER */
+
+.ka-match-control--undo {
+  width: 48px;
+  height: 48px;
+  color: #8a6b9d;
+  border-color: #e8d9ee;
+  font-size: 1.05rem;
+}
+
+/* BOTÓN CORAZÓN */
+
+.ka-match-control--like {
+  width: 67px;
+  height: 67px;
+  color: #fff;
+
+  background: linear-gradient(
+    135deg,
+    #f06aab,
+    #b74aaa
+  );
+
+  border-color: transparent;
+  font-size: 1.7rem;
+}
+
+/* ==========================================
+   INSTRUCCIONES
+   ========================================== */
+
+.ka-match-hint {
+  max-width: 510px;
+  margin: 15px auto 7px;
+  color: #77667f;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.ka-match-hint i {
+  color: #ad5cab;
+}
+
+.ka-match-note {
+  max-width: 510px;
+  margin: 0 auto;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #8d7b92;
+}
+
+/* ==========================================
+   PANTALLA FINAL
+   ========================================== */
+
+.ka-match-finished {
+  position: absolute;
+  inset: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+
+  padding: 35px;
+  text-align: center;
+  border: 2px dashed #e7c8e6;
+  border-radius: 28px;
+  background: #fff;
+}
+
+.ka-match-finished[hidden] {
+  display: none !important;
+}
+
+.ka-match-finished h3 {
+  font-size: 1.7rem;
+  color: #5c3477;
+  margin: 0;
+}
+
+.ka-match-finished p {
+  line-height: 1.6;
+  color: #7e6e83;
+}
+
+.ka-match-finished button,
 .ka-match-action {
+  border: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 9px;
+  padding: 14px 22px;
+  border-radius: 14px;
 
-  padding: 13px 20px;
+  background: linear-gradient(
+    100deg,
+    #7940b6,
+    #c456aa
+  );
 
-  border: 0;
-  border-radius: 12px;
-
-  background: #a94b64;
   color: #fff;
-
-  font-weight: 700;
-  text-align: center;
   text-decoration: none;
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.ka-match-action:hover {
-  background: #87354e;
-  color: #fff;
-  transform: translateY(-1px);
-}
-
-.ka-match-card-button {
-  width: 100%;
-  margin-top: 15px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 /* ==========================================
@@ -502,31 +758,38 @@
    ========================================== */
 
 .ka-match-empty {
+  max-width: 630px;
   padding: 55px 25px;
-
-  border-radius: 20px;
-  background: #fff;
-
+  margin: 34px auto;
   text-align: center;
-  border: 1px solid #f0dce1;
+  background: #fff;
+  border: 1px solid #f0dce9;
+  border-radius: 26px;
+  box-shadow: 0 15px 35px #59315c12;
 }
 
-.ka-match-empty > i {
-  margin-bottom: 15px;
-  color: #b85468;
-  font-size: 2.8rem;
+.ka-match-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 17px;
+  border-radius: 50%;
+  background: #f7e5f4;
+  color: #b64fa1;
+  font-size: 2.2rem;
 }
 
 .ka-match-empty h2 {
-  margin-bottom: 10px;
-  color: #25242a;
+  color: #51345b;
+  margin: 0 0 9px;
 }
 
 .ka-match-empty p {
+  color: #75647c;
+  line-height: 1.65;
   margin: 0 auto 22px;
-  max-width: 480px;
-  line-height: 1.7;
-  color: #666;
+  max-width: 420px;
 }
 
 /* ==========================================
@@ -536,85 +799,101 @@
 .ka-match-footer {
   display: flex;
   align-items: flex-start;
-  justify-content: center;
-  gap: 12px;
-
-  margin-top: 35px;
-  padding: 20px;
-
-  border: 1px solid #f0dce1;
-  border-radius: 14px;
-
-  background: #fff;
-  color: #777;
+  gap: 14px;
+  max-width: 740px;
+  margin: 38px auto 0;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: #f6edf8;
+  color: #785c7f;
+  border: 1px solid #ead9ee;
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 .ka-match-footer i {
-  margin-top: 4px;
-  color: #a94b64;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  color: #9b60b2;
+  margin-top: 3px;
 }
 
 .ka-match-footer p {
-  max-width: 850px;
   margin: 0;
-
-  font-size: 0.86rem;
-  line-height: 1.7;
 }
 
 /* ==========================================
-   RESPONSIVE
+   RESPONSIVE: CELULARES
    ========================================== */
 
-@media (max-width: 760px) {
+@media (max-width: 650px) {
 
   .ka-match-page {
-    padding: 30px 15px 60px;
+    padding: 17px 12px 45px;
   }
 
-  .ka-match-grid {
-    grid-template-columns: 1fr;
+  .ka-match-header {
+    padding: 24px 22px;
+    border-radius: 22px;
   }
 
-  .ka-match-profile {
+  .ka-match-header-decoration {
+    font-size: 5rem;
+    right: 0;
+    top: 34%;
+  }
+
+  .ka-match-toolbar {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .ka-match-results-heading {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .ka-match-content {
-    padding: 20px;
-  }
-
-  .ka-match-card-header h3 {
-    font-size: 1.3rem;
-  }
-
-  .ka-match-footer {
-    padding: 16px;
-  }
-}
-
-@media (max-width: 420px) {
-
-  .ka-match-score {
-    font-size: 1.4rem;
+    margin: 24px 3px 18px;
   }
 
   .ka-match-edit {
-    width: 100%;
+    align-self: flex-start;
   }
 
-  .ka-match-card-header {
-    gap: 8px;
+  .ka-match-deck {
+    width: min(100%, 420px);
+    height: 665px;
   }
 
-  .ka-match-header h1 {
+  .ka-match-photo {
+    height: 280px;
+  }
+
+  .ka-match-content {
+    height: 385px;
+    padding: 17px 18px;
+  }
+
+  .ka-match-photo-heading h3 {
     font-size: 2rem;
+  }
+
+  .ka-match-photo-tag,
+  .ka-match-photo-score {
+    font-size: 0.69rem;
+    padding: 8px;
+  }
+
+  .ka-match-controls {
+    gap: 17px;
+  }
+
+  .ka-match-footer {
+    margin-top: 30px;
+  }
+}
+
+/* ==========================================
+   ACCESIBILIDAD
+   ========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .ka-match-page * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -112,7 +112,7 @@ export async function enviarCodigoCorreo(
     text:
       `¡Bienvenido a KodApp!\n\n` +
       `Tu código de seguridad es: ${codigo}\n\n` +
-      `El código vence en 10 minutos.\n` +
+      `El código vence en 15 minutos.\n` +
       `No lo compartas con nadie.`,
 
     html: `
@@ -151,7 +151,7 @@ export async function enviarCodigoCorreo(
           ${codigo}
         </div>
 
-        <p>Válido durante 10 minutos.</p>
+        <p>Válido durante 15 minutos.</p>
 
         <p style="color:#aeb7c0;font-size:12px;">
           Si no solicitaste este código,

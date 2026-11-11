@@ -1,0 +1,21 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const esbuild = require('esbuild');
+(async () => {
+ const rut = await import('./src/lib/rut.ts');
+ assert.equal(rut.validarRut('12.345.678-5'), true);
+ assert.equal(rut.validarRut('12345678-9'), false);
+ assert.equal(rut.validarRut('0-0'), false);
+ assert.equal(rut.validarRut('6-k'), true);
+ assert.equal(rut.formatearRut('123456785'), '12.345.678-5');
+ const source = fs.readFileSync('src/pages/registro.astro','utf8').split('<script>')[1].split('</script>')[0].replace(/import\s*\{[\s\S]*?\}\s*from\s*["'][^"']+["'];/g,'');
+ const els = new Map(); const storage = new Map(); let now = 100000;
+ const context = {console, Map, Number, Boolean, String, Math, encodeURIComponent, validarRut:rut.validarRut, formatearRut:rut.formatearRut, Date:{now:()=>now},sessionStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},window:{setInterval:()=>1,location:{}},document:{addEventListener(){},querySelector(k){ if(!els.has(k)) els.set(k,{value:'',disabled:false,innerHTML:'',dataset:{},addEventListener(){},setCustomValidity(){}}); return els.get(k); }}};
+ vm.createContext(context); vm.runInContext(esbuild.transformSync(source,{loader:'ts',format:'cjs'}).code,context);
+ vm.runInContext('email.value="prueba@example.test"; establecerEspera(correoActual(),60)',context);
+ assert.equal(els.get('#send-code').disabled,true);
+ now+=59000; vm.runInContext('actualizarBotonEnvio()',context); assert.equal(els.get('#send-code').disabled,true);
+ now+=1000; vm.runInContext('actualizarBotonEnvio()',context); assert.equal(els.get('#send-code').disabled,false);
+ console.log('OK: RUT válido/inválido/K/formato; contador bloquea a los 59 s y habilita a los 60 s.');
+})().catch(e=>{console.error(e);process.exitCode=1});

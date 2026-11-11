@@ -1,18 +1,6 @@
-
 ---
-/**
- * KODAPP - MI MATCH
- *
- * Muestra compatibilidades calculadas con
- * las preferencias y mascotas de PostgreSQL.
- *
- * No modifica postulaciones ni aprobaciones.
- * CSS completamente separado.
- */
-
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-
 import { db } from "../lib/db";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 import { agregarFotosMascotas } from "../lib/fotos";
@@ -42,7 +30,7 @@ if (!usuario) {
 }
 
 if (usuario.tipo_usuario !== "adoptante") {
-  return Astro.redirect("/gestion");
+  return Astro.redirect("/compatibilidad-organizacion");
 }
 
 // ==========================================
@@ -184,417 +172,707 @@ function mensajeNivel(
 }
 ---
 
-<Layout
-  title="Mi Match | KodApp"
-  description="Descubre mascotas compatibles con tus preferencias."
->
+<Layout title="Mi Match | KodApp" description="Conoce mascotas compatibles con tus preferencias.">
   <Header />
 
   <main class="ka-match-page">
-
     <div class="ka-match-container">
-
-      <!-- ==================================
-           ENCABEZADO
-      ================================== -->
-
       <header class="ka-match-header">
-
-        <a
-          href="/usuario"
-          class="ka-match-back"
-        >
+        <a class="ka-match-back" href="/usuario">
           <i class="fa-solid fa-arrow-left"></i>
-          Volver a mi cuenta
+          Mi cuenta
         </a>
 
         <span class="ka-match-kicker">
-          Compatibilidad KodApp
+          <i class="fa-solid fa-heart"></i>
+          CONEXIONES ESPECIALES
         </span>
 
         <h1>
-          Encuentra tu Match
+          Un deslizamiento,
+          <span>una nueva amistad.</span>
         </h1>
 
         <p>
-          Descubre mascotas disponibles según
-          sus características y las preferencias
-          que registraste en tu perfil.
+          Descubre a tu posible compañero de vida.
+          Desliza para explorar y conoce qué tan
+          compatibles son.
         </p>
 
+        <div class="ka-match-header-decoration" aria-hidden="true">
+          <i class="fa-solid fa-paw"></i>
+        </div>
       </header>
 
-      <!-- ==================================
-           SIN PREFERENCIAS
-      ================================== -->
-
-      {
-        !preferencias ? (
-
-          <section class="ka-match-empty">
-
+      {!preferencias ? (
+        <section class="ka-match-empty">
+          <div class="ka-match-empty-icon">
             <i class="fa-solid fa-heart"></i>
+          </div>
 
-            <h2>
-              Primero necesitamos conocerte
-            </h2>
+          <h2>¡Primero queremos conocerte!</h2>
 
-            <p>
-              Completa tus preferencias para
-              comenzar a encontrar mascotas
-              que coincidan con lo que buscas.
-            </p>
+          <p>
+            Completa tus preferencias para descubrir
+            las mascotas que mejor coinciden contigo.
+          </p>
 
-            <a
-              href="/preferencias"
-              class="ka-match-action"
-            >
-              <i class="fa-solid fa-clipboard-list"></i>
-              Completar mis preferencias
+          <a class="ka-match-action" href="/preferencias">
+            Configurar mis preferencias
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </section>
+      ) : (
+        <>
+          <div class="ka-match-toolbar">
+            <div>
+              <span class="ka-match-kicker">
+                TU ESPACIO MATCH
+              </span>
+
+              <h2>
+                Conoce a tu próximo amigo
+                <i class="fa-solid fa-paw"></i>
+              </h2>
+            </div>
+
+            <a class="ka-match-edit" href="/preferencias">
+              <i class="fa-solid fa-sliders"></i>
+              Mis preferencias
             </a>
+          </div>
 
-          </section>
-
-        ) : (
-
-          <>
-
-            <!-- ==================================
-                 PERFIL GUARDADO
-            ================================== -->
-
-            <section class="ka-match-profile">
-
-              <div class="ka-match-profile-info">
-
-                <h2>
-                  Tu perfil de compatibilidad
-                </h2>
-
-                <p>
-                  Estamos utilizando tus preferencias
-                  registradas para calcular el Match.
-                </p>
-
+          {tarjetas.length === 0 ? (
+            <section class="ka-match-empty">
+              <div class="ka-match-empty-icon">
+                <i class="fa-solid fa-paw"></i>
               </div>
 
-              <a
-                href="/preferencias"
-                class="ka-match-edit"
-              >
-                <i class="fa-solid fa-sliders"></i>
-                Editar preferencias
-              </a>
+              <h2>
+                Por ahora no hay mascotas disponibles
+              </h2>
 
+              <p>
+                Vuelve a visitarnos para descubrir
+                nuevos compañeros.
+              </p>
             </section>
+          ) : (
+            <section
+              class="ka-match-experience"
+              aria-label="Explorar mascotas compatibles"
+            >
+              <div class="ka-match-progress-head">
+                <span>
+                  <i class="fa-solid fa-compass"></i>
+                  Explorando mascotas
+                </span>
 
-            <!-- ==================================
-                 SIN MASCOTAS
-            ================================== -->
+                <strong
+                  id="ka-match-counter"
+                  aria-live="polite"
+                >
+                  1 de {tarjetas.length}
+                </strong>
+              </div>
 
-            {
-              tarjetas.length === 0 ? (
+              <div
+                class="ka-match-track"
+                aria-hidden="true"
+              >
+                <span id="ka-match-track-fill"></span>
+              </div>
 
-                <section class="ka-match-empty">
+              <!-- MAZO DE TARJETAS -->
+              <div
+                class="ka-match-deck"
+                id="ka-match-deck"
+              >
+                {tarjetas.map((mascota, index) => (
+                  <article
+                    class="ka-match-card"
+                    data-index={index}
+                    data-pet-id={mascota.id}
+                    aria-label={`Mascota ${mascota.nombre}, ${mascota.match.porcentaje ?? 'sin porcentaje'} de compatibilidad`}
+                    aria-hidden={index !== 0 ? 'true' : 'false'}
+                  >
+                    <!-- FOTO -->
+                    <div class="ka-match-photo">
+                      {mascota.foto ? (
+                        <img
+                          src={mascota.foto}
+                          alt={`Fotografía de ${mascota.nombre}`}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          draggable="false"
+                        />
+                      ) : (
+                        <div class="ka-match-photo-fallback">
+                          <i class="fa-solid fa-paw"></i>
+                          <span>
+                            Una amistad por descubrir
+                          </span>
+                        </div>
+                      )}
 
-                  <i class="fa-solid fa-paw"></i>
+                      <div class="ka-match-photo-shade"></div>
 
-                  <h2>
-                    No hay mascotas disponibles
-                  </h2>
-
-                  <p>
-                    Actualmente no encontramos
-                    mascotas disponibles para
-                    calcular compatibilidades.
-                  </p>
-
-                </section>
-
-              ) : (
-
-                <>
-
-                  <!-- ==================================
-                       RESULTADOS
-                  ================================== -->
-
-                  <div class="ka-match-results-heading">
-
-                    <div>
-
-                      <span class="ka-match-kicker">
-                        Tus resultados
+                      <span class="ka-match-photo-tag">
+                        <i class="fa-solid fa-circle-check"></i>
+                        En adopción
                       </span>
 
-                      <h2>
-                        Mascotas recomendadas
-                      </h2>
+                      <span
+                        class:list={[
+                          "ka-match-photo-score",
+                          `ka-match-photo-score--${mascota.match.nivel}`
+                        ]}
+                      >
+                        <i class="fa-solid fa-heart"></i>
+                        {mascota.match.porcentaje === null
+                          ? 'Sin datos'
+                          : `${mascota.match.porcentaje}% match`}
+                      </span>
 
+                      <div class="ka-match-photo-heading">
+                        <h3>{mascota.nombre}</h3>
+
+                        <span>
+                          <i class="fa-solid fa-paw"></i>
+                          {mascota.tipo_mascota}
+                        </span>
+                      </div>
+
+                      <div class="ka-match-swipe-stamp ka-match-swipe-stamp--no">
+                        PASAR
+                      </div>
+
+                      <div class="ka-match-swipe-stamp ka-match-swipe-stamp--yes">
+                        ME ENCANTA
+                      </div>
                     </div>
 
-                    <span class="ka-match-results-count">
-                      {tarjetas.length}
-                      {" "}
-                      mascotas disponibles
-                    </span>
+                    <!-- INFORMACIÓN -->
+                    <div class="ka-match-content">
+                      <div class="ka-match-level-row">
+                        <div>
+                          <span class="ka-match-label">
+                            NIVEL DE CONEXIÓN
+                          </span>
 
+                          <p>
+                            {nombreNivel(mascota.match.nivel)}
+                          </p>
+                        </div>
+
+                        <span class="ka-match-coverage">
+                          {mascota.match.cobertura}%
+                          de criterios evaluados
+                        </span>
+                      </div>
+
+                      <progress
+                        class="ka-match-meter"
+                        value={mascota.match.porcentaje ?? 0}
+                        max="100"
+                        aria-label={`Compatibilidad con ${mascota.nombre}`}
+                      ></progress>
+
+                      <p class="ka-match-description">
+                        {mensajeNivel(mascota.match.nivel)}
+                      </p>
+
+                      {mascota.descripcion && (
+                        <p class="ka-match-bio">
+                          {mascota.descripcion}
+                        </p>
+                      )}
+
+                      <!-- DETALLE COMPATIBILIDAD -->
+                      <details class="ka-match-details">
+                        <summary>
+                          <i class="fa-solid fa-list-check"></i>
+                          ¿Por qué este match?
+                          <i class="fa-solid fa-chevron-down"></i>
+                        </summary>
+
+                        <div class="ka-match-details-body">
+                          {mascota.match.coincidencias.length > 0 && (
+                            <h4>
+                              <i class="fa-solid fa-circle-check"></i>
+                              Coincidencias
+                            </h4>
+                          )}
+
+                          {mascota.match.coincidencias.map((texto) => (
+                            <p class="ka-match-positive">
+                              <i class="fa-solid fa-check"></i>
+                              {texto}
+                            </p>
+                          ))}
+
+                          {mascota.match.advertencias.length > 0 && (
+                            <h4>
+                              <i class="fa-solid fa-circle-exclamation"></i>
+                              Aspectos por revisar
+                            </h4>
+                          )}
+
+                          {mascota.match.advertencias.map((texto) => (
+                            <p class="ka-match-warning">
+                              <i class="fa-solid fa-circle-info"></i>
+                              {texto}
+                            </p>
+                          ))}
+
+                          {mascota.match.coincidencias.length === 0 &&
+                            mascota.match.advertencias.length === 0 && (
+                              <p>
+                                Faltan datos para explicar esta compatibilidad.
+                              </p>
+                          )}
+                        </div>
+                      </details>
+
+                      <a
+                        class="ka-match-postular"
+                        href={`/postular/${mascota.id}`}
+                      >
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Conocer y postular
+                        <i class="fa-solid fa-arrow-right"></i>
+                      </a>
+                    </div>
+                  </article>
+                ))}
+
+                <!-- FINAL DEL RECORRIDO -->
+                <div
+                  class="ka-match-finished"
+                  id="ka-match-finished"
+                  hidden
+                >
+                  <div class="ka-match-empty-icon">
+                    <i class="fa-solid fa-heart"></i>
                   </div>
 
-                  <!-- ==================================
-                       TARJETAS MATCH
-                  ================================== -->
+                  <h3>¡Ya conociste a todos!</h3>
 
-                  <section
-                    class="ka-match-grid"
-                    aria-label="Resultados de compatibilidad"
+                  <p>
+                    Estas son todas las mascotas disponibles
+                    por ahora. Puedes volver a recorrerlas.
+                  </p>
+
+                  <button
+                    type="button"
+                    id="ka-match-restart"
                   >
-
-                    {
-                      tarjetas.map((mascota) => (
-
-                        <article class="ka-match-card">
-
-                          <!-- FOTO -->
-
-                          <div class="ka-match-photo">
-
-                            {
-                              mascota.foto ? (
-
-                                <img
-                                  src={mascota.foto}
-                                  alt={`Fotografía de ${mascota.nombre}`}
-                                  loading="lazy"
-                                />
-
-                              ) : (
-
-                                <i
-                                  class="fa-solid fa-paw"
-                                  aria-hidden="true"
-                                ></i>
-
-                              )
-                            }
-
-                          </div>
-
-                          <!-- CONTENIDO -->
-
-                          <div class="ka-match-content">
-
-                            <!-- NOMBRE Y RESULTADO -->
-
-                            <div class="ka-match-card-header">
-
-                              <div>
-
-                                <h3>
-                                  {mascota.nombre}
-                                </h3>
-
-                                <span class="ka-match-type">
-                                  {mascota.tipo_mascota}
-                                </span>
-
-                              </div>
-
-                              <div
-                                class:list={[
-                                  "ka-match-score",
-                                  `ka-match-score--${mascota.match.nivel}`
-                                ]}
-                              >
-                                {
-                                  mascota.match.porcentaje === null
-                                    ? "—"
-                                    : `${mascota.match.porcentaje}%`
-                                }
-                              </div>
-
-                            </div>
-
-                            <!-- ==================================
-                                 MEDIDOR NATIVO
-                                 SIN ESTILOS INLINE
-                            ================================== -->
-
-                            <progress
-                              class:list={[
-                                "ka-match-progress",
-                                `ka-match-progress--${mascota.match.nivel}`
-                              ]}
-                              value={mascota.match.porcentaje ?? 0}
-                              max="100"
-                              aria-label={`Compatibilidad de ${mascota.nombre}`}
-                            >
-                              {mascota.match.porcentaje ?? 0}%
-                            </progress>
-
-                            <!-- CLASIFICACIÓN -->
-
-                            <p
-                              class:list={[
-                                "ka-match-level",
-                                `ka-match-level--${mascota.match.nivel}`
-                              ]}
-                            >
-                              {nombreNivel(mascota.match.nivel)}
-                            </p>
-
-                            <p class="ka-match-description">
-                              {mensajeNivel(mascota.match.nivel)}
-                            </p>
-
-                            <!-- COBERTURA -->
-
-                            <div class="ka-match-coverage">
-
-                              <i class="fa-solid fa-circle-info"></i>
-
-                              <span>
-                                Criterios evaluados:
-                                {" "}
-                                {mascota.match.cobertura}%
-                              </span>
-
-                            </div>
-
-                            <!-- ==================================
-                                 COINCIDENCIAS
-                            ================================== -->
-
-                            {
-                              mascota.match.coincidencias.length > 0 && (
-
-                                <div class="ka-match-details">
-
-                                  <h4>
-                                    <i class="fa-solid fa-circle-check"></i>
-                                    Coincidencias encontradas
-                                  </h4>
-
-                                  <ul>
-
-                                    {
-                                      mascota.match.coincidencias.map(
-                                        (texto) => (
-
-                                          <li class="ka-match-positive">
-
-                                            <i class="fa-solid fa-check"></i>
-
-                                            <span>
-                                              {texto}
-                                            </span>
-
-                                          </li>
-
-                                        )
-                                      )
-                                    }
-
-                                  </ul>
-
-                                </div>
-
-                              )
-                            }
-
-                            <!-- ==================================
-                                 ADVERTENCIAS
-                            ================================== -->
-
-                            {
-                              mascota.match.advertencias.length > 0 && (
-
-                                <div class="ka-match-details">
-
-                                  <h4>
-                                    <i class="fa-solid fa-triangle-exclamation"></i>
-                                    Aspectos por revisar
-                                  </h4>
-
-                                  <ul>
-
-                                    {
-                                      mascota.match.advertencias.map(
-                                        (texto) => (
-
-                                          <li class="ka-match-warning">
-
-                                            <i class="fa-solid fa-triangle-exclamation"></i>
-
-                                            <span>
-                                              {texto}
-                                            </span>
-
-                                          </li>
-
-                                        )
-                                      )
-                                    }
-
-                                  </ul>
-
-                                </div>
-
-                              )
-                            }
-
-                            <!-- POSTULACIÓN -->
-
-                            <a
-                              href={`/postular/${mascota.id}`}
-                              class="ka-match-action ka-match-card-button"
-                            >
-                              Ver postulación
-
-                              <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-
-                          </div>
-
-                        </article>
-
-                      ))
-                    }
-
-                  </section>
-
-                </>
-
-              )
-            }
-
-          </>
-
-        )
-      }
-
-      <!-- ==================================
-           AVISO IMPORTANTE
-      ================================== -->
+                    <i class="fa-solid fa-rotate-right"></i>
+                    Volver a empezar
+                  </button>
+                </div>
+              </div>
+
+              <!-- CONTROLES -->
+              <div
+                class="ka-match-controls"
+                id="ka-match-controls"
+              >
+                <button
+                  class="ka-match-control ka-match-control--pass"
+                  id="ka-match-pass"
+                  type="button"
+                  aria-label="Pasar a la siguiente mascota"
+                >
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <button
+                  class="ka-match-control ka-match-control--undo"
+                  id="ka-match-undo"
+                  type="button"
+                  aria-label="Volver a la mascota anterior"
+                  disabled
+                >
+                  <i class="fa-solid fa-rotate-left"></i>
+                </button>
+
+                <button
+                  class="ka-match-control ka-match-control--like"
+                  id="ka-match-like"
+                  type="button"
+                  aria-label="Me gusta esta mascota y continuar"
+                >
+                  <i class="fa-solid fa-heart"></i>
+                </button>
+              </div>
+
+              <p class="ka-match-hint">
+                <i class="fa-solid fa-hand-pointer"></i>
+                Desliza a la <b>izquierda</b> para pasar
+                o a la <b>derecha</b> si te gusta.
+                También puedes usar las flechas del teclado.
+              </p>
+
+              <p class="ka-match-note" role="note">
+                El corazón solo avanza a la siguiente mascota.
+                Para iniciar una solicitud, pulsa
+                <strong>Conocer y postular</strong>.
+              </p>
+            </section>
+          )}
+        </>
+      )}
 
       <footer class="ka-match-footer">
-
         <i class="fa-solid fa-shield-heart"></i>
 
         <p>
-          Los porcentajes representan coincidencias
-          entre la información registrada de las
-          mascotas y las preferencias del adoptante.
-
-          No garantizan una adopción responsable
-          y no reemplazan la evaluación realizada
-          por la organización de rescate.
+          La compatibilidad es orientativa: refleja
+          coincidencias entre tus preferencias y la
+          información disponible de cada mascota.
+          No garantiza una adopción ni reemplaza
+          la evaluación del equipo rescatista.
         </p>
-
       </footer>
-
     </div>
-
   </main>
-
 </Layout>
+
+<script>
+  const deck =
+    document.querySelector<HTMLElement>('#ka-match-deck');
+
+  if (deck) {
+    const cards = Array.from(
+      deck.querySelectorAll<HTMLElement>('.ka-match-card')
+    );
+
+    const counter =
+      document.querySelector<HTMLElement>('#ka-match-counter');
+
+    const fill =
+      document.querySelector<HTMLElement>('#ka-match-track-fill');
+
+    const finished =
+      document.querySelector<HTMLElement>('#ka-match-finished');
+
+    const controls =
+      document.querySelector<HTMLElement>('#ka-match-controls');
+
+    const pass =
+      document.querySelector<HTMLButtonElement>('#ka-match-pass');
+
+    const like =
+      document.querySelector<HTMLButtonElement>('#ka-match-like');
+
+    const undo =
+      document.querySelector<HTMLButtonElement>('#ka-match-undo');
+
+    const restart =
+      document.querySelector<HTMLButtonElement>('#ka-match-restart');
+
+    let current = 0;
+    let busy = false;
+
+    let startX = 0;
+    let startY = 0;
+    let dx = 0;
+
+    let dragging = false;
+    let pointerId: number | null = null;
+
+    // =====================================
+    // DIBUJAR EL MAZO
+    // =====================================
+
+    const paint = () => {
+      cards.forEach((card, i) => {
+        const offset = i - current;
+
+        const visible =
+          offset >= 0 && offset <= 2;
+
+        card.hidden = !visible;
+        card.style.zIndex = String(cards.length - i);
+
+        card.style.transform =
+          offset === 0
+            ? 'translate3d(0,0,0)'
+            : `translate3d(0,${Math.min(offset, 2) * 11}px,0) scale(${1 - Math.min(offset, 2) * 0.045})`;
+
+        card.style.opacity = visible ? '1' : '0';
+
+        card.classList.remove('is-dragging');
+
+        card.setAttribute(
+          'aria-hidden',
+          offset === 0 ? 'false' : 'true'
+        );
+
+        if ('inert' in card) {
+          card.inert = offset !== 0;
+        }
+
+        card
+          .querySelectorAll<HTMLElement>('.ka-match-swipe-stamp')
+          .forEach(stamp => {
+            stamp.style.opacity = '0';
+          });
+      });
+
+      const done = current >= cards.length;
+
+      if (finished) finished.hidden = !done;
+      if (controls) controls.hidden = done;
+
+      if (counter) {
+        counter.textContent = done
+          ? `${cards.length} de ${cards.length}`
+          : `${current + 1} de ${cards.length}`;
+      }
+
+      if (fill) {
+        fill.style.width =
+          `${cards.length ? (current / cards.length) * 100 : 0}%`;
+      }
+
+      if (undo) undo.disabled = current === 0 || busy;
+      if (pass) pass.disabled = done || busy;
+      if (like) like.disabled = done || busy;
+    };
+
+    // =====================================
+    // DESLIZAR IZQUIERDA O DERECHA
+    // =====================================
+
+    const swipe = (direction: -1 | 1) => {
+      if (busy || current >= cards.length) return;
+
+      const card = cards[current];
+
+      busy = true;
+
+      card.classList.remove('is-dragging');
+      card.classList.add('is-leaving');
+
+      card.style.transform =
+        `translate3d(${direction * Math.max(window.innerWidth, 600)}px,-45px,0) rotate(${direction * 18}deg)`;
+
+      card.style.opacity = '0';
+
+      window.setTimeout(() => {
+        card.classList.remove('is-leaving');
+
+        current += 1;
+        busy = false;
+
+        paint();
+      }, 270);
+    };
+
+    // =====================================
+    // RESTABLECER POSICIÓN DE TARJETA
+    // =====================================
+
+    const resetDrag = (card: HTMLElement) => {
+      card.classList.remove('is-dragging');
+
+      card.style.transform = 'translate3d(0,0,0)';
+
+      card
+        .querySelectorAll<HTMLElement>('.ka-match-swipe-stamp')
+        .forEach(stamp => {
+          stamp.style.opacity = '0';
+        });
+    };
+
+    // =====================================
+    // INICIO DEL ARRASTRE
+    // =====================================
+
+    deck.addEventListener('pointerdown', event => {
+      const target = event.target as HTMLElement;
+      const card = cards[current];
+
+      if (
+        !card ||
+        busy ||
+        !card.contains(target) ||
+        target.closest('a,button,summary,details')
+      ) {
+        return;
+      }
+
+      if (
+        event.pointerType === 'mouse' &&
+        event.button !== 0
+      ) {
+        return;
+      }
+
+      dragging = true;
+      pointerId = event.pointerId;
+
+      startX = event.clientX;
+      startY = event.clientY;
+      dx = 0;
+
+      card.classList.add('is-dragging');
+    });
+
+    // =====================================
+    // MOVER TARJETA CON MOUSE O DEDO
+    // =====================================
+
+    deck.addEventListener(
+      'pointermove',
+      event => {
+        if (
+          !dragging ||
+          event.pointerId !== pointerId ||
+          busy
+        ) {
+          return;
+        }
+
+        const card = cards[current];
+        if (!card) return;
+
+        const moveY = event.clientY - startY;
+
+        if (
+          Math.abs(moveY) >
+          Math.abs(event.clientX - startX) * 1.4 &&
+          Math.abs(moveY) > 15
+        ) {
+          dragging = false;
+          resetDrag(card);
+          return;
+        }
+
+        dx = event.clientX - startX;
+
+        if (
+          Math.abs(dx) > 8 &&
+          event.pointerType === 'touch'
+        ) {
+          event.preventDefault();
+        }
+
+        card.style.transform =
+          `translate3d(${dx}px,${Math.abs(dx) * 0.06}px,0) rotate(${dx / 24}deg)`;
+
+        const opacity =
+          String(Math.min(Math.abs(dx) / 100, 1));
+
+        const yes =
+          card.querySelector<HTMLElement>(
+            '.ka-match-swipe-stamp--yes'
+          );
+
+        const no =
+          card.querySelector<HTMLElement>(
+            '.ka-match-swipe-stamp--no'
+          );
+
+        if (yes) {
+          yes.style.opacity = dx > 0 ? opacity : '0';
+        }
+
+        if (no) {
+          no.style.opacity = dx < 0 ? opacity : '0';
+        }
+      },
+      { passive: false }
+    );
+
+    // =====================================
+    // SOLTAR TARJETA
+    // =====================================
+
+    const endDrag = (event: PointerEvent) => {
+      if (
+        !dragging ||
+        event.pointerId !== pointerId
+      ) {
+        return;
+      }
+
+      dragging = false;
+      pointerId = null;
+
+      const card = cards[current];
+      if (!card) return;
+
+      if (Math.abs(dx) >= 95) {
+        swipe(dx > 0 ? 1 : -1);
+      } else {
+        resetDrag(card);
+      }
+    };
+
+    deck.addEventListener('pointerup', endDrag);
+
+    deck.addEventListener('pointercancel', event => {
+      if (event.pointerId !== pointerId) return;
+
+      dragging = false;
+      pointerId = null;
+
+      const card = cards[current];
+
+      if (card) resetDrag(card);
+    });
+
+    // =====================================
+    // BOTONES DE ACCIÓN
+    // =====================================
+
+    pass?.addEventListener('click', () => swipe(-1));
+
+    like?.addEventListener('click', () => swipe(1));
+
+    undo?.addEventListener('click', () => {
+      if (busy || current === 0) return;
+
+      current -= 1;
+      paint();
+    });
+
+    restart?.addEventListener('click', () => {
+      if (!busy) {
+        current = 0;
+        paint();
+      }
+    });
+
+    // =====================================
+    // FLECHAS DEL TECLADO
+    // =====================================
+
+    document.addEventListener('keydown', event => {
+      const target = event.target as HTMLElement;
+
+      if (
+        target.closest(
+          'input, textarea, select, button, a, summary, [contenteditable="true"]'
+        )
+      ) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        swipe(-1);
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        swipe(1);
+      }
+    });
+
+    // Mostrar primera tarjeta
+    paint();
+  }
+</script>
