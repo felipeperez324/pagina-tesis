@@ -1,217 +1,144 @@
-// Importamos el tipo APIRoute de Astro para definir
-// correctamente nuestro endpoint.
+
 import type { APIRoute } from "astro";
 
-// Importamos la conexión con PostgreSQL.
-import { dbFotos } from "../../../lib/dbfotos";
+import { db } from "../../../lib/db";
 
+import {
+  getUsuarioDesdeSesion
+} from "../../../lib/auth";
 
-// Importamos la función que permite obtener
-// el usuario asociado a una sesión.
-import { getUsuarioDesdeSesion } from "../../../lib/auth";
+import {
+  validarImagen,
+  subirImagen,
+  borrarImagen,
+  ErrorImagen
+} from "../../../lib/azure";
 
-// Este endpoint se ejecuta en el servidor.
+import { urlFotoPerfil } from "../../../lib/fotos";
+
 export const prerender = false;
 
+function responder(
+  datos: Record<string, unknown>,
+  status = 200
+) {
+  return new Response(JSON.stringify(datos), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store"
+    }
+  });
+}
 
-// Endpoint POST utilizado para cambiar la foto de perfil.
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({
+  request,
+  cookies
+}) => {
+  const origin = request.headers.get("origin");
+
+  if (
+    origin &&
+    origin !== new URL(request.url).origin
+  ) {
+    return responder({
+      ok: false,
+      mensaje: "Origen no permitido."
+    }, 403);
+  }
 
   try {
+    const usuario = await getUsuarioDesdeSesion(
+      cookies.get("session_id")?.value
+    );
 
-    // =========================================
-    // COMPROBAR SESIÓN
-    // =========================================
-
-    // Obtenemos el ID de sesión almacenado
-    // en la cookie del navegador.
-    const sessionId = cookies.get("session_id")?.value;
-
-    // Buscamos el usuario asociado a esa sesión.
-    const usuario = await getUsuarioDesdeSesion(sessionId);
-
-    // Si no existe un usuario válido,
-    // significa que no está autenticado.
     if (!usuario) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "No estás autenticado.",
-        }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      return responder({
+        ok: false,
+        mensaje: "Debes iniciar sesión."
+      }, 401);
     }
 
+    const formulario = await request.formData();
 
-    // =========================================
-    // OBTENER ARCHIVO ENVIADO
-    // =========================================
-
-    // Obtenemos los datos enviados mediante FormData.
-    const formData = await request.formData();
-
-    // Buscamos el archivo que llegó
-    // con el nombre "foto".
-    const archivo = formData.get("foto");
-
-
-    // Comprobamos que realmente se haya enviado
-    // un archivo.
-    if (!(archivo instanceof File)) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "No se recibió ninguna imagen.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-
-    // =========================================
-    // COMPROBAR TIPO DE ARCHIVO
-    // =========================================
-
-    // Comprobamos que el archivo sea una imagen.
-    // Por ejemplo: image/png, image/jpeg, etc.
-    if (!archivo.type.startsWith("image/")) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "El archivo debe ser una imagen.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-
-    // =========================================
-    // COMPROBAR TAMAÑO
-    // =========================================
-
-    // Limitamos las imágenes a un máximo de 5 MB.
-    if (archivo.size > 5 * 1024 * 1024) {
-
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          mensaje: "La imagen no puede superar los 5 MB.",
-        }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-    }
-
-
-    // =========================================
-    // CONVERTIR IMAGEN A BASE64
-    // =========================================
-
-    // Convertimos el archivo recibido a un Buffer.
-    const buffer = Buffer.from(
-      await archivo.arrayBuffer()
+    const imagen = await validarImagen(
+      formulario.get("foto")
     );
 
-    // Convertimos la imagen a una cadena Base64.
-    //
-    // Se conserva el tipo MIME de la imagen
-    // para poder utilizarla directamente como src
-    // posteriormente.
-    const imagenBase64 =
-      `data:${archivo.type};base64,${buffer.toString("base64")}`;
+    if (!imagen) {
+      return responder({
+        ok: false,
+        mensaje: "Selecciona una imagen."
+      }, 400);
+    }
 
-
-    // =========================================
-    // GUARDAR EN POSTGRESQL
-    // =========================================
-
-    // Actualizamos la foto del usuario actual.
-    //
-    // usuario.id identifica al usuario que inició sesión.
-    await dbFotos.query(
-      `INSERT INTO fotos_perfil (
-        usuario_id,
-        imagen,
-        tipo_mime
-      )
-      VALUES ($1, $2, $3)
-
-      ON CONFLICT (usuario_id)
-      DO UPDATE SET
-        imagen = EXCLUDED.imagen,
-        tipo_mime = EXCLUDED.tipo_mime,
-        fecha_actualizacion = NOW()`,
-      [
-        usuario.id,
-        buffer,
-        archivo.type,
-      ]
+    // Consultar la fotografía anterior.
+    const anterior = await db.query(
+      "SELECT foto_blob FROM usuarios WHERE id = $1",
+      [usuario.id]
     );
 
-    // =========================================
-    // RESPUESTA EXITOSA
-    // =========================================
+    if (!anterior.rows.length) {
+      return responder({
+        ok: false,
+        mensaje: "Usuario no encontrado."
+      }, 404);
+    }
 
-    // Devolvemos la imagen guardada al navegador
-    // para que pueda mostrarse inmediatamente.
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        foto: imagenBase64,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+    // Subir nueva fotografía a Azure.
+    const nombre = await subirImagen(
+      "perfiles",
+      usuario.id,
+      imagen
     );
 
+    try {
+      // Guardar únicamente la referencia.
+      await db.query(
+        `UPDATE usuarios
+         SET foto_blob = $1
+         WHERE id = $2`,
+        [nombre, usuario.id]
+      );
+    } catch (error) {
+      await borrarImagen(nombre).catch(console.error);
+      throw error;
+    }
+
+    // Limpiar la fotografía reemplazada.
+    const antigua =
+      anterior.rows[0].foto_blob as string | null;
+
+    if (antigua) {
+      await borrarImagen(antigua).catch(error =>
+        console.error(
+          "Fallo limpiando avatar anterior:",
+          error
+        )
+      );
+    }
+
+    return responder({
+      ok: true,
+      foto: urlFotoPerfil(usuario.id, nombre)
+    });
 
   } catch (error) {
+    if (error instanceof ErrorImagen) {
+      return responder({
+        ok: false,
+        mensaje: error.message
+      }, 400);
+    }
 
-    // Si ocurre un error inesperado,
-    // lo mostramos en la consola del servidor.
     console.error(
-      "Error al guardar foto de perfil:",
+      "Error guardando avatar en Azure:",
       error
     );
 
-
-    // Enviamos un mensaje genérico al navegador.
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        mensaje: "No se pudo guardar la foto.",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return responder({
+      ok: false,
+      mensaje: "No se pudo guardar la fotografía."
+    }, 500);
   }
 };

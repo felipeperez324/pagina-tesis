@@ -2,17 +2,17 @@
 import type { APIRoute } from "astro";
 
 import { db } from "../../../lib/db";
-import { dbFotos } from "../../../lib/dbfotos";
 import { getUsuarioDesdeSesion } from "../../../lib/auth";
+import { borrarImagen } from "../../../lib/azure";
 
 export const prerender = false;
 
 function responder(
   datos: Record<string, unknown>,
-  estado = 200
+  status = 200
 ) {
   return new Response(JSON.stringify(datos), {
-    status: estado,
+    status,
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store"
@@ -20,14 +20,26 @@ function responder(
   });
 }
 
-// ==========================================
-// ELIMINAR PUBLICACIÓN DE MASCOTA
-// ==========================================
-export const DELETE: APIRoute = async ({ request, cookies }) => {
+export const DELETE: APIRoute = async ({
+  request,
+  cookies
+}) => {
+  const origin = request.headers.get("origin");
+
+  if (
+    origin &&
+    origin !== new URL(request.url).origin
+  ) {
+    return responder({
+      ok: false,
+      mensaje: "Origen no permitido."
+    }, 403);
+  }
+
   try {
-    // 1. Comprobar la sesión.
-    const sessionId = cookies.get("session_id")?.value;
-    const usuario = await getUsuarioDesdeSesion(sessionId);
+    const usuario = await getUsuarioDesdeSesion(
+      cookies.get("session_id")?.value
+    );
 
     if (!usuario) {
       return responder({
@@ -36,103 +48,74 @@ export const DELETE: APIRoute = async ({ request, cookies }) => {
       }, 401);
     }
 
-    // 2. Solo las organizaciones pueden eliminar.
     if (usuario.tipo_usuario !== "organizacion") {
       return responder({
         ok: false,
-        mensaje: "No tienes permisos para eliminar publicaciones."
+        mensaje: "Sin permisos."
       }, 403);
     }
 
-    // 3. Obtener ID de la publicación.
-    const datos = await request.json().catch(() => null);
+    const datos = await request.json()
+      .catch(() => null);
+
     const id = Number(datos?.id);
 
     if (!Number.isSafeInteger(id) || id <= 0) {
       return responder({
         ok: false,
-        mensaje: "El ID de la publicación no es válido."
+        mensaje: "ID inválido."
       }, 400);
     }
 
-    // 4. Eliminar de la base principal.
-    // Solo si pertenece a esta organización.
-    let resultado;
+    const resultado = await db.query(
+      `DELETE FROM mascotas
+       WHERE id = $1
+         AND usuario_id = $2
+       RETURNING foto_blob`,
+      [id, usuario.id]
+    );
 
-    try {
-      resultado = await db.query(
-        `DELETE FROM mascotas
-         WHERE id = $1
-           AND usuario_id = $2
-         RETURNING id`,
-        [id, usuario.id]
-      );
-    } catch (error: unknown) {
-      console.error("Error al eliminar mascota:", error);
-
-      // Puede haber solicitudes u otros registros
-      // relacionados que impiden el borrado.
-      const codigo = (error as { code?: string })?.code;
-
-      if (codigo === "23503") {
-        return responder({
-          ok: false,
-          mensaje:
-            "No se puede eliminar esta publicación porque " +
-            "tiene registros relacionados."
-        }, 409);
-      }
-
+    if (!resultado.rows.length) {
       return responder({
         ok: false,
-        mensaje: "No se pudo eliminar la publicación."
-      }, 500);
-    }
-
-    // Si no se eliminó, no existe o no pertenece al usuario.
-    if (resultado.rows.length === 0) {
-      return responder({
-        ok: false,
-        mensaje: "La publicación no existe o no te pertenece."
+        mensaje: "Mascota no encontrada o sin permisos."
       }, 404);
     }
 
-    // 5. Eliminar fotografía de KodApp_Fotos.
     try {
-      await dbFotos.query(
-        `DELETE FROM fotos_mascotas
-         WHERE mascota_id = $1`,
-        [id]
+      await borrarImagen(
+        resultado.rows[0].foto_blob
       );
+
     } catch (error) {
       console.error(
-        "La publicación se eliminó, pero falló la limpieza de su foto:",
+        "Publicación borrada, pero falló limpieza en Azure:",
         error
       );
 
-      // Son dos bases independientes:
-      // la publicación ya fue eliminada correctamente.
       return responder({
         ok: true,
         advertencia: true,
         mensaje:
-          "Publicación eliminada, pero no se pudo borrar " +
-          "su fotografía de la base de imágenes."
+          "Publicación eliminada. No se pudo limpiar " +
+          "su imagen de Azure."
       });
     }
 
-    // 6. Todo correcto.
     return responder({
       ok: true,
-      mensaje: "Publicación y fotografía eliminadas correctamente."
+      mensaje: "Publicación eliminada correctamente."
     });
 
   } catch (error) {
-    console.error("Error inesperado al eliminar:", error);
+    console.error(
+      "Error eliminando mascota:",
+      error
+    );
 
     return responder({
       ok: false,
-      mensaje: "Ocurrió un error al eliminar la publicación."
+      mensaje: "No se pudo eliminar la publicación."
     }, 500);
   }
 };

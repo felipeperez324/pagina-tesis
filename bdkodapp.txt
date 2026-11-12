@@ -416,6 +416,15 @@ WHERE table_schema = 'public'
 ORDER BY table_name;
 
 
+
+
+ALTER TABLE public.usuarios
+ADD COLUMN IF NOT EXISTS foto_blob TEXT;
+
+ALTER TABLE public.mascotas
+ADD COLUMN IF NOT EXISTS foto_blob TEXT;
+
+
 -- ============================================================
 -- FIN - KODAPP
 -- ============================================================
