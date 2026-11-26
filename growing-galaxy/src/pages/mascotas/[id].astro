@@ -1,4 +1,3 @@
-
 ---
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
@@ -90,8 +89,14 @@ function mostrarEdad(meses: number | null) {
       ← Volver a mascotas
     </a>
 
-    <h1>Conoce a {mascota.nombre}</h1>
-    <p>Organización: {mascota.organizacion}</p>
+    <div class="ficha-encabezado">
+      <div>
+        <span class="section-kicker">Ficha de adopción</span>
+        <h1>Conoce a {mascota.nombre}</h1>
+        <p><i class="fa-solid fa-building" aria-hidden="true"></i>{" "}Organización: {mascota.organizacion}</p>
+      </div>
+      <span class:list={["ficha-estado", { disponible: mascota.postulable }]}>{mascota.postulable ? "Disponible para postular" : "No disponible para postular"}</span>
+    </div>
 
     <div class="contenido">
       
@@ -137,7 +142,7 @@ function mostrarEdad(meses: number | null) {
     </section>
 
     {mascota.postulable ? (
-      <a class="boton-postular" href={`/postular/${id}`}>
+      <a class="btn-primary boton-postular" href={`/postular/${id}`}>
         Postular para adoptar
       </a>
     ) : (
@@ -149,104 +154,23 @@ function mostrarEdad(meses: number | null) {
 
 
 <style>
-  .ficha {
-    max-width: 1100px;
-    margin: 40px auto;
-    padding: 20px;
-  }
-
-  .volver {
-    display: inline-block;
-    margin-bottom: 20px;
-    color: #f59e0b;
-  }
-
-  .contenido {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin: 25px 0;
-  }
-
-  .panel {
-    background: #292d36;
-    border: 1px solid #454954;
-    border-radius: 16px;
-    padding: 25px;
-    margin-bottom: 24px;
-  }
-
-  .panel h2 {
-    margin-bottom: 15px;
-  }
-
-  .panel p {
-    white-space: pre-wrap;
-    margin-bottom: 18px;
-  }
-
-  .imagen-principal {
-    width: 100%;
-    height: 340px;
-    object-fit: contain;
-    border-radius: 12px;
-    background: #181b21;
-  }
-
-  .galeria {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
-  }
-
-  .miniatura {
-    width: 75px;
-    height: 75px;
-    padding: 0;
-    border: 2px solid #f59e0b;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    background: transparent;
-  }
-
-  .miniatura img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .datos div {
-    display: flex;
-    justify-content: space-between;
-    gap: 15px;
-    padding: 10px 0;
-    border-bottom: 1px solid #454954;
-  }
-
-  .datos dt {
-    font-weight: bold;
-  }
-
-  .datos dd {
-    margin: 0;
-    text-align: right;
-  }
-
-  .boton-postular {
-    display: inline-block;
-    padding: 14px 24px;
-    border-radius: 10px;
-    background: #f59e0b;
-    color: #171717;
-    font-weight: bold;
-    text-decoration: none;
-  }
-
-  @media (max-width: 768px) {
-    .contenido {
-      grid-template-columns: 1fr;
-    }
-  }
+  .ficha { max-width:1160px; margin:32px auto; padding:20px; color:var(--text); }
+  .volver { display:inline-flex; align-items:center; gap:8px; margin-bottom:18px; color:var(--cyan); font-size:13px; font-weight:800; text-decoration:none; }
+  .ficha-encabezado { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .ficha-encabezado h1 { font-size:clamp(28px,4vw,40px); margin:8px 0; overflow-wrap:anywhere; }
+  .ficha-encabezado p { color:var(--muted); }
+  .ficha-estado { display:inline-flex; align-items:center; padding:9px 14px; background:var(--surface); border:1px solid var(--border-light); border-radius:999px; color:var(--muted); font-size:12px; font-weight:800; }
+  .ficha-estado.disponible { color:var(--success); border-color:var(--success); }
+  .contenido { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin:25px 0; align-items:start; }
+  .panel { background:var(--surface); border:1px solid var(--border-light); border-radius:18px; padding:24px; margin-bottom:22px; min-width:0; box-shadow:0 8px 24px #0003; }
+  .contenido .panel { margin-bottom:0; }
+  .panel h2 { color:var(--text); font-size:19px; margin:0 0 14px; }
+  .panel p { white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-soft); line-height:1.65; margin:0 0 22px; }
+  .panel p:last-child { margin-bottom:0; }
+  .datos { display:grid; gap:8px; margin:0; }
+  .datos div { display:flex; justify-content:space-between; align-items:baseline; gap:15px; padding:12px 14px; background:var(--bg-soft); border:1px solid var(--border); border-radius:9px; }
+  .datos dt { color:var(--muted); font-size:13px; font-weight:700; }
+  .datos dd { margin:0; text-align:right; color:var(--text-soft); font-size:14px; overflow-wrap:anywhere; min-width:0; }
+  .boton-postular { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:46px; text-decoration:none; }
+  @media(max-width:768px) { .contenido { grid-template-columns:1fr; } .panel { padding:17px; } .ficha { padding:15px; } .boton-postular { width:100%; } }
 </style>

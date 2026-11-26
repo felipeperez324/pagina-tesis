@@ -4,10 +4,7 @@ import type { APIRoute } from "astro";
 import { db } from "../../../lib/db";
 import { getUsuarioDesdeSesion } from "../../../lib/auth";
 
-import {
-  COMUNAS_BIOBIO,
-  RAZAS_POR_TIPO
-} from "../../../lib/catalogosMascotas";
+import { leerMascota } from "../../../lib/serializerMascota";
 
 import {
   validarImagen,
@@ -17,11 +14,7 @@ import {
   type ImagenValidada
 } from "../../../lib/azure";
 
-import {
-  PERSONALIDADES,
-  ANTECEDENTES_MEDICOS,
-  procesarClasificacion
-} from "../../../lib/CatalogoMatch";
+
 
 export const prerender = false;
 
@@ -72,134 +65,32 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     const datos = await request.formData();
 
     // Información básica
-    const nombre = String(datos.get("nombre") ?? "").trim();
-    const tipo = String(datos.get("tipoMascota") ?? "").trim();
-    const descripcion = String(datos.get("descripcion") ?? "").trim();
+    // Validar y normalizar los datos mediante serializer.
 
-    const personalidad = procesarClasificacion(
-      datos.get("personalidadCodigo"),
-      datos.get("personalidadDetalle"),
-      PERSONALIDADES,
-      "la personalidad"
-    );
+    const validacion = leerMascota(datos);
 
-    const salud = procesarClasificacion(
-      datos.get("saludCodigo"),
-      datos.get("saludDetalle"),
-      ANTECEDENTES_MEDICOS,
-      "los antecedentes médicos"
-    );
-
-    if (!nombre || nombre.length > 100) {
-      return responder({ ok: false, mensaje: "Nombre inválido." }, 400);
-    }
-
-    if (!["perro", "gato", "otro"].includes(tipo)) {
-      return responder({ ok: false, mensaje: "Tipo inválido." }, 400);
-    }
-
-    if (descripcion.length > 5000) {
-      return responder({ ok: false, mensaje: "Descripción demasiado larga." }, 400);
-    }
-
-    if (!personalidad.ok) {
-      return responder({ ok: false, mensaje: personalidad.mensaje }, 400);
-    }
-
-    if (!salud.ok) {
-      return responder({ ok: false, mensaje: salud.mensaje }, 400);
-    }
-
-    // Información adicional de la ficha
-
-    const raza = String(datos.get("raza") ?? "").trim();
-
-// Obtener la edad ingresada en el formulario.
-    const edadTexto = String(datos.get("edadMeses") ?? "").trim();
-
-    // Convertir a número o dejar null si no se ingresó.
-    const edadMeses =
-      edadTexto === "" ? null : Number(edadTexto);
-
-    // Validar que sea un número entero entre 0 y 360.
-    if (
-      edadTexto !== "" &&
-      (
-        !/^\d+$/.test(edadTexto) ||
-        edadMeses === null ||
-        !Number.isInteger(edadMeses) ||
-        edadMeses < 0 ||
-        edadMeses > 360
-      )
-    ) {
+    if (!validacion.ok) {
       return responder({
         ok: false,
-        mensaje: "La edad debe estar entre 0 y 360 meses."
+        mensaje: validacion.mensaje
       }, 400);
     }
 
-    
-    const sexo = String(datos.get("sexo") ?? "desconocido");
-    const tamano = String(datos.get("tamano") ?? "desconocido");
-    const ubicacion = String(datos.get("ubicacion") ?? "").trim();
-
-    const requisitos = String(
-      datos.get("requisitosAdopcion") ?? ""
-    ).trim();
-
-    const esterilizadoTexto = String(
-      datos.get("esterilizado") ?? "desconocido"
-    );
-
-    const vacunasTexto = String(
-      datos.get("vacunasAlDia") ?? "desconocido"
-    );
-
-    // ====================================
-    // VALIDAR LONGITUD DE LOS CAMPOS
-    // ====================================
-
-    if (
-      raza.length > 100 ||
-      ubicacion.length > 120 ||
-      requisitos.length > 2000
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Raza, ubicación o requisitos demasiado largos."
-      }, 400);
-    }
-
-    // ====================================
-    // VALIDAR COMUNA
-    // ====================================
-
-    if (!COMUNAS_BIOBIO.includes(ubicacion)) {
-      return responder({
-        ok: false,
-        mensaje: "Selecciona una comuna válida de la Región del Biobío."
-      }, 400);
-    }
-
-    // ====================================
-    // VALIDAR RAZA SEGÚN TIPO DE MASCOTA
-    // ====================================
-
-    const razasPermitidas = RAZAS_POR_TIPO[tipo] ?? [];
-
-    if (!razasPermitidas.includes(raza)) {
-      return responder({
-        ok: false,
-        mensaje: "Selecciona una raza válida para el tipo de mascota."
-      }, 400);
-    }
-
-
-    const convertirBooleano = (valor: string): boolean | null => {
-      if (valor === "si") return true;
-      if (valor === "no") return false;
-      return null;
-    };
+    const {
+      nombre,
+      tipo,
+      descripcion,
+      raza,
+      edadMeses,
+      sexo,
+      tamano,
+      ubicacion,
+      requisitos,
+      personalidad,
+      salud,
+      esterilizado,
+      vacunas
+    } = validacion.datos;
 
     // Validar fotografía principal
     const fotoPrincipal = await validarImagen(
@@ -273,8 +164,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           edadMeses,
           sexo,
           tamano,
-          convertirBooleano(esterilizadoTexto),
-          convertirBooleano(vacunasTexto),
+          esterilizado,
+          vacunas,
           ubicacion || null,
           requisitos || null
         ]

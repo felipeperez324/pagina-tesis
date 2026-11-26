@@ -1,11 +1,15 @@
-
 ---
+import PaginadorMascotas from "../../components/PaginadorMascotas.astro";
+import { leerBusqueda, calcularPagina, enlacePagina, MASCOTAS_POR_PAGINA } from "../../lib/paginacionMascotas";
+import "../../styles/catalogo-mascotas.css";
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import { getUsuarioDesdeSesion } from "../../lib/auth";
 import { db } from "../../lib/db";
 import { agregarFotosMascotas } from "../../lib/fotos";
 
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "private, no-store");
 const sessionId = Astro.cookies.get("session_id")?.value;
 const usuario = await getUsuarioDesdeSesion(sessionId);
 
@@ -17,137 +21,47 @@ if (usuario.tipo_usuario !== "organizacion") {
   return Astro.redirect("/usuario");
 }
 
-const resultado = await db.query(
-  `SELECT
-    id, 
-    foto_blob,
-    nombre,
-    descripcion,
-    personalidad,
-    historial_medico,
-    estado_adopcion,
-    tipo_mascota,
-    publicada
-   FROM mascotas
-   WHERE usuario_id = $1
-   ORDER BY id DESC`,
-  [usuario.id]
+const ruta = "/gestion/mascotas";
+const q = leerBusqueda(Astro.url);
+const estadosValidos = ["activas", "reservadas", "adoptadas", "ocultas"];
+const estadoURL = Astro.url.searchParams.get("estado") ?? "";
+const estadoActual = estadosValidos.includes(estadoURL) ? estadoURL : "activas";
+const filtros = { estado: estadoActual, q };
+
+// Los contadores mantienen el total por estado, independientemente de la búsqueda.
+const conteo = await db.query(
+  `SELECT COUNT(*) AS total,
+     COUNT(*) FILTER (WHERE publicada AND estado_adopcion = 'disponible') AS activas,
+     COUNT(*) FILTER (WHERE publicada AND estado_adopcion = 'reservada') AS reservadas,
+     COUNT(*) FILTER (WHERE publicada AND estado_adopcion = 'adoptada') AS adoptadas,
+     COUNT(*) FILTER (WHERE NOT publicada) AS ocultas
+   FROM public.mascotas WHERE usuario_id = $1`, [usuario.id]
 );
-
-
-  const todasLasMascotas = agregarFotosMascotas(resultado.rows);
-
-  // ======================================
-  // PESTAÑA SELECCIONADA
-  // ======================================
-
-  const estadosValidos = [
-    "activas",
-    "reservadas",
-    "adoptadas",
-    "ocultas"
-  ];
-
-  const estadoURL = Astro.url.searchParams.get("estado");
-
-  const estadoActual =
-    estadoURL && estadosValidos.includes(estadoURL)
-      ? estadoURL
-      : "activas";
-
-  // ======================================
-  // CONTAR MASCOTAS POR ESTADO
-  // ======================================
-
-  const contadores = {
-    activas: todasLasMascotas.filter(
-      (m) =>
-        m.publicada === true &&
-        m.estado_adopcion === "disponible"
-    ).length,
-
-    reservadas: todasLasMascotas.filter(
-      (m) =>
-        m.publicada === true &&
-        m.estado_adopcion === "reservada"
-    ).length,
-
-    adoptadas: todasLasMascotas.filter(
-      (m) =>
-        m.publicada === true &&
-        m.estado_adopcion === "adoptada"
-    ).length,
-
-    ocultas: todasLasMascotas.filter(
-      (m) => m.publicada === false
-    ).length
-  };
-
-  // ======================================
-  // DEFINICIÓN DE LAS PESTAÑAS
-  // ======================================
-
-  const pestanas = [
-    {
-      id: "activas",
-      nombre: "Activas",
-      icono: "fa-circle-check",
-      cantidad: contadores.activas
-    },
-    {
-      id: "reservadas",
-      nombre: "Reservadas",
-      icono: "fa-clock",
-      cantidad: contadores.reservadas
-    },
-    {
-      id: "adoptadas",
-      nombre: "Adoptadas",
-      icono: "fa-heart",
-      cantidad: contadores.adoptadas
-    },
-    {
-      id: "ocultas",
-      nombre: "Ocultas",
-      icono: "fa-eye-slash",
-      cantidad: contadores.ocultas
-    }
-  ];
-
-  // ======================================
-  // FILTRAR MASCOTAS SEGÚN LA PESTAÑA
-  // ======================================
-
-  const mascotas = todasLasMascotas.filter((mascota) => {
-
-    // Publicaciones ocultas
-    if (estadoActual === "ocultas") {
-      return mascota.publicada === false;
-    }
-
-    // Las mascotas ocultas no aparecen
-    // en las otras categorías.
-    if (mascota.publicada === false) {
-      return false;
-    }
-
-    // Mascotas disponibles
-    if (estadoActual === "activas") {
-      return mascota.estado_adopcion === "disponible";
-    }
-
-    // Mascotas reservadas
-    if (estadoActual === "reservadas") {
-      return mascota.estado_adopcion === "reservada";
-    }
-
-    // Mascotas adoptadas
-    if (estadoActual === "adoptadas") {
-      return mascota.estado_adopcion === "adoptada";
-    }
-
-    return false;
-  });
+const contadores = conteo.rows[0];
+const totalPublicaciones = Number(contadores.total);
+const pestanas = [
+  { id: "activas", nombre: "Activas", icono: "fa-circle-check", cantidad: Number(contadores.activas) },
+  { id: "reservadas", nombre: "Reservadas", icono: "fa-clock", cantidad: Number(contadores.reservadas) },
+  { id: "adoptadas", nombre: "Adoptadas", icono: "fa-heart", cantidad: Number(contadores.adoptadas) },
+  { id: "ocultas", nombre: "Ocultas", icono: "fa-eye-slash", cantidad: Number(contadores.ocultas) }
+];
+const estadoBD = estadoActual === "activas" ? "disponible"
+  : estadoActual === "reservadas" ? "reservada" : estadoActual === "adoptadas" ? "adoptada" : "";
+const parametros = [usuario.id, estadoActual === "ocultas", estadoBD, q];
+const condiciones = `FROM public.mascotas
+   WHERE usuario_id = $1
+     AND (($2::boolean AND NOT publicada) OR (NOT $2::boolean AND publicada AND estado_adopcion = $3))
+     AND ($4::text = '' OR strpos(lower(nombre), lower($4::text)) > 0)`;
+const conteoFiltrado = await db.query(`SELECT COUNT(*) AS total ${condiciones}`, parametros);
+const total = Number(conteoFiltrado.rows[0].total);
+const { pagina, paginas, offset } = calcularPagina(Astro.url, total);
+const resultado = await db.query(
+  `SELECT id, foto_blob, nombre, descripcion, personalidad, historial_medico,
+     estado_adopcion, tipo_mascota, publicada
+   ${condiciones} ORDER BY id DESC LIMIT $5 OFFSET $6`,
+  [...parametros, MASCOTAS_POR_PAGINA, offset]
+);
+const mascotas = agregarFotosMascotas(resultado.rows);
 
 ---
 
@@ -157,7 +71,7 @@ const resultado = await db.query(
 >
   <Header />
 
-  <main class="management-page">
+  <main class="management-page ka-gestion-mascotas">
     <div class="management-container">
 
       <div class="page-header page-header-inline">
@@ -191,14 +105,15 @@ const resultado = await db.query(
 
           <!-- PESTAÑAS DE ESTADO DE LAS MASCOTAS -->
 
-          {todasLasMascotas.length > 0 && (
+          {totalPublicaciones > 0 && (
             <nav
               class="mis-mascotas-pestanas"
               aria-label="Filtrar publicaciones por estado"
             >
               {pestanas.map((pestana) => (
                 <a
-                  href={`/gestion/mascotas?estado=${pestana.id}`}
+                  href={enlacePagina(ruta, { estado: pestana.id, q })}
+                  data-estado={pestana.id}
                   class:list={{
                     "mis-mascotas-pestana": true,
                     "activa": estadoActual === pestana.id
@@ -222,6 +137,18 @@ const resultado = await db.query(
           )}
 
 
+      <form method="GET" action={ruta} class="ka-busqueda-gestion">
+        <input type="hidden" name="estado" value={estadoActual} />
+        <label>Buscar por nombre
+          <span class="ka-busqueda-campo">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input type="search" name="q" value={q} maxlength="100" placeholder="Nombre de tu mascota..." />
+          </span>
+        </label>
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar</button>
+        {q && <a href={enlacePagina(ruta, { estado: estadoActual })} class="btn-outline">Limpiar búsqueda</a>}
+      </form>
+
       {
         mascotas.length === 0 ? (
           <section class="empty-state">
@@ -232,15 +159,15 @@ const resultado = await db.query(
 
             
           <h2>
-            {todasLasMascotas.length === 0
+            {totalPublicaciones === 0
               ? "Todavía no tienes publicaciones"
-              : `No tienes mascotas ${estadoActual}`}
+              : q ? "No encontramos mascotas con ese nombre" : `No tienes mascotas ${estadoActual}`}
           </h2>
 
           <p>
-            {todasLasMascotas.length === 0
+            {totalPublicaciones === 0
               ? "Cuando publiques una mascota, aparecerá aquí."
-              : "Las mascotas aparecerán automáticamente en esta sección cuando tengan ese estado."}
+              : q ? "Prueba con otro nombre o cambia de pestaña." : "Las mascotas aparecerán automáticamente en esta sección cuando tengan ese estado."}
           </p>
 
 
@@ -248,7 +175,7 @@ const resultado = await db.query(
               href="/gestion/crear-mascota"
               class="btn-primary"
             >
-              {todasLasMascotas.length === 0
+              {totalPublicaciones === 0
                 ? "Publicar mi primera mascota"
                 : "Publicar otra mascota"}
             </a>
@@ -359,6 +286,7 @@ const resultado = await db.query(
         )
       }
 
+      <PaginadorMascotas ruta={ruta} filtros={filtros} pagina={pagina} paginas={paginas} total={total} cantidad={mascotas.length} />
     </div>
   </main>
 </Layout>
@@ -410,408 +338,3 @@ const resultado = await db.query(
       });
     });
 </script>
-
-
-
-<style>
-  /* =========================================
-     PESTAÑAS DE ESTADO
-     ========================================= */
-
-  .mis-mascotas-pestanas {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    margin: 28px 0;
-  }
-
-  .mis-mascotas-pestana {
-    --estado-color: var(--cyan);
-
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    min-height: 76px;
-    padding: 18px 14px;
-
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: 14px;
-
-    color: var(--text-soft);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 800;
-
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  /* Colores de cada estado */
-
-  .mis-mascotas-pestana[href$="estado=activas"] {
-    --estado-color: #58d98f;
-  }
-
-  .mis-mascotas-pestana[href$="estado=reservadas"] {
-    --estado-color: #ffc857;
-  }
-
-  .mis-mascotas-pestana[href$="estado=adoptadas"] {
-    --estado-color: #ff8297;
-  }
-
-  .mis-mascotas-pestana[href$="estado=ocultas"] {
-    --estado-color: #99a6b4;
-  }
-
-  /* Iconos */
-
-  .mis-mascotas-pestana > i {
-    display: grid;
-    place-items: center;
-
-    width: 38px;
-    height: 38px;
-    flex-shrink: 0;
-
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--estado-color);
-
-    font-size: 17px;
-    border-radius: 10px;
-  }
-
-  /* Contador de mascotas */
-
-  .mis-mascotas-contador {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-width: 30px;
-    height: 30px;
-    padding: 0 8px;
-    margin-left: auto;
-
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--estado-color);
-
-    font-size: 15px;
-    font-weight: 900;
-    border-radius: 8px;
-  }
-
-  /* Efecto al pasar el cursor */
-
-  .mis-mascotas-pestana:hover {
-    background: var(--surface-2);
-    border-color: var(--estado-color);
-    transform: translateY(-3px);
-  }
-
-  /* Pestaña seleccionada */
-
-  .mis-mascotas-pestana.activa {
-    background: linear-gradient(
-      135deg,
-      rgba(32, 207, 255, 0.13),
-      var(--surface)
-    );
-
-    border-color: var(--cyan);
-    color: var(--text);
-
-    box-shadow:
-      0 5px 20px rgba(32, 207, 255, 0.08);
-  }
-
-  .mis-mascotas-pestana.activa::after {
-    content: "";
-
-    position: absolute;
-    bottom: 0;
-    left: 14px;
-    right: 14px;
-
-    height: 3px;
-    background: var(--cyan);
-    border-radius: 5px 5px 0 0;
-  }
-
-  .mis-mascotas-pestana:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: 4px;
-  }
-
-  /* =========================================
-     ENCABEZADO
-     ========================================= */
-
-  .page-header .back-link {
-    display: flex;
-    width: fit-content;
-    margin-bottom: 14px;
-  }
-
-  /* =========================================
-     TARJETAS DE MASCOTAS
-     ========================================= */
-
-  .management-pets-grid {
-    gap: 22px;
-  }
-
-  .management-pet-card {
-    display: flex;
-    flex-direction: column;
-
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: 18px;
-
-    overflow: hidden;
-
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.18);
-  }
-
-  .management-pet-card:hover {
-    border-color: var(--cyan-dark);
-
-    box-shadow:
-      0 14px 30px rgba(0, 0, 0, 0.28);
-  }
-
-  /* Fotografías */
-
-  .management-pet-image {
-    position: relative;
-    height: 230px;
-
-    border-bottom:
-      1px solid var(--border-light);
-  }
-
-  .management-pet-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* Estado sobre la fotografía */
-
-  .pet-status-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-
-    display: inline-flex;
-    align-items: center;
-
-    padding: 6px 11px;
-
-    background: rgba(8, 14, 20, 0.92);
-    color: var(--text-soft);
-
-    border: 1px solid var(--border-light);
-    border-radius: 999px;
-
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: capitalize;
-  }
-
-  /* Contenido de las tarjetas */
-
-  .management-pet-content {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-
-    gap: 10px;
-    padding: 20px;
-  }
-
-  .management-pet-content h2 {
-    margin: 2px 0;
-
-    color: var(--text);
-    font-size: 21px;
-    font-weight: 900;
-
-    overflow-wrap: anywhere;
-  }
-
-  .management-pet-content > p {
-    margin: 0;
-
-    color: var(--text-soft);
-    font-size: 13px;
-    line-height: 1.6;
-
-    overflow-wrap: anywhere;
-  }
-
-  /* Etiqueta del tipo de mascota */
-
-  .management-pet-content .pet-card-meta {
-    align-self: flex-start;
-
-    padding: 5px 10px;
-
-    background: var(--cyan-soft);
-    color: var(--cyan);
-
-    border-radius: 7px;
-
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  /* =========================================
-     PERSONALIDAD E HISTORIAL MÉDICO
-     ========================================= */
-
-  .management-pet-info {
-    display: grid;
-    gap: 12px;
-
-    padding: 14px;
-    margin: 5px 0;
-
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-  }
-
-  .management-pet-info:empty {
-    display: none;
-  }
-
-  .management-pet-info > div {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .management-pet-info strong {
-    color: var(--muted);
-
-    font-size: 11px;
-    font-weight: 800;
-  }
-
-  .management-pet-info span {
-    color: var(--text-soft);
-
-    font-size: 13px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-
-  /* =========================================
-     BOTONES DE ACCIÓN
-     ========================================= */
-
-  .management-pet-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    margin-top: auto;
-    padding-top: 10px;
-  }
-
-  .management-pet-actions .btn-outline,
-  .management-pet-actions .btn-primary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-
-    width: 100%;
-    min-height: 44px;
-
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 800;
-  }
-
-  /* =========================================
-     DISEÑO RESPONSIVE
-     ========================================= */
-
-  @media (max-width: 1000px) {
-    .mis-mascotas-pestanas {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .management-pets-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 600px) {
-    .mis-mascotas-pestanas {
-      gap: 10px;
-      margin: 20px 0;
-    }
-
-    .mis-mascotas-pestana {
-      min-height: 64px;
-      padding: 12px 9px;
-      gap: 7px;
-      font-size: 12px;
-    }
-
-    .mis-mascotas-pestana > i {
-      width: 27px;
-      height: 27px;
-      font-size: 13px;
-    }
-
-    .mis-mascotas-contador {
-      min-width: 24px;
-      height: 24px;
-      font-size: 12px;
-    }
-
-    .management-pets-grid {
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-
-    .management-pet-image {
-      height: 220px;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .mis-mascotas-pestanas {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .mis-mascotas-pestana,
-    .management-pet-card,
-    .management-pet-image img {
-      transition: none;
-    }
-
-    .mis-mascotas-pestana:hover,
-    .management-pet-card:hover,
-    .management-pet-card:hover img {
-      transform: none;
-    }
-  }
-</style>
-

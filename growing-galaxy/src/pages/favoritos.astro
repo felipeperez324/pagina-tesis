@@ -2,11 +2,28 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
+import PaginadorMascotas from "../components/PaginadorMascotas.astro";
+
 import { db } from "../lib/db";
 import { getUsuarioDesdeSesion } from "../lib/auth";
 import { agregarFotosMascotas } from "../lib/fotos";
 
+import {
+  leerBusqueda,
+  calcularPagina,
+  MASCOTAS_POR_PAGINA
+} from "../lib/paginacionMascotas";
+
+import "../styles/catalogo-mascotas.css";
+
 export const prerender = false;
+
+Astro.response.headers.set(
+  "Cache-Control",
+  "private, no-store"
+);
+
+// VALIDAR SESIÓN
 
 const usuario = await getUsuarioDesdeSesion(
   Astro.cookies.get("session_id")?.value
@@ -20,6 +37,37 @@ if (usuario.tipo_usuario !== "adoptante") {
   return Astro.redirect("/gestion");
 }
 
+// BUSCADOR
+
+const q = leerBusqueda(Astro.url);
+
+const condiciones = `
+  FROM public.favoritos f
+  JOIN public.mascotas m
+    ON m.id = f.mascota_id
+  WHERE f.adoptante_id = $1
+    AND (
+      $2::text = ''
+      OR strpos(lower(m.nombre), lower($2::text)) > 0
+    )
+`;
+
+// CONTAR FAVORITOS
+
+const conteo = await db.query(
+  `SELECT COUNT(*) AS total ${condiciones}`,
+  [usuario.id, q]
+);
+
+const total = Number(conteo.rows[0].total);
+
+// PAGINACIÓN
+
+const { pagina, paginas, offset } =
+  calcularPagina(Astro.url, total);
+
+// CONSULTAR FAVORITOS
+
 const resultado = await db.query(
   `SELECT
      m.id,
@@ -27,256 +75,892 @@ const resultado = await db.query(
      m.descripcion,
      m.tipo_mascota,
      m.ubicacion,
+     m.raza,
+     m.tamano,
+     m.personalidad,
+     m.historial_medico,
      m.foto_blob,
+     f.guardada_en,
      EXISTS (
        SELECT 1
-       FROM mascotas_postulables mp
+       FROM public.mascotas_postulables mp
        WHERE mp.id = m.id
      ) AS postulable
-   FROM favoritos f
-   JOIN mascotas m ON m.id = f.mascota_id
-   WHERE f.adoptante_id = $1
-   ORDER BY f.guardada_en DESC`,
-  [usuario.id]
+   ${condiciones}
+   ORDER BY f.guardada_en DESC, m.id DESC
+   LIMIT $3 OFFSET $4`,
+  [
+    usuario.id,
+    q,
+    MASCOTAS_POR_PAGINA,
+    offset
+  ]
 );
 
-const mascotas = agregarFotosMascotas(resultado.rows);
+const mascotas = agregarFotosMascotas(
+  resultado.rows
+);
 ---
 
 <Layout
-  title="Mis favoritas | KodApp"
-  description="Mascotas guardadas para adoptar más adelante."
+  title="Mis favoritas | KodaApp"
+  description="Consulta las mascotas que guardaste en favoritos."
 >
   <Header />
 
-  <main class="favoritos-contenedor">
+  <main class="favoritos-contenedor ka-catalogo">
 
-    <a href="/match" class="volver">
-      ← Volver al Match
-    </a>
+    <!-- ENCABEZADO -->
 
-    <h1>
-      <i class="fa-solid fa-heart"></i>
-      Mis mascotas favoritas
-    </h1>
+    <div class="favoritos-header">
 
-    <p>
-      Aquí encontrarás las mascotas que guardaste
-      mientras explorabas el Match.
-    </p>
+      <a href="/match" class="favoritos-volver">
+        <i class="fa-solid fa-arrow-left"></i>
+        Volver al Match
+      </a>
 
-    {mascotas.length === 0 ? (
-      <section class="sin-favoritos">
+      <span class="favoritos-kicker">
         <i class="fa-solid fa-heart"></i>
-        <h2>Todavía no tienes favoritas</h2>
+        MIS FAVORITOS
+      </span>
 
-        <p>
-          Explora el Match y presiona el corazón
-          para guardar una mascota.
-        </p>
+      <h1>Mis mascotas favoritas</h1>
 
-        <a href="/match" class="boton">
-          Explorar Match
-        </a>
-      </section>
-    ) : (
-      <div class="favoritos-grid">
+      <p>
+        Aquí encontrarás las mascotas que guardaste
+        mientras explorabas el Match.
+      </p>
 
-        {mascotas.map((mascota) => (
-          <article
-            class="favorito-card"
-            data-favorito={mascota.id}
-          >
-            {mascota.foto ? (
-              <img
-                src={mascota.foto}
-                alt={`Fotografía de ${mascota.nombre}`}
-                loading="lazy"
-              />
-            ) : (
-              <div class="sin-foto">🐾</div>
-            )}
+    </div>
 
-            <div class="favorito-datos">
-              <h2>{mascota.nombre}</h2>
+    <!-- BUSCADOR -->
 
-              <p>{mascota.tipo_mascota}</p>
+    <form
+      method="GET"
+      action="/favoritos"
+      class="favoritos-buscador"
+    >
 
-              {mascota.ubicacion && (
-                <p>
-                  <i class="fa-solid fa-location-dot"></i>
-                  {mascota.ubicacion}
-                </p>
-              )}
+      <div class="favoritos-buscador-header">
 
-              {mascota.postulable ? (
-                <div class="favorito-acciones">
-                  <a href={`/mascotas/${mascota.id}`}>
-                    Ver ficha
-                  </a>
+        <h2>
+          <i class="fa-solid fa-magnifying-glass"></i>
+          Buscar favoritos
+        </h2>
 
-                  <a href={`/postular/${mascota.id}`}>
-                    Postular
-                  </a>
-                </div>
-              ) : (
-                <p>
-                  Esta mascota ya no recibe postulaciones.
-                </p>
-              )}
-
-              <button
-                type="button"
-                class="quitar-favorito"
-                data-id={mascota.id}
-              >
-                <i class="fa-solid fa-trash"></i>
-                Quitar de favoritos
-              </button>
-            </div>
-          </article>
-        ))}
+        <span>
+          {total} {total === 1 ? "resultado" : "resultados"}
+        </span>
 
       </div>
-    )}
 
-    <p id="favoritos-mensaje" role="status"></p>
+      <div class="favoritos-buscador-fila">
+
+        <label>
+          Nombre de la mascota
+
+          <span class="ka-busqueda-campo">
+
+            <i
+              class="fa-solid fa-magnifying-glass"
+              aria-hidden="true"
+            ></i>
+
+            <input
+              type="search"
+              name="q"
+              value={q}
+              maxlength="100"
+              placeholder="Ej. Luna, Max, Rodolfo..."
+            />
+
+          </span>
+        </label>
+
+        <div class="favoritos-buscador-acciones">
+
+          <a href="/favoritos" class="btn-outline">
+            Limpiar
+          </a>
+
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            Buscar
+          </button>
+
+        </div>
+
+      </div>
+
+    </form>
+
+    <!-- MENSAJES -->
+
+    <p
+      id="favoritos-mensaje"
+      class="favoritos-mensaje"
+      role="status"
+      aria-live="polite"
+    ></p>
+
+    <!-- ESTADO VACÍO -->
+
+    {
+      mascotas.length === 0 ? (
+
+        <section class="sin-favoritos">
+
+          <div class="sin-favoritos-icono">
+            <i class="fa-solid fa-heart"></i>
+          </div>
+
+          <h2>
+            {q
+              ? "No encontramos mascotas"
+              : "Todavía no tienes favoritas"}
+          </h2>
+
+          <p>
+            {q
+              ? "Prueba buscando otro nombre."
+              : "Explora el Match y presiona el corazón para guardar una mascota."}
+          </p>
+
+          <a
+            href={q ? "/favoritos" : "/match"}
+            class="btn-outline"
+          >
+            <i class={
+              q
+                ? "fa-solid fa-filter-circle-xmark"
+                : "fa-solid fa-heart"
+            }></i>
+
+            {q ? "Limpiar búsqueda" : "Explorar Match"}
+          </a>
+
+        </section>
+
+      ) : (
+
+        <div class="mascotas-grid">
+
+          {mascotas.map((mascota) => (
+
+            <article
+              class="mascota-card favorito-card"
+              data-favorito={mascota.id}
+            >
+
+              <!-- FOTOGRAFÍA -->
+
+              <div class="mascota-card-image">
+
+                {mascota.foto ? (
+
+                  <img
+                    src={mascota.foto}
+                    alt={`Fotografía de ${mascota.nombre}`}
+                    loading="lazy"
+                  />
+
+                ) : (
+
+                  <div class="favorito-sin-foto">
+                    <i class="fa-solid fa-paw"></i>
+                  </div>
+
+                )}
+
+                <span
+                  class:list={[
+                    "pet-status-badge",
+                    {
+                      "estado-disponible": mascota.postulable,
+                      "estado-no-disponible": !mascota.postulable
+                    }
+                  ]}
+                >
+                  <i class={
+                    mascota.postulable
+                      ? "fa-solid fa-circle-check"
+                      : "fa-solid fa-circle-info"
+                  }></i>
+
+                  {mascota.postulable
+                    ? "Disponible"
+                    : "No disponible"}
+
+                </span>
+
+                <span
+                  class="favorito-corazon"
+                  title="Mascota guardada en favoritos"
+                >
+                  <i class="fa-solid fa-heart"></i>
+                </span>
+
+              </div>
+
+              <!-- INFORMACIÓN -->
+
+              <div class="mascota-card-content">
+
+                <span class="mascota-tipo">
+                  {mascota.tipo_mascota}
+                </span>
+
+                <h3>{mascota.nombre}</h3>
+
+                <div class="ka-mascota-etiquetas">
+
+                  {mascota.ubicacion && (
+
+                    <span>
+                      <i class="fa-solid fa-location-dot"></i>
+                      {mascota.ubicacion}
+                    </span>
+
+                  )}
+
+                  {mascota.postulable && mascota.raza && (
+                    <span>{mascota.raza}</span>
+                  )}
+
+                  {mascota.postulable && mascota.tamano && (
+                    <span>
+                      {mascota.tamano === "pequeno"
+                        ? "Pequeño"
+                        : mascota.tamano === "mediano"
+                          ? "Mediano"
+                          : mascota.tamano === "grande"
+                            ? "Grande"
+                            : mascota.tamano}
+                    </span>
+                  )}
+
+                </div>
+
+                {mascota.postulable && mascota.descripcion && (
+                  <p>{mascota.descripcion}</p>
+                )}
+
+                <!-- PERSONALIDAD Y SALUD -->
+
+                {
+                  mascota.postulable &&
+                  (mascota.personalidad ||
+                    mascota.historial_medico) && (
+
+                    <div class="ka-mascota-detalles">
+
+                      {mascota.personalidad && (
+
+                        <div>
+                          <strong>Personalidad</strong>
+                          <span>{mascota.personalidad}</span>
+                        </div>
+
+                      )}
+
+                      {mascota.historial_medico && (
+
+                        <div>
+                          <strong>Cuidados y salud</strong>
+                          <span>{mascota.historial_medico}</span>
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )
+                }
+
+                <!-- BOTONES -->
+
+                <div class="favorito-botones">
+
+                  {mascota.postulable ? (
+
+                    <div class="favorito-acciones">
+
+                      <a
+                        href={`/mascotas/${mascota.id}`}
+                        class="btn-outline"
+                      >
+                        <i class="fa-solid fa-eye"></i>
+                        Ver ficha completa
+                      </a>
+
+                      <a
+                        href={`/postular/${mascota.id}`}
+                        class="btn-primary"
+                      >
+                        <i class="fa-solid fa-paw"></i>
+                        Postular
+                      </a>
+
+                    </div>
+
+                  ) : (
+
+                    <div class="favorito-aviso">
+
+                      <i class="fa-solid fa-circle-info"></i>
+
+                      <span>
+                        Esta mascota actualmente no recibe
+                        postulaciones.
+                      </span>
+
+                    </div>
+
+                  )}
+
+                  <button
+                    type="button"
+                    class="quitar-favorito"
+                    data-id={mascota.id}
+                  >
+                    <i class="fa-solid fa-trash-can"></i>
+                    Quitar de favoritos
+                  </button>
+
+                </div>
+
+              </div>
+
+            </article>
+
+          ))}
+
+        </div>
+
+      )
+    }
+
+    <!-- PAGINADOR -->
+
+    <PaginadorMascotas
+      ruta="/favoritos"
+      filtros={{ q }}
+      pagina={pagina}
+      paginas={paginas}
+      total={total}
+      cantidad={mascotas.length}
+    />
 
   </main>
+
 </Layout>
 
 <script>
+
   document
-    .querySelectorAll<HTMLButtonElement>(".quitar-favorito")
+    .querySelectorAll<HTMLButtonElement>(
+      ".quitar-favorito"
+    )
     .forEach((boton) => {
 
       boton.addEventListener("click", async () => {
+
+        const mensaje = document.querySelector(
+          "#favoritos-mensaje"
+        );
+
         boton.disabled = true;
 
+        if (mensaje) {
+          mensaje.textContent = "";
+        }
+
         try {
-          const respuesta = await fetch("/api/favoritos", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              accion: "quitar",
-              mascotaId: Number(boton.dataset.id)
-            })
-          });
+
+          const respuesta = await fetch(
+            "/api/favoritos",
+            {
+              method: "POST",
+              credentials: "same-origin",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                accion: "quitar",
+                mascotaId: Number(boton.dataset.id)
+              })
+            }
+          );
 
           const resultado = await respuesta.json();
 
           if (!respuesta.ok || !resultado.ok) {
+
             throw new Error(
-              resultado.mensaje || "No se pudo quitar."
+              resultado.mensaje ||
+              "No se pudo quitar el favorito."
             );
+
           }
 
-          boton.closest("[data-favorito]")?.remove();
+          // Actualizar los contadores y la paginación.
+          window.location.reload();
 
         } catch (error) {
+
           boton.disabled = false;
 
-          const mensaje =
-            document.querySelector("#favoritos-mensaje");
-
           if (mensaje) {
+
             mensaje.textContent =
               error instanceof Error
                 ? error.message
                 : "Error al quitar favorito.";
+
           }
+
         }
+
       });
+
     });
+
 </script>
 
 <style>
+
+  /* ======================================
+     CONTENEDOR GENERAL
+     ====================================== */
+
   .favoritos-contenedor {
-    max-width: 1150px;
+    max-width: 1200px;
     margin: 40px auto;
     padding: 20px;
   }
 
-  .favoritos-contenedor h1 {
-    margin: 22px 0;
+  .favoritos-header {
+    margin-bottom: 28px;
   }
 
-  .favoritos-contenedor h1 i {
-    color: #f59e0b;
+  .favoritos-header h1 {
+    margin: 12px 0;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 900;
+    color: var(--text);
   }
 
-  .volver {
-    color: #f59e0b;
+  .favoritos-header p {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .favoritos-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    color: var(--cyan);
     text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
   }
 
-  .favoritos-grid {
-    display: grid;
-    grid-template-columns: repeat(
-      auto-fill, minmax(260px, 1fr)
-    );
-    gap: 22px;
-    margin-top: 30px;
+  .favoritos-volver:hover {
+    text-decoration: underline;
   }
+
+  .favoritos-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--cyan);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+  }
+
+  /* ======================================
+     BUSCADOR
+     ====================================== */
+
+  .favoritos-buscador {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 28px;
+  }
+
+  .favoritos-buscador-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .favoritos-buscador-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .favoritos-buscador-header h2 i {
+    color: var(--cyan);
+  }
+
+  .favoritos-buscador-header > span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .favoritos-buscador-fila {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .favoritos-buscador-fila label {
+    flex: 1 1 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--text-soft);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .favoritos-buscador-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .favoritos-buscador-acciones a,
+  .favoritos-buscador-acciones button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+
+  /* ======================================
+     TARJETAS Y FOTOGRAFÍAS
+     ====================================== */
 
   .favorito-card {
-    background: #242d38;
-    border: 1px solid #485463;
-    border-radius: 16px;
-    overflow: hidden;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
   }
 
-  .favorito-card > img,
-  .sin-foto {
+  .favorito-card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.25);
+  }
+
+  .mascota-card-image {
+    position: relative;
+    height: 230px;
+    overflow: hidden;
+    background: #09171f;
+  }
+
+  .mascota-card-image img {
+    display: block;
     width: 100%;
-    height: 220px;
+    height: 100%;
     object-fit: cover;
   }
 
-  .sin-foto {
+  .favorito-sin-foto {
     display: grid;
     place-items: center;
-    font-size: 55px;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+      circle,
+      #102630,
+      #091219
+    );
+    color: #65717d;
+    font-size: 46px;
   }
 
-  .favorito-datos {
-    padding: 20px;
+  /* ======================================
+     ESTADO Y CORAZÓN
+     ====================================== */
+
+  .pet-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 1;
+  }
+
+  .estado-disponible {
+    color: #58d98f;
+  }
+
+  .estado-no-disponible {
+    color: #ffc857;
+  }
+
+  .favorito-corazon {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+
+    display: grid;
+    place-items: center;
+
+    width: 38px;
+    height: 38px;
+
+    background: rgba(8, 14, 20, 0.92);
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+
+    color: #ff8297;
+    font-size: 17px;
+  }
+
+  /* ======================================
+     BOTONES DE ACCIÓN
+     ====================================== */
+
+  .favorito-botones {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 12px;
   }
 
   .favorito-acciones {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
-    margin: 18px 0;
   }
 
-  .favorito-acciones a,
-  .boton {
-    background: #f59e0b;
-    color: #151515;
-    padding: 10px 14px;
-    border-radius: 9px;
+  .favorito-acciones a {
+    flex: 1 1 125px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 44px;
+    padding: 10px 12px;
+
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
     text-decoration: none;
-    font-weight: bold;
+    white-space: normal;
   }
+
+  /* ======================================
+     QUITAR FAVORITO
+     ====================================== */
 
   .quitar-favorito {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
     width: 100%;
-    padding: 10px;
-    border-radius: 9px;
-    color: #fff;
-    background: #4a3135;
-    border: 1px solid #a45a62;
+    min-height: 44px;
+    padding: 10px 15px;
+
+    background: rgba(187, 89, 107, 0.08);
+    border: 1px solid rgba(187, 89, 107, 0.55);
+    border-radius: 10px;
+
+    color: #ff899d;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
     cursor: pointer;
+
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease;
   }
 
-  .sin-favoritos {
-    text-align: center;
-    padding: 45px;
-    margin-top: 30px;
-    border: 1px solid #485463;
-    border-radius: 16px;
+  .quitar-favorito:hover {
+    background: rgba(187, 89, 107, 0.20);
+    border-color: #ff899d;
   }
+
+  .quitar-favorito:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+
+  .quitar-favorito:focus-visible {
+    outline: 2px solid #ff899d;
+    outline-offset: 3px;
+  }
+
+  /* ======================================
+     MASCOTA NO DISPONIBLE
+     ====================================== */
+
+  .favorito-aviso {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+
+    background: rgba(255, 200, 87, 0.06);
+    border: 1px solid rgba(255, 200, 87, 0.2);
+    border-radius: 10px;
+
+    color: #ffc857;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* ======================================
+     ESTADO VACÍO
+     ====================================== */
+
+  .sin-favoritos {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+
+    padding: 50px 25px;
+
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 18px;
+
+    text-align: center;
+  }
+
+  .sin-favoritos-icono {
+    display: grid;
+    place-items: center;
+
+    width: 76px;
+    height: 76px;
+
+    background: rgba(187, 89, 107, 0.12);
+    border-radius: 50%;
+
+    color: #bb596b;
+    font-size: 30px;
+  }
+
+  .sin-favoritos h2 {
+    margin: 0;
+    font-size: 23px;
+    color: var(--text);
+  }
+
+  .sin-favoritos p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .sin-favoritos a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* ======================================
+     MENSAJES DE ERROR
+     ====================================== */
+
+  .favoritos-mensaje {
+    padding: 14px;
+    margin-bottom: 18px;
+
+    background: rgba(187, 89, 107, 0.1);
+    border: 1px solid rgba(187, 89, 107, 0.4);
+    border-radius: 10px;
+
+    color: #ff899d;
+    font-size: 14px;
+  }
+
+  .favoritos-mensaje:empty {
+    display: none;
+  }
+
+  /* ======================================
+     DISEÑO RESPONSIVE
+     ====================================== */
+
+  @media (max-width: 600px) {
+
+    .favoritos-contenedor {
+      margin: 20px auto;
+      padding: 16px;
+    }
+
+    .favoritos-buscador {
+      padding: 16px;
+    }
+
+    .favoritos-buscador-fila {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .favoritos-buscador-fila label {
+      flex: auto;
+    }
+
+    .favoritos-buscador-acciones {
+      width: 100%;
+    }
+
+    .favoritos-buscador-acciones a,
+    .favoritos-buscador-acciones button {
+      flex: 1;
+    }
+
+    .mascota-card-image {
+      height: 240px;
+    }
+
+    .favorito-acciones {
+      flex-direction: column;
+    }
+
+    .favorito-acciones a {
+      flex: auto;
+      width: 100%;
+    }
+
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .favorito-card,
+    .quitar-favorito {
+      transition: none;
+    }
+
+  }
+
 </style>

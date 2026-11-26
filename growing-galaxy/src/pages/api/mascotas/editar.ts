@@ -12,16 +12,9 @@ import {
   type ImagenValidada
 } from "../../../lib/azure";
 
-import {
-  PERSONALIDADES,
-  ANTECEDENTES_MEDICOS,
-  procesarClasificacion
-} from "../../../lib/CatalogoMatch";
 
-import {
-  COMUNAS_BIOBIO,
-  RAZAS_POR_TIPO
-} from "../../../lib/catalogosMascotas";
+import { leerMascota } from "../../../lib/serializerMascota";
+
 
 export const prerender = false;
 
@@ -91,200 +84,54 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }, 400);
     }
 
-    // ==========================================
-    // 2. DATOS DE LA MASCOTA
-    // ==========================================
 
-    const nombre = String(datos.get("nombre") ?? "").trim();
 
-    const tipo = String(
-      datos.get("tipoMascota") ?? ""
-    ).trim();
+      // ==========================================
+      // 2. SERIALIZER DE MASCOTAS
+      // ==========================================
 
-    const descripcion = String(
-      datos.get("descripcion") ?? ""
-    ).trim();
+      const validacion = leerMascota(datos);
 
-    const estado = String(
-      datos.get("estadoAdopcion") ?? ""
-    ).trim();
+      if (!validacion.ok) {
+        return responder({
+          ok: false,
+          mensaje: validacion.mensaje
+        }, 400);
+      }
 
-    const raza = String(datos.get("raza") ?? "").trim();
+      const {
+        nombre,
+        tipo,
+        descripcion,
+        raza,
+        edadMeses,
+        sexo,
+        tamano,
+        ubicacion,
+        requisitos,
+        personalidad,
+        salud,
+        esterilizado,
+        vacunas
+      } = validacion.datos;
 
-    const ubicacion = String(
-      datos.get("ubicacion") ?? ""
-    ).trim();
+      // ==========================================
+      // 3. VALIDAR ESTADO DE ADOPCIÓN
+      // ==========================================
 
-    const edadTexto = String(
-      datos.get("edadMeses") ?? ""
-    ).trim();
-
-    const sexo = String(
-      datos.get("sexo") ?? "desconocido"
-    );
-
-    const tamano = String(
-      datos.get("tamano") ?? "desconocido"
-    );
-
-    const esterilizadoTexto = String(
-      datos.get("esterilizado") ?? "desconocido"
-    );
-
-    const vacunasTexto = String(
-      datos.get("vacunasAlDia") ?? "desconocido"
-    );
-
-    const requisitos = String(
-      datos.get("requisitosAdopcion") ?? ""
-    ).trim();
-
-    // ==========================================
-    // 3. VALIDACIONES
-    // ==========================================
-
-    if (
-      !nombre ||
-      nombre.length > 100 ||
-      descripcion.length > 5000
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Revisa el nombre o la descripción."
-      }, 400);
-    }
-
-    if (!["perro", "gato", "otro"].includes(tipo)) {
-      return responder({
-        ok: false,
-        mensaje: "Tipo de mascota inválido."
-      }, 400);
-    }
-
-    if (
-      !["disponible", "reservada", "adoptada"]
-        .includes(estado)
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Estado de adopción inválido."
-      }, 400);
-    }
-
-    if (
-      raza.length > 100 ||
-      ubicacion.length > 120 ||
-      requisitos.length > 2000
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Raza, comuna o requisitos demasiado largos."
-      }, 400);
-    }
-
-    if (!COMUNAS_BIOBIO.includes(ubicacion)) {
-      return responder({
-        ok: false,
-        mensaje: "Selecciona una comuna válida del Biobío."
-      }, 400);
-    }
-
-    const razasPermitidas = RAZAS_POR_TIPO[tipo] ?? [];
-
-    if (!razasPermitidas.includes(raza)) {
-      return responder({
-        ok: false,
-        mensaje: "Selecciona una raza válida."
-      }, 400);
-    }
-
-    if (
-      !["macho", "hembra", "desconocido"].includes(sexo) ||
-      !["pequeno", "mediano", "grande", "desconocido"].includes(tamano) ||
-      !["si", "no", "desconocido"].includes(esterilizadoTexto) ||
-      !["si", "no", "desconocido"].includes(vacunasTexto)
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Revisa las características de la mascota."
-      }, 400);
-    }
-
-    // Convertir edad a número.
-    let edadMeses: number | null = null;
-
-    if (edadTexto !== "") {
-      edadMeses = Number(edadTexto);
+      const estado = String(
+        datos.get("estadoAdopcion") ?? ""
+      ).trim();
 
       if (
-        !/^\d+$/.test(edadTexto) ||
-        !Number.isInteger(edadMeses) ||
-        edadMeses > 360
+        !["disponible", "reservada", "adoptada"]
+          .includes(estado)
       ) {
         return responder({
           ok: false,
-          mensaje: "La edad debe estar entre 0 y 360 meses."
+          mensaje: "Estado de adopción inválido."
         }, 400);
       }
-    }
-
-    // Convertir valores de texto a booleanos.
-    const valorBool = (valor: string): boolean | null =>
-      valor === "si"
-        ? true
-        : valor === "no"
-          ? false
-          : null;
-
-    // ==========================================
-    // 4. PERSONALIDAD Y SALUD
-    // ==========================================
-
-    const personalidad = procesarClasificacion(
-      datos.get("personalidadCodigo"),
-      datos.get("personalidadDetalle"),
-      PERSONALIDADES,
-      "la personalidad"
-    );
-
-    const salud = procesarClasificacion(
-      datos.get("saludCodigo"),
-      datos.get("saludDetalle"),
-      ANTECEDENTES_MEDICOS,
-      "los antecedentes médicos"
-    );
-
-    if (!personalidad.ok) {
-      return responder({
-        ok: false,
-        mensaje: personalidad.mensaje
-      }, 400);
-    }
-
-    if (!salud.ok) {
-      return responder({
-        ok: false,
-        mensaje: salud.mensaje
-      }, 400);
-    }
-
-    // Evitar información contradictoria.
-    if (
-      (
-        salud.codigo === "vacunacion_pendiente" &&
-        vacunasTexto === "si"
-      ) ||
-      (
-        salud.codigo === "vacunacion_al_dia" &&
-        vacunasTexto === "no"
-      )
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "La vacunación y los antecedentes médicos se contradicen."
-      }, 400);
-    }
-
     // ==========================================
     // 5. VALIDAR FOTOGRAFÍAS
     // ==========================================
@@ -487,8 +334,8 @@ export const POST: APIRoute = async ({ request, cookies }) => {
           edadMeses,
           sexo,
           tamano,
-          valorBool(esterilizadoTexto),
-          valorBool(vacunasTexto),
+          esterilizado,
+          vacunas,
           ubicacion,
           requisitos || null,
           id,

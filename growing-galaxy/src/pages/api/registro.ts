@@ -10,13 +10,8 @@ import {
 } from "../../lib/verificacioncorreo";
 
 import {
-  validarContrasena
-} from "../../lib/validarcontrasena";
-
-import {
-  validarRut,
-  formatearRut
-} from "../../lib/rut";
+  leerRegistro
+} from "../../lib/serializerUsuario";
 
 export const prerender = false;
 
@@ -47,140 +42,57 @@ function responder(
 export const POST: APIRoute = async ({ request }) => {
   let conexion;
 
+// ========================================
+// SERIALIZER DE ENTRADA
+// ========================================
   try {
-    const datos = await request.json().catch(() => null);
-    if (!datos || typeof datos !== "object" || Array.isArray(datos)) {
-      return responder({ok: false, mensaje: "Solicitud inválida."}, 400);
-    }
-    const nombre = typeof datos.nombre === "string" ? datos.nombre.trim() : "";
-    const rutEntrada = typeof datos.rut === "string" ? datos.rut.trim() : "";
-    const correo = typeof datos.correo === "string" ? datos.correo.trim().toLowerCase() : "";
-    const tipoUsuario = typeof datos.tipoUsuario === "string" ? datos.tipoUsuario : "";
-    const contrasena = datos.contrasena;
-    const comprobante = datos.comprobante;
+        const cuerpo: unknown =
+          await request.json().catch(() => null);
 
-    // ========================================
-    // CAMPOS OBLIGATORIOS
-    // ========================================
+        const validacion = leerRegistro(cuerpo);
 
-    if (
-      !nombre ||
-      !rutEntrada ||
-      !correo ||
-      typeof contrasena !== "string" ||
-      !contrasena
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Completa todos los campos."
-      }, 400);
-    }
+        if (!validacion.ok) {
 
-    if (nombre.length > 100) {
-      return responder({
-        ok: false,
-        mensaje:
-          "El nombre no puede superar 100 caracteres."
-      }, 400);
-    }
+          return responder({
+            ok: false,
+            mensaje: validacion.mensaje
+          }, validacion.estado);
 
-    // ========================================
-    // VALIDACIÓN DE RUT MÓDULO 11
-    // ========================================
+        }
 
-    if (!validarRut(rutEntrada)) {
-      return responder({
-        ok: false,
-        mensaje:
-          "El RUT ingresado no tiene un dígito " +
-          "verificador válido. Revisa los datos."
-      }, 400);
-    }
+        // Datos validados y normalizados.
 
-    // Mantener formato tradicional en PostgreSQL.
-    const rut = formatearRut(rutEntrada);
+        const {
+          nombre,
+          rut,
+          rutCompacto,
+          correo,
+          tipoUsuario,
+          contrasena,
+          comprobante
+        } = validacion.datos;
 
-    if (rut.length > 12) {
-      return responder({
-        ok: false,
-        mensaje: "El formato del RUT es inválido."
-      }, 400);
-    }
+        // ========================================
+        // EVIDENCIA LOCAL DEL SERIALIZER
+        // ========================================
 
-    // Se utiliza para buscar duplicados aunque
-    // existan registros antiguos con otros formatos.
-    const rutCompacto = rut
-      .toUpperCase()
-      .replace(/[^0-9K]/g, "");
+        if (import.meta.env.DEV) {
 
-    // ========================================
-    // VALIDACIÓN DE CORREO
-    // ========================================
+          console.log(
+            "[REGISTRO] Datos validados:",
+            JSON.stringify({
+              nombre,
+              tipoUsuario,
+              rutValido: true,
+              correoFormatoValido: true,
+              contrasenaValida: true,
+              comprobanteFormatoValido: true
+            }, null, 2)
+          );
 
-    if (
-      correo.length > 150 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
-    ) {
-      return responder({
-        ok: false,
-        mensaje: "Correo electrónico inválido."
-      }, 400);
-    }
+        }
 
-    // ========================================
-    // VALIDACIÓN DE CONTRASEÑA
-    // ========================================
 
-    if (
-      contrasena.length > 72 ||
-      Buffer.byteLength(contrasena, "utf8") > 72
-    ) {
-      return responder({
-        ok: false,
-        mensaje:
-          "La contraseña es demasiado larga."
-      }, 400);
-    }
-
-    const erroresContrasena =
-      validarContrasena(contrasena);
-
-    if (erroresContrasena.length > 0) {
-      return responder({
-        ok: false,
-        mensaje: erroresContrasena.join(" ")
-      }, 400);
-    }
-
-    // ========================================
-    // ROLES PERMITIDOS
-    // ========================================
-
-    if (
-      !["adoptante", "organizacion"]
-        .includes(tipoUsuario)
-    ) {
-      return responder({
-        ok: false,
-        mensaje:
-          "Selecciona un tipo de cuenta válido."
-      }, 400);
-    }
-
-    // ========================================
-    // COMPROBANTE DE VERIFICACIÓN
-    // ========================================
-
-    if (
-      typeof comprobante !== "string" ||
-      !/^[a-f0-9]{64}$/.test(comprobante)
-    ) {
-      return responder({
-        ok: false,
-        mensaje:
-          "Primero debes verificar tu correo."
-      }, 403);
-    }
 
     // Generar hash antes de escribir el usuario.
     const contrasenaHash = await bcrypt.hash(

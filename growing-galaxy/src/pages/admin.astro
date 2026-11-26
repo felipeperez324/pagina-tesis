@@ -67,26 +67,131 @@ const [usuarios, politica, reportes, historial] = await Promise.all([
     JOIN usuarios a ON a.id=h.actor_id JOIN usuarios u ON u.id=h.cuenta_id ORDER BY h.id DESC LIMIT 50`)
 ]);
 ---
-<Layout title="Administración | KodaApp"><Header />
-<main class="management-container">
-<h1>Administración</h1>
-{error && <p role="alert">{error}</p>}
-{Astro.url.searchParams.has("guardado") && <p role="status">Cambio registrado.</p>}
-<section><h2>Cupo de adopciones simultáneas</h2>
-<form method="post"><input type="hidden" name="accion" value="cupo"/>
-<label>Máximo por adoptante <input type="number" name="id" value={politica.rows[0].maximo} required min="1" max="100"/></label>
-<label>Motivo <input name="motivo" required minlength="10" maxlength="1000"/></label><button>Guardar límite</button></form></section>
-<section><h2>Reportes pendientes</h2>{!reportes.rows.length && <p>Sin reportes pendientes.</p>}
-{reportes.rows.map(r => <article><strong>#{r.id} · {r.nombre} (cuenta {r.cuenta_id}, postulación {r.postulacion_id})</strong><p>{r.motivo}</p>
-<form method="post"><input type="hidden" name="accion" value="revisar"/><input type="hidden" name="id" value={r.id}/>
-<label>Resolución <input name="motivo" required minlength="10" maxlength="1000"/></label><button>Marcar revisado</button></form></article>)}</section>
-<section><h2>Cuentas</h2><form method="get"><label>Nombre, correo o ID <input type="search" name="q" value={busqueda}/></label><button>Buscar</button></form>
-{usuarios.rows.map(u => <article><strong>#{u.id} · {u.nombre}</strong> · {u.tipo_usuario} · {u.estado_cuenta}
-<form method="post"><input type="hidden" name="id" value={u.id}/><input type="hidden" name="accion" value={u.estado_cuenta==="activo"?"suspender":"reactivar"}/>
-<label>Motivo <input name="motivo" minlength="10" maxlength="1000" required/></label><button>{u.estado_cuenta==="activo"?"Suspender":"Reactivar"}</button></form></article>)}</section>
-<section><h2>Últimas 50 acciones</h2><ol>{historial.rows.map(h => <li>{h.creado_en.toLocaleString("es-CL")} · {h.actor} · {h.accion} · {h.cuenta} · {h.motivo}</li>)}</ol></section>
-</main></Layout>
+<Layout title="Administración | KodaApp">
+  <Header />
+  <main class="management-container admin-page">
+    <header class="admin-heading">
+      <div>
+        <span class="admin-kicker"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Panel de administración</span>
+        <h1>Administración</h1>
+        <p>Gestiona usuarios, reportes y reglas de adopción de KodaApp.</p>
+      </div>
+      <a href="/admin/kpi" class="btn-outline"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Dashboard KPI</a>
+    </header>
+
+    {error && <p class="admin-message is-error" role="alert">{error}</p>}
+    {Astro.url.searchParams.has("guardado") && !error && <p class="admin-message is-success" role="status">Cambio registrado.</p>}
+
+    <div class="admin-shortcuts" aria-label="Resumen de administración">
+      <a href="#cupos"><span>Cupo por adoptante</span><strong>{politica.rows[0]?.maximo ?? "—"}</strong></a>
+      <a href="#reportes"><span>Reportes pendientes mostrados</span><strong>{reportes.rows.length}</strong></a>
+      <a href="#cuentas"><span>Cuentas en el listado</span><strong>{usuarios.rows.length}</strong></a>
+      <a href="#historial"><span>Acciones recientes mostradas</span><strong>{historial.rows.length}</strong></a>
+    </div>
+
+    <section class="admin-section" id="cupos">
+      <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-paw" aria-hidden="true"></i></span><div><h2>Cupo de adopciones simultáneas</h2><p>Define el máximo de tenencias vigentes por adoptante.</p></div></div>
+      <form method="post" class="admin-form">
+        <input type="hidden" name="accion" value="cupo" />
+        <label class="number-field">Máximo por adoptante<input type="number" name="id" value={politica.rows[0]?.maximo} required min="1" max="100" /></label>
+        <label class="grow">Motivo del cambio<input name="motivo" required minlength="10" maxlength="1000" placeholder="Explica por qué se modifica el límite" /></label>
+        <button class="admin-button primary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Guardar límite</button>
+      </form>
+      <p class="admin-hint">Límite permitido: 1 a 100. Motivo obligatorio, entre 10 y 1000 caracteres.</p>
+    </section>
+
+    <section class="admin-section" id="reportes">
+      <div class="section-heading"><span class="section-icon warning"><i class="fa-solid fa-flag" aria-hidden="true"></i></span><div><h2>Reportes pendientes</h2><p>Revisa los reportes y registra la resolución.</p></div><span class="section-count">{reportes.rows.length}</span></div>
+      {!reportes.rows.length && <div class="admin-empty"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><strong>Sin reportes pendientes</strong><p>Los nuevos reportes aparecerán aquí.</p></div>}
+      <div class="admin-list">
+        {reportes.rows.map(r => <article class="admin-item">
+          <div class="item-title"><strong>Reporte #{r.id} · {r.nombre}</strong><span class="status pending">Pendiente</span></div>
+          <p class="admin-hint">Cuenta #{r.cuenta_id} · Postulación {r.postulacion_id ?? "No asociada"}</p>
+          <p class="report-reason">{r.motivo}</p>
+          <form method="post" class="admin-form"><input type="hidden" name="accion" value="revisar"/><input type="hidden" name="id" value={r.id}/><label class="grow">Resolución<input name="motivo" required minlength="10" maxlength="1000" placeholder="Describe la resolución del reporte"/></label><button type="submit" class="admin-button primary">Marcar revisado</button></form>
+        </article>)}
+      </div>
+    </section>
+
+    <section class="admin-section" id="cuentas">
+      <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-users" aria-hidden="true"></i></span><div><h2>Cuentas</h2><p>Busca usuarios y administra el estado de sus cuentas.</p></div><span class="section-count">{usuarios.rows.length}</span></div>
+      <form method="get" action="/admin" class="admin-form search-form"><label class="grow">Nombre, correo o ID<input type="search" name="q" value={busqueda} maxlength="100" placeholder="Buscar usuario..."/></label><button type="submit" class="admin-button primary"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar</button>{busqueda && <a class="admin-button neutral" href="/admin#cuentas">Limpiar</a>}</form>
+      <p class="admin-hint">Se muestran hasta 50 cuentas por consulta.</p>
+      {!usuarios.rows.length && <div class="admin-empty"><strong>No se encontraron cuentas</strong><p>Intenta con otro término de búsqueda.</p></div>}
+      <div class="admin-list">
+        {usuarios.rows.map(u => <article class="admin-item">
+          <div class="account-row"><span class="account-icon"><i class={u.tipo_usuario === "organizacion" ? "fa-solid fa-building" : "fa-solid fa-user"} aria-hidden="true"></i></span><div class="account-name"><strong>{u.nombre}</strong><small>#{u.id} · {u.tipo_usuario === "organizacion" ? "Organización" : "Adoptante"}</small></div><span class:list={["status", u.estado_cuenta === "activo" ? "active" : "suspended"]}>{u.estado_cuenta === "activo" ? "Activa" : "Suspendida"}</span></div>
+          {u.id === usuario.id ? <p class="admin-hint">Tu cuenta administrativa no se puede suspender desde aquí.</p> : <form method="post" class="admin-form"><input type="hidden" name="id" value={u.id}/><input type="hidden" name="accion" value={u.estado_cuenta === "activo" ? "suspender" : "reactivar"}/><label class="grow">Motivo<input name="motivo" minlength="10" maxlength="1000" required placeholder="Registra el motivo de la acción"/></label><button type="submit" class:list={["admin-button", u.estado_cuenta === "activo" ? "danger" : "success"]}><i class={u.estado_cuenta === "activo" ? "fa-solid fa-user-slash" : "fa-solid fa-user-check"} aria-hidden="true"></i>{u.estado_cuenta === "activo" ? "Suspender" : "Reactivar"}</button></form>}
+        </article>)}
+      </div>
+    </section>
+
+    <section class="admin-section" id="historial">
+      <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span><div><h2>Historial de gestión</h2><p>Últimas 50 acciones administrativas registradas.</p></div></div>
+      {!historial.rows.length ? <div class="admin-empty"><strong>Sin acciones registradas</strong><p>Los cambios administrativos quedarán registrados aquí.</p></div> : <div class="table-wrap" tabindex="0" aria-label="Historial de gestión"><table><thead><tr><th>Fecha</th><th>Administrador</th><th>Acción</th><th>Cuenta</th><th>Motivo</th></tr></thead><tbody>{historial.rows.map(h => <tr><td>{new Date(h.creado_en).toLocaleString("es-CL", {timeZone:"America/Santiago"})}</td><td>{h.actor}</td><td>{h.accion}</td><td>{h.cuenta}</td><td>{h.motivo}</td></tr>)}</tbody></table></div>}
+    </section>
+  </main>
+</Layout>
+
 <style>
-main {max-width:70rem;margin:2rem auto;padding:1rem} section {margin:2rem 0} article {padding:1rem 0;border-bottom:1px solid #ccd8d2}
-form {display:flex;flex-wrap:wrap;align-items:end;gap:.7rem;margin:.5rem 0} label {display:grid;gap:.2rem} input,button {padding:.5rem;font:inherit} button{cursor:pointer}
+  .admin-page{max-width:1150px;margin:36px auto 64px;padding:0 20px;color:var(--text);color-scheme:dark}
+  .admin-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+  .admin-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+  .admin-heading h1{font-size:clamp(30px,4vw,42px);margin:7px 0 5px;line-height:1.15}
+  .admin-heading p,.section-heading p{color:var(--muted);margin:0}
+  .admin-heading .btn-outline{display:inline-flex;gap:9px;align-items:center}
+  .admin-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}
+  .admin-shortcuts a{display:flex;flex-direction:column;gap:8px;padding:18px;background:var(--surface);border:1px solid var(--border-light);border-radius:16px;color:var(--text-soft);text-decoration:none;font-weight:700;font-size:13px}
+  .admin-shortcuts a:hover{border-color:var(--cyan)}
+  .admin-shortcuts strong{font-size:30px;line-height:1.15;color:var(--cyan)}
+  .admin-section{background:var(--surface);border:1px solid var(--border-light);border-radius:18px;padding:24px;margin:0 0 20px;scroll-margin-top:110px}
+  .section-heading{display:flex;align-items:center;gap:13px;margin-bottom:20px}
+  .section-heading h2{margin:0 0 3px;font-size:20px;line-height:1.25}
+  .section-heading p{font-size:13px}
+  .section-icon,.account-icon{display:grid;place-items:center;flex-shrink:0;width:42px;height:42px;border-radius:11px;color:var(--cyan);background:var(--cyan-soft);font-size:18px}
+  .section-icon.warning{color:var(--warning);background:rgba(255,200,87,.1)}
+  .section-count{margin-left:auto;padding:5px 11px;border:1px solid var(--border-light);border-radius:8px;color:var(--text-soft);font-weight:800}
+  .admin-form{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0}
+  .admin-form label{display:flex;flex-direction:column;gap:7px;min-width:0;color:var(--text-soft);font-size:13px;font-weight:700}
+  .admin-form .grow{flex:1 1 240px}
+  .number-field{flex:0 1 180px}
+  .admin-form input:not([type="hidden"]){width:100%;min-height:44px;padding:10px 13px;border:1px solid var(--border-light);border-radius:9px;background:var(--bg-soft);color:var(--text);font:inherit}
+  .admin-form input::placeholder{color:var(--muted);font-weight:400}
+  .admin-form input:focus{outline:2px solid var(--cyan);outline-offset:1px}
+  .admin-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 15px;border-radius:9px;border:1px solid var(--border-light);font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .admin-button.primary{color:var(--cyan);border-color:var(--cyan-dark);background:var(--cyan-soft)}
+  .admin-button.neutral{color:var(--text-soft);background:var(--surface-2)}
+  .admin-button.danger{color:#ff8997;background:rgba(255,90,110,.1);border-color:rgba(255,90,110,.5)}
+  .admin-button.success{color:var(--success);background:rgba(88,217,143,.1);border-color:rgba(88,217,143,.5)}
+  .admin-button:hover{filter:brightness(1.2)}
+  .admin-button:focus-visible,.admin-shortcuts a:focus-visible,.table-wrap:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+  .admin-hint{color:var(--muted);font-size:12px;margin:10px 0 0;overflow-wrap:anywhere}
+  .admin-empty{display:grid;justify-items:center;gap:8px;text-align:center;border:1px dashed var(--border-light);background:var(--bg-soft);padding:25px;border-radius:12px;color:var(--text-soft)}
+  .admin-empty i{font-size:22px;color:var(--success)}
+  .admin-empty p{margin:0;color:var(--muted);font-size:13px}
+  .admin-list{display:grid;gap:12px}
+  .admin-item{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:0}
+  .account-row,.item-title{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .account-name{flex:1;min-width:0;display:grid;gap:3px;overflow-wrap:anywhere}
+  .account-name small{color:var(--muted);font-size:12px}
+  .item-title strong{flex:1;overflow-wrap:anywhere}
+  .status{flex-shrink:0;font-size:12px;font-weight:800;border-radius:999px;padding:5px 10px}
+  .status.active{color:var(--success);background:rgba(88,217,143,.1)}
+  .status.suspended{color:#ff8997;background:rgba(255,90,110,.12)}
+  .status.pending{color:var(--warning);background:rgba(255,200,87,.12)}
+  .search-form{margin-bottom:8px}
+  .search-form + .admin-hint{margin-bottom:16px}
+  .report-reason{background:var(--bg-soft);padding:12px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .admin-message{padding:13px 16px;border:1px solid;border-radius:10px;margin-bottom:20px}
+  .is-error{color:#ff8997;background:rgba(255,90,110,.1)}
+  .is-success{color:var(--success);background:rgba(88,217,143,.1)}
+  .table-wrap{overflow-x:auto;border:1px solid var(--border-light);border-radius:10px}
+  table{width:100%;border-collapse:collapse;min-width:680px;font-size:13px;text-align:left}
+  th,td{padding:13px 12px;vertical-align:top;border-bottom:1px solid var(--border);overflow-wrap:anywhere}
+  th{background:var(--surface-2);color:var(--text-soft);font-weight:800}
+  td{color:var(--text-soft)}
+  tbody tr:last-child td{border-bottom:0}
+  td:first-child{white-space:nowrap}
+  @media(max-width:850px){.admin-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:540px){.admin-page{padding:0 12px;margin-top:22px}.admin-section{padding:16px}.admin-shortcuts{gap:9px}.admin-shortcuts a{padding:12px}.admin-form .grow,.number-field{flex:1 1 100%}.admin-form .admin-button{width:100%}.account-row{gap:8px;flex-wrap:wrap}.section-heading h2{font-size:17px}.section-icon,.account-icon{width:34px;height:34px}.admin-heading .btn-outline{width:100%;justify-content:center}}
 </style>

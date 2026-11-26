@@ -1,0 +1,48 @@
+/* Compartido por Explorar mascotas y Mis mascotas. */
+.ka-catalogo .mascotas-grid, .ka-gestion-mascotas .management-pets-grid {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px;
+}
+.ka-catalogo .mascota-card, .ka-gestion-mascotas .management-pet-card {
+  display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--border-light); border-radius:18px; overflow:hidden; box-shadow:0 8px 24px #0003; min-width:0;
+}
+.ka-catalogo .mascota-card:hover, .ka-gestion-mascotas .management-pet-card:hover { border-color:var(--cyan-dark); }
+.ka-catalogo .mascota-card-image, .ka-gestion-mascotas .management-pet-image { position:relative; height:230px; border-bottom:1px solid var(--border-light); }
+.ka-catalogo .pet-status-badge, .ka-gestion-mascotas .pet-status-badge { position:absolute; top:12px; right:12px; display:inline-flex; padding:6px 11px; background:#080e14ed; border:1px solid var(--border-light); border-radius:999px; color:var(--text-soft); font-size:11px; font-weight:800; text-transform:capitalize; }
+.ka-catalogo .mascota-card-content, .ka-gestion-mascotas .management-pet-content { display:flex; flex-direction:column; flex:1; gap:10px; padding:20px; min-width:0; }
+.ka-catalogo .mascota-card-content h3, .ka-gestion-mascotas .management-pet-content h2 { margin:2px 0; color:var(--text); font-size:21px; font-weight:900; overflow-wrap:anywhere; }
+.ka-catalogo .mascota-card-content > p, .ka-gestion-mascotas .management-pet-content > p { margin:0; color:var(--text-soft); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.ka-catalogo .mascota-tipo, .ka-gestion-mascotas .pet-card-meta { align-self:flex-start; padding:5px 10px; background:var(--cyan-soft); color:var(--cyan); border-radius:7px; font-size:10px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
+.ka-catalogo .ka-mascota-detalles, .ka-gestion-mascotas .management-pet-info { display:grid; gap:12px; padding:14px; margin:5px 0; background:var(--bg-soft); border:1px solid var(--border); border-radius:10px; }
+.ka-catalogo .ka-mascota-detalles:empty, .ka-gestion-mascotas .management-pet-info:empty { display:none; }
+.ka-catalogo .ka-mascota-detalles > div, .ka-gestion-mascotas .management-pet-info > div { display:flex; flex-direction:column; gap:3px; margin:0; }
+.ka-catalogo .ka-mascota-detalles strong, .ka-gestion-mascotas .management-pet-info strong { color:var(--muted); font-size:11px; font-weight:800; }
+.ka-catalogo .ka-mascota-detalles span, .ka-gestion-mascotas .management-pet-info span { color:var(--text-soft); font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+.ka-catalogo .ka-mascota-acciones, .ka-gestion-mascotas .management-pet-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:auto; padding-top:10px; }
+.ka-catalogo .ka-mascota-acciones a, .ka-gestion-mascotas .management-pet-actions :is(a,button) { display:flex; align-items:center; justify-content:center; gap:8px; flex:1 1 130px; min-height:44px; white-space:normal; text-align:center; font-size:13px; }
+.ka-gestion-mascotas .management-pet-actions { flex-direction:column; }
+.ka-gestion-mascotas .management-pet-actions :is(a,button) { flex:0 0 auto; width:100%; }
+.ka-catalogo .ka-mascota-etiquetas { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0; }
+.ka-catalogo .ka-mascota-etiquetas span { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; background:var(--surface-2); border:1px solid var(--border-light); color:var(--text-soft); border-radius:20px; font-size:11px; }
+.ka-busqueda-campo { position:relative; display:flex; align-items:center; min-width:0; width:100%; }
+.ka-busqueda-campo i { position:absolute; left:14px; color:var(--cyan); pointer-events:none; }
+.ka-busqueda-campo input { width:100%; min-width:0; min-height:44px; padding:10px 14px 10px 40px; background:var(--bg-soft); color:var(--text); border:1px solid var(--border-light); border-radius:10px; font:inherit; }
+.ka-busqueda-campo input:focus { outline:2px solid var(--cyan); outline-offset:2px; }
+.ka-busqueda-campo input::placeholder { color:var(--muted); }
+.ka-gestion-mascotas .ka-busqueda-gestion { display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; padding:18px; margin:0 0 22px; border:1px solid var(--border-light); border-radius:14px; background:var(--surface); }
+.ka-busqueda-gestion label { display:grid; gap:7px; flex:1 1 240px; color:var(--text-soft); font-size:13px; font-weight:700; }
+.ka-busqueda-gestion :is(button,a) { min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.ka-gestion-mascotas .mis-mascotas-pestanas { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin:28px 0; }
+.ka-gestion-mascotas .mis-mascotas-pestana { --estado-color:var(--cyan); position:relative; display:flex; align-items:center; gap:12px; min-height:76px; padding:18px 14px; border:1px solid var(--border-light); border-radius:14px; background:var(--surface); color:var(--text-soft); font-size:14px; font-weight:800; text-decoration:none; }
+.ka-gestion-mascotas .mis-mascotas-pestana[data-estado="activas"] { --estado-color:#58d98f; }
+.ka-gestion-mascotas .mis-mascotas-pestana[data-estado="reservadas"] { --estado-color:#ffc857; }
+.ka-gestion-mascotas .mis-mascotas-pestana[data-estado="adoptadas"] { --estado-color:#ff8297; }
+.ka-gestion-mascotas .mis-mascotas-pestana[data-estado="ocultas"] { --estado-color:#99a6b4; }
+.ka-gestion-mascotas .mis-mascotas-pestana > i { display:grid; place-items:center; flex-shrink:0; width:38px; height:38px; background:#ffffff0d; color:var(--estado-color); border-radius:10px; font-size:17px; }
+.ka-gestion-mascotas .mis-mascotas-contador { display:inline-flex; justify-content:center; align-items:center; min-width:30px; height:30px; padding:0 8px; margin-left:auto; background:#ffffff0f; color:var(--estado-color); font-weight:900; border-radius:8px; }
+.ka-gestion-mascotas .mis-mascotas-pestana:hover { border-color:var(--estado-color); }
+.ka-gestion-mascotas .mis-mascotas-pestana.activa { background:linear-gradient(135deg,var(--cyan-soft),var(--surface)); border-color:var(--cyan); color:var(--text); }
+.ka-gestion-mascotas .mis-mascotas-pestana.activa::after { content:""; position:absolute; bottom:0; left:14px; right:14px; height:3px; border-radius:5px 5px 0 0; background:var(--cyan); }
+@media(max-width:1000px) { .ka-catalogo .mascotas-grid,.ka-gestion-mascotas .management-pets-grid,.ka-gestion-mascotas .mis-mascotas-pestanas { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .ka-catalogo .mascotas-grid,.ka-gestion-mascotas .management-pets-grid { grid-template-columns:1fr; } .ka-gestion-mascotas .mis-mascotas-pestanas { gap:9px; } .ka-gestion-mascotas .mis-mascotas-pestana { min-height:64px; padding:10px 8px; gap:6px; font-size:12px; } .ka-gestion-mascotas .mis-mascotas-pestana > i { width:25px; height:25px; font-size:13px; } .ka-gestion-mascotas .mis-mascotas-contador { min-width:22px; padding:0 5px; font-size:12px; } }
+@media(max-width:370px) { .ka-gestion-mascotas .mis-mascotas-pestanas { grid-template-columns:1fr; } }
+@media(prefers-reduced-motion:reduce) { .ka-catalogo .mascota-card,.ka-catalogo .mascota-card img,.ka-gestion-mascotas .management-pet-card,.ka-gestion-mascotas .management-pet-card img { transition:none; transform:none; } }

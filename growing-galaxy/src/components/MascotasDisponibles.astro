@@ -1,5 +1,7 @@
-
 ---
+import PaginadorMascotas from "./PaginadorMascotas.astro";
+import { leerBusqueda, calcularPagina, MASCOTAS_POR_PAGINA } from "../lib/paginacionMascotas";
+import "../styles/catalogo-mascotas.css";
 import { db } from "../lib/db";
 import { agregarFotosMascotas } from "../lib/fotos";
 
@@ -65,83 +67,63 @@ const esterilizado = filtro(
   ["si", "no"]
 );
 
-// Consultar solamente las mascotas
-// que cumplen con los filtros.
-const resultado = await db.query(
-  `SELECT
-     m.id,
-     m.foto_blob,
-     m.nombre,
-     m.descripcion,
-     m.tipo_mascota,
-     m.raza,
-     m.ubicacion,
-     m.tamano,
-     m.personalidad,
-     m.personalidad_codigo,
-     m.historial_medico,
-     m.salud_codigo,
-     m.vacunas_al_dia,
-     m.esterilizado
-   FROM mascotas_postulables m
+const q = leerBusqueda(Astro.url);
+const ruta = Astro.url.pathname === "/usuario" ? "/usuario" : "/mascotas";
+const filtros = { tipo, comuna, raza, personalidad, cuidado, tamano, esterilizado, q };
+const parametros = [tipo, comuna, raza, personalidad, cuidado, tamano, esterilizado, q];
+
+// El mismo WHERE para el conteo y la página de resultados.
+const condiciones = `
+   FROM public.mascotas_postulables m
    WHERE ($1::text = '' OR m.tipo_mascota = $1)
      AND ($2::text = '' OR m.ubicacion = $2)
      AND ($3::text = '' OR m.raza = $3)
      AND ($4::text = '' OR m.personalidad_codigo = $4)
      AND ($5::text = '' OR m.salud_codigo = $5)
      AND ($6::text = '' OR m.tamano = $6)
-     AND (
-       $7::text = '' OR
-       m.esterilizado = ($7::text = 'si')  
-       
-     )
-   ORDER BY m.id DESC`,
-  [
-    tipo,
-    comuna,
-    raza,
-    personalidad,
-    cuidado,
-    tamano,
-    esterilizado
-  ]
+     AND ($7::text = '' OR m.esterilizado = ($7::text = 'si'))
+     AND ($8::text = '' OR strpos(lower(m.nombre), lower($8::text)) > 0)`;
+const conteo = await db.query(`SELECT COUNT(*) AS total ${condiciones}`, parametros);
+const total = Number(conteo.rows[0].total);
+const { pagina, paginas, offset } = calcularPagina(Astro.url, total);
+const resultado = await db.query(
+  `SELECT m.id, m.foto_blob, m.nombre, m.descripcion, m.tipo_mascota,
+     m.raza, m.ubicacion, m.tamano, m.personalidad, m.personalidad_codigo,
+     m.historial_medico, m.salud_codigo, m.vacunas_al_dia, m.esterilizado
+   ${condiciones}
+   ORDER BY m.id DESC LIMIT $9 OFFSET $10`,
+  [...parametros, MASCOTAS_POR_PAGINA, offset]
 );
-
 const mascotas = agregarFotosMascotas(resultado.rows);
-
-const hayFiltros = [
-  tipo, comuna, raza, personalidad,
-  cuidado, tamano, esterilizado
-].some(Boolean);
+const hayFiltros = Object.values(filtros).some(Boolean);
 ---
 
-<section class="mascotas-disponibles">
+<section class="mascotas-disponibles ka-catalogo">
 
-  <div class="mascotas-disponibles-header">
-    <p class="small-title">Encuentra a tu compañero</p>
-    <h2>Mascotas disponibles</h2>
-    <p>
-      Filtra por ubicación, características y cuidados
-      para encontrar una mascota adecuada para ti.
-    </p>
-  </div>
 
   <!-- FILTROS -->
 
   <form
     method="GET"
-    action="/mascotas"
+    action={ruta}
     class="ka-filtros"
   >
     <div class="ka-filtros-titulo">
       <h3>
-        <i class="fa-solid fa-sliders"></i>
+        <i class="fa-solid fa-sliders" aria-hidden="true"></i>{" "}
         Filtrar mascotas
       </h3>
-      <span>{mascotas.length} resultados</span>
+      <span>{total} resultados</span>
     </div>
 
     <div class="ka-filtros-grid">
+      <label class="ka-filtro-nombre">
+        Nombre de la mascota
+        <span class="ka-busqueda-campo">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input type="search" name="q" value={q} maxlength="100" placeholder="Ej. Luna, Max, Toby..." />
+        </span>
+      </label>
 
       <label>
         Tipo de mascota
@@ -249,7 +231,7 @@ const hayFiltros = [
     </div>
 
     <div class="ka-filtros-acciones">
-      <a href="/mascotas" class="btn-outline">
+      <a href={ruta} class="btn-outline">
         Limpiar filtros
       </a>
 
@@ -294,6 +276,7 @@ const hayFiltros = [
                 <i class="fa-solid fa-paw"></i>
               </div>
             )}
+            <span class="pet-status-badge">Disponible</span>
           </div>
 
           <div class="mascota-card-content">
@@ -307,7 +290,7 @@ const hayFiltros = [
             <div class="ka-mascota-etiquetas">
               {mascota.ubicacion && (
                 <span>
-                  <i class="fa-solid fa-location-dot"></i>
+                  <i class="fa-solid fa-location-dot" aria-hidden="true"></i>{" "}
                   {mascota.ubicacion}
                 </span>
               )}
@@ -323,6 +306,7 @@ const hayFiltros = [
               <p>{mascota.descripcion}</p>
             )}
 
+            {(mascota.personalidad || mascota.historial_medico) && <div class="ka-mascota-detalles">
             {mascota.personalidad && (
               <div class="mascota-info">
                 <strong>Personalidad</strong>
@@ -337,6 +321,7 @@ const hayFiltros = [
               </div>
             )}
 
+            </div>}
             <div class="ka-mascota-acciones">
 
               <a
@@ -359,15 +344,16 @@ const hayFiltros = [
       ))}
     </div>
   )}
+  <PaginadorMascotas ruta={ruta} filtros={filtros} pagina={pagina} paginas={paginas} total={total} cantidad={mascotas.length} />
 </section>
 
 <style>
   .ka-filtros {
     padding: 24px;
     margin: 25px 0 30px;
-    border: 1px solid #46515f;
+    border: 1px solid var(--border-light);
     border-radius: 18px;
-    background: #222a35;
+    background: var(--surface);
   }
 
   .ka-filtros-titulo {
@@ -396,6 +382,8 @@ const hayFiltros = [
     gap: 14px;
   }
 
+  .ka-filtro-nombre { grid-column: 1 / -1; }
+
   .ka-filtros-grid label {
     display: flex;
     flex-direction: column;
@@ -422,35 +410,6 @@ const hayFiltros = [
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 20px;
-  }
-
-  .ka-mascota-etiquetas {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 12px 0;
-  }
-
-  .ka-mascota-etiquetas span {
-    padding: 5px 9px;
-    background: #2e3945;
-    color: #f4f4f4;
-    border: 1px solid #53606c;
-    border-radius: 20px;
-    font-size: 11px;
-  }
-
-  .ka-mascota-acciones {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .ka-mascota-acciones a {
-    flex: 1;
-    text-align: center;
-    white-space: nowrap;
   }
 
   @media (max-width: 1000px) {

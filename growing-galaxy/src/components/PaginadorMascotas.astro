@@ -1,0 +1,45 @@
+---
+import { enlacePagina, MASCOTAS_POR_PAGINA } from "../lib/paginacionMascotas";
+interface Props {
+  ruta: string;
+  filtros: Record<string, string>;
+  pagina: number;
+  paginas: number;
+  total: number;
+  cantidad: number;
+}
+const { ruta, filtros, pagina, paginas, total, cantidad } = Astro.props;
+const numeros = [...new Set([1, pagina - 2, pagina - 1, pagina, pagina + 1, pagina + 2, paginas])]
+  .filter(n => n >= 1 && n <= paginas).sort((a,b) => a-b);
+const inicio = (pagina - 1) * MASCOTAS_POR_PAGINA + 1;
+---
+{total > 0 && cantidad > 0 && (
+  <div class="ka-paginacion">
+    <p>Mostrando {inicio}–{inicio + cantidad - 1} de {total} mascotas</p>
+    {paginas > 1 && (
+      <nav aria-label="Páginas de mascotas">
+        {pagina > 1 ? (
+          <a href={enlacePagina(ruta, filtros, pagina - 1)} aria-label="Página anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
+        ) : <span class="deshabilitado" aria-hidden="true">‹</span>}
+        {numeros.map((n,i) => (
+          <>
+            {i > 0 && n - numeros[i-1] > 1 && <span class="puntos">…</span>}
+            {n === pagina ? <span class="actual" aria-current="page">{n}</span> : <a href={enlacePagina(ruta, filtros, n)} aria-label={`Página ${n}`}>{n}</a>}
+          </>
+        ))}
+        {pagina < paginas ? (
+          <a href={enlacePagina(ruta, filtros, pagina + 1)} aria-label="Página siguiente"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+        ) : <span class="deshabilitado" aria-hidden="true">›</span>}
+      </nav>
+    )}
+  </div>
+)}
+<style>
+  .ka-paginacion { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:20px 0 8px; margin-top:16px; }
+  .ka-paginacion p { color:var(--muted); font-size:13px; margin:0; }
+  nav { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  nav a, nav span { display:grid; place-items:center; min-width:40px; min-height:40px; padding:0 9px; border:1px solid var(--border-light); background:var(--surface); border-radius:9px; color:var(--text-soft); text-decoration:none; font-size:13px; font-weight:800; }
+  nav a:hover, nav a:focus-visible, nav .actual { border-color:var(--cyan); color:var(--cyan); background:var(--cyan-soft); }
+  nav .deshabilitado { opacity:.45; }
+  nav .puntos { min-width:20px; border:0; background:transparent; }
+</style>

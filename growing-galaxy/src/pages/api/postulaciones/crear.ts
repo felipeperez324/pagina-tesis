@@ -2,7 +2,7 @@
 import type { APIRoute } from "astro";
 import { db } from "../../../lib/db";
 import { getUsuarioDesdeSesion } from "../../../lib/auth";
-import { leerPostulacion } from "../../../lib/postulacion";
+import {leerPostulacion, responderPostulacion as responder } from "../../../lib/postulacion";
 import { comprobarCupo, ReglaAdopcion } from "../../../lib/adopcion";
 import { enviarAvisoKodaApp } from "../../../lib/notificacionesCorreo";
 
@@ -16,18 +16,7 @@ export const prerender = false;
  * No modifica el estado de adopción de la mascota.
  */
 
-function responder(
-  datos: Record<string, unknown>,
-  status = 200
-): Response {
-  return new Response(JSON.stringify(datos), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store"
-    }
-  });
-}
+
 
 export const POST: APIRoute = async ({
   request,

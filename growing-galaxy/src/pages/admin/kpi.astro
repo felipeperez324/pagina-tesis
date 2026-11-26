@@ -1,0 +1,188 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import { getUsuarioDesdeSesion } from "../../lib/auth";
+import { db } from "../../lib/db";
+
+export const prerender = false;
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+const usuario = await getUsuarioDesdeSesion(Astro.cookies.get("session_id")?.value);
+if (!usuario) return Astro.redirect("/login");
+if (!usuario.es_admin) {
+  return new Response("Acceso reservado a administración.", {
+    status: 403,
+    headers: { "Cache-Control": "private, no-store" }
+  });
+}
+
+// Agregaciones independientes: evitan multiplicar registros por JOIN.
+// Se usan datos históricos y actuales, sin escribir en las tablas.
+const [resumen, serie] = await Promise.all([
+  db.query(`
+    WITH cuentas AS (
+      SELECT COUNT(*) AS usuarios,
+             COUNT(*) FILTER (WHERE tipo_usuario = 'organizacion') AS organizaciones,
+             COUNT(*) FILTER (WHERE estado_cuenta = 'suspendido') AS suspendidas
+      FROM public.usuarios
+    ), solicitudes AS (
+      SELECT COUNT(*) FILTER (WHERE estado = 'pendiente') AS pendientes,
+             COUNT(*) FILTER (WHERE estado = 'aprobada') AS aprobadas,
+             COUNT(*) FILTER (WHERE estado = 'rechazada') AS rechazadas,
+             COUNT(*) FILTER (WHERE estado = 'cancelada') AS canceladas,
+             COUNT(*) FILTER (WHERE estado = 'aprobada' AND fin_tenencia IS NULL) AS vigentes,
+             COUNT(*) FILTER (WHERE estado = 'aprobada' AND fin_tenencia IS NOT NULL) AS finalizadas,
+             AVG(EXTRACT(EPOCH FROM (resuelta_en - creada_en)) / 86400)
+               FILTER (WHERE estado = 'aprobada' AND resuelta_en >= creada_en) AS dias_aprobacion
+      FROM public.postulaciones
+    )
+    SELECT cuentas.*, solicitudes.*,
+           (SELECT COUNT(*) FROM public.mascotas_postulables) AS postulables,
+           (SELECT COUNT(*) FROM public.reportes WHERE revisado_en IS NULL) AS reportes_pendientes
+    FROM cuentas CROSS JOIN solicitudes
+  `),
+  db.query(`
+    WITH meses AS (
+      SELECT generate_series(
+        date_trunc('month', now() AT TIME ZONE 'America/Santiago') - interval '5 months',
+        date_trunc('month', now() AT TIME ZONE 'America/Santiago'),
+        interval '1 month'
+      ) AS mes
+    ), aprobaciones AS (
+      SELECT date_trunc('month', resuelta_en AT TIME ZONE 'America/Santiago') AS mes,
+             COUNT(*) AS cantidad
+      FROM public.postulaciones
+      WHERE estado = 'aprobada' AND resuelta_en IS NOT NULL
+        AND resuelta_en >= ((SELECT MIN(mes) FROM meses) AT TIME ZONE 'America/Santiago')
+        AND resuelta_en < ((SELECT MAX(mes) + interval '1 month' FROM meses) AT TIME ZONE 'America/Santiago')
+      GROUP BY 1
+    )
+    SELECT to_char(m.mes, 'YYYY-MM') AS mes, COALESCE(a.cantidad, 0) AS cantidad
+    FROM meses m LEFT JOIN aprobaciones a ON a.mes = m.mes
+    ORDER BY m.mes
+  `)
+]);
+
+const r = resumen.rows[0];
+const entero = new Intl.NumberFormat("es-CL");
+const decimal = new Intl.NumberFormat("es-CL", { maximumFractionDigits: 1 });
+const totalResueltas = Number(r.aprobadas) + Number(r.rechazadas);
+const tasa = totalResueltas > 0
+  ? `${decimal.format(Number(r.aprobadas) / totalResueltas * 100)} %`
+  : "Sin datos";
+const tiempo = r.dias_aprobacion == null ? "Sin datos" : `${decimal.format(Number(r.dias_aprobacion))} días`;
+const tarjetas = [
+  { titulo: "Usuarios registrados", valor: r.usuarios, icono: "fa-users", color: "#20cfff" },
+  { titulo: "Organizaciones registradas", valor: r.organizaciones, icono: "fa-building", color: "#20cfff" },
+  { titulo: "Mascotas postulables", valor: r.postulables, icono: "fa-paw", color: "#58d98f" },
+  { titulo: "Tenencias vigentes", valor: r.vigentes, icono: "fa-heart", color: "#ff8297" },
+  { titulo: "Tenencias finalizadas", valor: r.finalizadas, icono: "fa-clock-rotate-left", color: "#b2becb" },
+  { titulo: "Postulaciones pendientes", valor: r.pendientes, icono: "fa-clipboard-list", color: "#ffc857" },
+  { titulo: "Cuentas suspendidas", valor: r.suspendidas, icono: "fa-user-slash", color: "#ff8297" },
+  { titulo: "Reportes pendientes", valor: r.reportes_pendientes, icono: "fa-flag", color: "#ffc857" }
+];
+const estados = [
+  { nombre: "Aprobadas", cantidad: Number(r.aprobadas), color: "#58d98f" },
+  { nombre: "Pendientes", cantidad: Number(r.pendientes), color: "#ffc857" },
+  { nombre: "Rechazadas", cantidad: Number(r.rechazadas), color: "#ff8297" },
+  { nombre: "Canceladas", cantidad: Number(r.canceladas), color: "#8995a1" }
+];
+const totalEstados = estados.reduce((s, e) => s + e.cantidad, 0);
+const meses = serie.rows.map(fila => ({
+  etiqueta: new Intl.DateTimeFormat("es-CL", { month: "short", year: "2-digit", timeZone: "UTC" })
+    .format(new Date(`${fila.mes}-01T00:00:00Z`)),
+  cantidad: Number(fila.cantidad)
+}));
+const maxMes = Math.max(1, ...meses.map(m => m.cantidad));
+---
+<Layout title="Indicadores | KodaApp" description="Dashboard administrativo de KodaApp.">
+  <Header />
+  <main class="kpi-page">
+    <header class="kpi-heading">
+      <div>
+        <a class="kpi-back" href="/admin"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a administración</a>
+        <p class="kpi-kicker">PANEL DE ADMINISTRACIÓN</p>
+        <h1>Dashboard de indicadores</h1>
+        <p>Resumen de la plataforma · Datos consultados directamente desde PostgreSQL.</p>
+      </div>
+      <a class="btn-outline" href="/admin/kpi"><i class="fa-solid fa-rotate" aria-hidden="true"></i>{" "}Actualizar</a>
+    </header>
+    <section class="kpi-grid" aria-label="Indicadores generales">
+      {tarjetas.map(t => (
+        <article class="kpi-card" style={`--accent:${t.color}`}>
+          <i class={`fa-solid ${t.icono} kpi-icon`} aria-hidden="true"></i>
+          <h2>{t.titulo}</h2>
+          <strong>{entero.format(Number(t.valor))}</strong>
+        </article>
+      ))}
+    </section>
+    <section class="kpi-metrics" aria-label="Indicadores de adopción">
+      <article class="kpi-card" style="--accent:#58d98f">
+        <h2>Tasa de aprobación de solicitudes resueltas</h2><strong>{tasa}</strong>
+        <p>Aprobadas / (aprobadas + rechazadas). Excluye canceladas y pendientes.</p>
+      </article>
+      <article class="kpi-card" style="--accent:#20cfff">
+        <h2>Tiempo promedio de aprobación</h2><strong>{tiempo}</strong>
+        <p>Tiempo transcurrido desde la postulación hasta su aprobación.</p>
+      </article>
+    </section>
+    <section class="kpi-charts" aria-label="Gráficos de adopción">
+      <article class="kpi-panel">
+        <h2>Adopciones aprobadas por mes</h2>
+        <p>Últimos seis meses, según fecha de aprobación (hora de Chile).</p>
+        <div class="kpi-bars">
+          {meses.map(m => (
+            <div class="kpi-bar-col">
+              <div class="kpi-bar-track"><div class="kpi-bar" style={`height:${m.cantidad / maxMes * 100}%`}><span>{entero.format(m.cantidad)}</span></div></div>
+              <span class="kpi-month">{m.etiqueta}</span>
+            </div>
+          ))}
+        </div>
+        {!meses.some(m => m.cantidad > 0) && <p>No hay adopciones aprobadas en este período.</p>}
+      </article>
+      <article class="kpi-panel">
+        <h2>Distribución de postulaciones</h2>
+        <p>{entero.format(totalEstados)} solicitudes registradas.</p>
+        {estados.map(e => (
+          <div class="kpi-status">
+            <div><span>{e.nombre}</span><strong>{entero.format(e.cantidad)}</strong></div>
+            <div class="kpi-progress"><span style={`width:${totalEstados ? e.cantidad / totalEstados * 100 : 0}%;background:${e.color}`}></span></div>
+            <small>{totalEstados ? decimal.format(e.cantidad / totalEstados * 100) : "0"} %</small>
+          </div>
+        ))}
+      </article>
+    </section>
+    <p class="kpi-note">Las adopciones aprobadas incluyen tenencias vigentes y finalizadas. Los indicadores no representan una evaluación del bienestar animal.</p>
+  </main>
+</Layout>
+<style>
+  .kpi-page{max-width:1180px;margin:0 auto;padding:32px 24px 64px;color:var(--text)}
+  .kpi-heading{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:28px}
+  .kpi-back{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);font-weight:700;text-decoration:none;margin-bottom:16px}
+  .kpi-kicker{color:var(--cyan);font-size:.78rem;font-weight:800;letter-spacing:.12em;margin:0 0 8px}
+  .kpi-heading h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.15;margin:0 0 10px}
+  .kpi-heading p:not(.kpi-kicker),.kpi-panel p,.kpi-card p,.kpi-note{color:var(--muted);font-size:.9rem;line-height:1.5;margin:0}
+  .kpi-grid,.kpi-metrics,.kpi-charts{display:grid;gap:16px;margin-bottom:20px}
+  .kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .kpi-metrics,.kpi-charts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi-card,.kpi-panel{background:var(--surface);border:1px solid var(--border-light);border-radius:16px;padding:20px;min-width:0}
+  .kpi-card{display:flex;flex-direction:column;gap:10px}
+  .kpi-icon{color:var(--accent);font-size:1.25rem}
+  .kpi-card h2{font-size:.9rem;color:var(--text-soft);font-weight:700;margin:0}
+  .kpi-card strong{font-size:clamp(1.6rem,3vw,2rem);line-height:1.2;color:var(--accent);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .kpi-panel h2{font-size:1.15rem;margin:0 0 6px}
+  .kpi-bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:30px 0 18px}
+  .kpi-bar-col{text-align:center;min-width:0}
+  .kpi-bar-track{height:150px;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px solid var(--border-light)}
+  .kpi-bar{position:relative;width:70%;max-width:42px;background:var(--cyan);border-radius:5px 5px 0 0}
+  .kpi-bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:.78rem;font-weight:800;padding-bottom:4px;color:var(--text)}
+  .kpi-month{display:block;font-size:.75rem;color:var(--text-soft);margin-top:8px}
+  .kpi-status{margin-top:16px}
+  .kpi-status>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:.9rem;margin-bottom:6px}
+  .kpi-progress{height:9px;background:var(--border);border-radius:10px;overflow:hidden}
+  .kpi-progress span{display:block;height:100%;border-radius:10px}
+  .kpi-status small{color:var(--muted);font-size:.78rem}
+  .kpi-note{margin-top:12px!important}
+  @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-charts{grid-template-columns:1fr}}
+  @media(max-width:540px){.kpi-page{padding:22px 14px 40px}.kpi-grid,.kpi-metrics{grid-template-columns:1fr 1fr;gap:10px}.kpi-metrics{grid-template-columns:1fr}.kpi-card,.kpi-panel{padding:14px}.kpi-bars{gap:5px}.kpi-card h2{font-size:.82rem}}
+</style>
